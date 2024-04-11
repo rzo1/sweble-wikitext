@@ -19,3 +19,4 @@ This module exposes the wikitext parser itself, [other Maven modules are availab
 
 You first need to clone the [sweble/osr-common](https://github.com/sweble/osr-common) repository, and then clone this repository inside it, as the `tooling/sweble-wikitext` local directory.
 You can then work on this library as a Maven project.
+
