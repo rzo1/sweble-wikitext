@@ -17,6 +17,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          path: tooling/sweble-wikitext
+          fetch-depth: 0
       - uses: actions/cache@v3
         with:
           path: ~/.m2/repository
