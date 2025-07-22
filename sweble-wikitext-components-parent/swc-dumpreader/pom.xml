@@ -97,8 +97,8 @@
 
 		<!-- JAXB Implementation -->
 		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-impl</artifactId>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -169,9 +169,9 @@
 
 			<!-- Compile schema files -->
 			<plugin>
-				<groupId>org.jvnet.jaxb2.maven2</groupId>
-				<artifactId>maven-jaxb23-plugin</artifactId>
-				<version>0.15.3</version>
+				<groupId>com.evolvedbinary.maven.jvnet</groupId>
+				<artifactId>jaxb30-maven-plugin</artifactId>
+				<version>0.15.0</version>
 				<configuration>
 					<schemaDirectory>${schema-sources.directory}</schemaDirectory>
 					<generateDirectory>${generated-sources.directory}</generateDirectory>

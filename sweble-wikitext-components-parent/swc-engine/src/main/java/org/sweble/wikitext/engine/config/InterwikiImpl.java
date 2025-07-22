@@ -21,8 +21,8 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlType;
 
 import org.sweble.wikitext.engine.PageTitle;
 import org.sweble.wikitext.engine.utils.UrlService;

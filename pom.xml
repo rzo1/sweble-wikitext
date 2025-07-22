@@ -60,7 +60,7 @@
 		<!-- Should be ${project.version} but that causes trouble with the release plugin -->
 		<sweble.version>4.0.0-SNAPSHOT</sweble.version>
 		<jaxb-api.version>4.0.2</jaxb-api.version>
-		<jaxb-impl.version>4.0.5</jaxb-impl.version>
+		<jaxb-impl.version>4.0.3</jaxb-impl.version>
 
 		<!-- override from osr parent -->
 		<maven.compiler.source>11</maven.compiler.source>
@@ -214,8 +214,8 @@
 			</dependency>
 
 			<dependency>
-				<groupId>com.sun.xml.bind</groupId>
-				<artifactId>jaxb-impl</artifactId>
+				<groupId>org.glassfish.jaxb</groupId>
+				<artifactId>jaxb-runtime</artifactId>
 				<version>${jaxb-impl.version}</version>
 				<exclusions>
 					<exclusion>
@@ -225,6 +225,11 @@
 				</exclusions>
 			</dependency>
 
+			<dependency>
+				<groupId>org.aspectj</groupId>
+				<artifactId>aspectjrt</artifactId>
+				<version>1.9.22.1</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

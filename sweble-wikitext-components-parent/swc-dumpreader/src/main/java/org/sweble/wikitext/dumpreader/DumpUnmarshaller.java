@@ -22,15 +22,15 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.PropertyException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.UnmarshallerHandler;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-import javax.xml.bind.attachment.AttachmentUnmarshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.PropertyException;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.bind.UnmarshallerHandler;
+import jakarta.xml.bind.ValidationEventHandler;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.attachment.AttachmentUnmarshaller;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Source;
@@ -320,7 +320,7 @@ public class DumpUnmarshaller
 
 	/**
 	 * @deprecated since JAXB2.0, please see
-	 *             {@link #setSchema(javax.xml.validation.Schema)}
+	 *             {@link #setSchema(jakarta.xml.validation.Schema)}
 	 */
 	public void setValidating(boolean validating) throws JAXBException
 	{
@@ -329,7 +329,7 @@ public class DumpUnmarshaller
 
 	/**
 	 * @deprecated since JAXB2.0, please see
-	 *             {@link #setSchema(javax.xml.validation.Schema)}
+	 *             {@link #setSchema(jakarta.xml.validation.Schema)}
 	 */
 	public boolean isValidating() throws JAXBException
 	{
@@ -366,22 +366,23 @@ public class DumpUnmarshaller
 		return unmarshaller.getSchema();
 	}
 
+	@Override
+	public <A extends XmlAdapter<?, ?>> void setAdapter(Class<A> type, A adapter) {
+		unmarshaller.setAdapter(type, adapter);
+	}
+
+	@Override
+	public <A extends XmlAdapter<?, ?>> A getAdapter(Class<A> type) {
+		return unmarshaller.getAdapter(type);
+	}
+
 	public void setAdapter(@SuppressWarnings("rawtypes") XmlAdapter adapter)
 	{
 		unmarshaller.setAdapter(adapter);
 	}
 
-	@SuppressWarnings("rawtypes")
-	public <A extends XmlAdapter> void setAdapter(Class<A> type, A adapter)
-	{
-		unmarshaller.setAdapter(type, adapter);
-	}
 
-	@SuppressWarnings("rawtypes")
-	public <A extends XmlAdapter> A getAdapter(Class<A> type)
-	{
-		return unmarshaller.getAdapter(type);
-	}
+
 
 	public void setAttachmentUnmarshaller(AttachmentUnmarshaller au)
 	{
