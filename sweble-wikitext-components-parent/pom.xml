@@ -59,7 +59,7 @@
 
 		<!-- Plugin dependency versions -->
 		<maven-jaxb2-plugin.version>0.15.1</maven-jaxb2-plugin.version>
-		<maven-jflex-plugin.version>1.8.2</maven-jflex-plugin.version>
+		<maven-jflex-plugin.version>1.9.1</maven-jflex-plugin.version>
 		<maven-rats-plugin.version>1.3.3</maven-rats-plugin.version>
 
 		<jopt-simple.version>5.0.4</jopt-simple.version>
