@@ -10,7 +10,7 @@ This library is published on Maven Central. You can use it by adding the followi
 <dependency>
   <groupId>io.github.rzo1.org.sweble.wikitext</groupId>
   <artifactId>swc-parser-lazy</artifactId>
-  <version>3.1.9</version>
+  <version>4.0.0</version>
 </dependency>
 ```
 This module exposes the wikitext parser itself, [other Maven modules are available as well](https://search.maven.org/search?q=org.sweble.wikitext).
