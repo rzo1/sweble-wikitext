@@ -21,9 +21,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.sweble.wikitext</groupId>
+		<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
 		<artifactId>sweble-wikitext-components-parent</artifactId>
-		<version>3.1.10-SNAPSHOT</version>
+		<version>4.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>swc-dumpreader</artifactId>
@@ -191,7 +191,7 @@
 							<schemaIncludes>
 								<include>export-0.5.xsd</include>
 							</schemaIncludes>
-							<generatePackage>org.sweble.wikitext.dumpreader.export_0_5</generatePackage>
+							<generatePackage>io.github.rzo1.org.sweble.wikitext.dumpreader.export_0_5</generatePackage>
 						</configuration>
 					</execution>
 					<execution>
@@ -203,7 +203,7 @@
 							<schemaIncludes>
 								<include>export-0.6-fixed.xsd</include>
 							</schemaIncludes>
-							<generatePackage>org.sweble.wikitext.dumpreader.export_0_6</generatePackage>
+							<generatePackage>io.github.rzo1.org.sweble.wikitext.dumpreader.export_0_6</generatePackage>
 						</configuration>
 					</execution>
 					<execution>
@@ -215,7 +215,7 @@
 							<schemaIncludes>
 								<include>export-0.7.xsd</include>
 							</schemaIncludes>
-							<generatePackage>org.sweble.wikitext.dumpreader.export_0_7</generatePackage>
+							<generatePackage>io.github.rzo1.org.sweble.wikitext.dumpreader.export_0_7</generatePackage>
 						</configuration>
 					</execution>
 					<execution>
@@ -227,7 +227,7 @@
 							<schemaIncludes>
 								<include>export-0.8.xsd</include>
 							</schemaIncludes>
-							<generatePackage>org.sweble.wikitext.dumpreader.export_0_8</generatePackage>
+							<generatePackage>io.github.rzo1.org.sweble.wikitext.dumpreader.export_0_8</generatePackage>
 						</configuration>
 					</execution>
 					<execution>
@@ -239,7 +239,7 @@
 							<schemaIncludes>
 								<include>export-0.9.xsd</include>
 							</schemaIncludes>
-							<generatePackage>org.sweble.wikitext.dumpreader.export_0_9</generatePackage>
+							<generatePackage>io.github.rzo1.org.sweble.wikitext.dumpreader.export_0_9</generatePackage>
 						</configuration>
 					</execution>
 					<execution>
@@ -251,7 +251,7 @@
 							<schemaIncludes>
 								<include>export-0.10.xsd</include>
 							</schemaIncludes>
-							<generatePackage>org.sweble.wikitext.dumpreader.export_0_10</generatePackage>
+							<generatePackage>io.github.rzo1.org.sweble.wikitext.dumpreader.export_0_10</generatePackage>
 						</configuration>
 					</execution>
 				</executions>

@@ -21,9 +21,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.sweble.wikitext</groupId>
+		<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
 		<artifactId>sweble-wikitext-components-parent</artifactId>
-		<version>3.1.10-SNAPSHOT</version>
+		<version>4.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>swc-engine</artifactId>
@@ -103,7 +103,7 @@
 
 		<!-- Sweble Wikitext Components - Sweble Wikitext Parser -->
 		<dependency>
-			<groupId>org.sweble.wikitext</groupId>
+			<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
 			<artifactId>swc-parser-lazy</artifactId>
 		</dependency>
 

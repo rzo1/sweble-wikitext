@@ -28,7 +28,7 @@
 
 	<groupId>org.sweble</groupId>
 	<artifactId>sweble-parent</artifactId>
-	<version>3.1.10-SNAPSHOT</version>
+	<version>4.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Sweble Parent</name>
 	<inceptionYear>2010</inceptionYear>
@@ -58,7 +58,7 @@
 		<!-- Dependencies -->
 		<osr-common.version>3.0.8</osr-common.version>
 		<!-- Should be ${project.version} but that causes trouble with the release plugin -->
-		<sweble.version>3.1.10-SNAPSHOT</sweble.version>
+		<sweble.version>4.0.0-SNAPSHOT</sweble.version>
 		<jaxb-api.version>2.3.3</jaxb-api.version>
 		<jaxb-impl.version>2.3.9</jaxb-impl.version>
 
@@ -141,28 +141,28 @@
 
 			<!-- Sweble Wikitext Components - Sweble Wikitext Parser -->
 			<dependency>
-				<groupId>org.sweble.wikitext</groupId>
+				<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
 				<artifactId>swc-parser-lazy</artifactId>
 				<version>${sweble.version}</version>
 			</dependency>
 
 			<!-- Sweble Wikitext Components - Engine -->
 			<dependency>
-				<groupId>org.sweble.wikitext</groupId>
+				<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
 				<artifactId>swc-engine</artifactId>
 				<version>${sweble.version}</version>
 			</dependency>
 
 			<!-- Sweble Wikitext Components - Dump Reader -->
 			<dependency>
-				<groupId>org.sweble.wikitext</groupId>
+				<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
 				<artifactId>swc-dumpreader</artifactId>
 				<version>${sweble.version}</version>
 			</dependency>
 
 			<!-- Sweble Wikitext Components - Article Cruncher -->
 			<dependency>
-				<groupId>org.sweble.wikitext</groupId>
+				<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
 				<artifactId>swc-article-cruncher</artifactId>
 				<version>${sweble.version}</version>
 			</dependency>

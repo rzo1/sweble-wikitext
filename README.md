@@ -8,7 +8,7 @@ This library is published on Maven Central. You can use it by adding the followi
 
 ```
 <dependency>
-  <groupId>org.sweble.wikitext</groupId>
+  <groupId>io.github.rzo1.org.sweble.wikitext</groupId>
   <artifactId>swc-parser-lazy</artifactId>
   <version>3.1.9</version>
 </dependency>

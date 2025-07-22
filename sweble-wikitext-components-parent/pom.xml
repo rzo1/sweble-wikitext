@@ -23,10 +23,10 @@
 	<parent>
 		<groupId>org.sweble</groupId>
 		<artifactId>sweble-parent</artifactId>
-		<version>3.1.10-SNAPSHOT</version>
+		<version>4.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>org.sweble.wikitext</groupId>
+	<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
 	<artifactId>sweble-wikitext-components-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Sweble Wikitext Components Parent</name>
