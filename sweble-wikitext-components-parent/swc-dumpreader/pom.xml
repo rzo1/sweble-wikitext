@@ -171,7 +171,7 @@
 			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
 				<artifactId>maven-jaxb23-plugin</artifactId>
-				<version>0.15.1</version>
+				<version>0.15.3</version>
 				<configuration>
 					<schemaDirectory>${schema-sources.directory}</schemaDirectory>
 					<generateDirectory>${generated-sources.directory}</generateDirectory>
