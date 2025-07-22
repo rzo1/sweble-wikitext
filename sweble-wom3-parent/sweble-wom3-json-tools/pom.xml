@@ -22,9 +22,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.sweble.wom3</groupId>
+		<groupId>io.github.rzo1.org.sweble.wom3</groupId>
 		<artifactId>sweble-wom3-parent</artifactId>
-		<version>4.0.0-SNAPSHOT</version>
+		<version>4.0.0</version>
 	</parent>
 
 	<artifactId>sweble-wom3-json-tools</artifactId>
@@ -57,7 +57,7 @@
 
 		<!-- Sweble - WOM 3.0 Core -->
 		<dependency>
-			<groupId>org.sweble.wom3</groupId>
+			<groupId>io.github.rzo1.org.sweble.wom3</groupId>
 			<artifactId>sweble-wom3-core</artifactId>
 		</dependency>
 

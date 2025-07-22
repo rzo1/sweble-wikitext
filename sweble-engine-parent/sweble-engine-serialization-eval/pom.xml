@@ -22,9 +22,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.sweble.engine</groupId>
+		<groupId>io.github.rzo1.org.sweble.engine</groupId>
 		<artifactId>sweble-engine-parent</artifactId>
-		<version>4.0.0-SNAPSHOT</version>
+		<version>4.0.0</version>
 	</parent>
 
 	<artifactId>sweble-engine-serialization-eval</artifactId>
@@ -105,19 +105,19 @@
 
 		<!-- Sweble - WOM 3.0 Core -->
 		<dependency>
-			<groupId>org.sweble.wom3</groupId>
+			<groupId>io.github.rzo1.org.sweble.wom3</groupId>
 			<artifactId>sweble-wom3-core</artifactId>
 		</dependency>
 
 		<!-- Sweble - WOM 3.0 SWC Adapter -->
 		<dependency>
-			<groupId>org.sweble.wom3</groupId>
+			<groupId>io.github.rzo1.org.sweble.wom3</groupId>
 			<artifactId>sweble-wom3-swc-adapter</artifactId>
 		</dependency>
 
 		<!-- Sweble Engine - Serialization -->
 		<dependency>
-			<groupId>org.sweble.engine</groupId>
+			<groupId>io.github.rzo1.org.sweble.engine</groupId>
 			<artifactId>sweble-engine-serialization</artifactId>
 		</dependency>
 

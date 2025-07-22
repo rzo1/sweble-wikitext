@@ -26,9 +26,9 @@
 		<version>3.0.8</version>
 	</parent>
 
-	<groupId>org.sweble</groupId>
+	<groupId>io.github.rzo1.org.sweble</groupId>
 	<artifactId>sweble-parent</artifactId>
-	<version>4.0.0-SNAPSHOT</version>
+	<version>4.0.0</version>
 	<packaging>pom</packaging>
 	<name>Sweble Parent</name>
 	<inceptionYear>2010</inceptionYear>
@@ -58,7 +58,7 @@
 		<!-- Dependencies -->
 		<osr-common.version>3.0.8</osr-common.version>
 		<!-- Should be ${project.version} but that causes trouble with the release plugin -->
-		<sweble.version>4.0.0-SNAPSHOT</sweble.version>
+		<sweble.version>4.0.0</sweble.version>
 		<jaxb-api.version>4.0.2</jaxb-api.version>
 		<jaxb-impl.version>4.0.3</jaxb-impl.version>
 
@@ -173,21 +173,21 @@
 
 			<!-- Sweble - WOM 3.0 Core -->
 			<dependency>
-				<groupId>org.sweble.wom3</groupId>
+				<groupId>io.github.rzo1.org.sweble.wom3</groupId>
 				<artifactId>sweble-wom3-core</artifactId>
 				<version>${sweble.version}</version>
 			</dependency>
 
 			<!-- Sweble - WOM 3.0 JSON Tools -->
 			<dependency>
-				<groupId>org.sweble.wom3</groupId>
+				<groupId>io.github.rzo1.org.sweble.wom3</groupId>
 				<artifactId>sweble-wom3-json-tools</artifactId>
 				<version>${sweble.version}</version>
 			</dependency>
 
 			<!-- Sweble WOM 3.0 - SWC Adapter -->
 			<dependency>
-				<groupId>org.sweble.wom3</groupId>
+				<groupId>io.github.rzo1.org.sweble.wom3</groupId>
 				<artifactId>sweble-wom3-swc-adapter</artifactId>
 				<version>${sweble.version}</version>
 			</dependency>
@@ -198,7 +198,7 @@
 
 			<!-- Sweble Engine - Serialization -->
 			<dependency>
-				<groupId>org.sweble.engine</groupId>
+				<groupId>io.github.rzo1.org.sweble.engine</groupId>
 				<artifactId>sweble-engine-serialization</artifactId>
 				<version>${sweble.version}</version>
 			</dependency>
@@ -286,6 +286,19 @@
 
 			</plugins>
 		</pluginManagement>
+
+		<plugins>
+			<plugin>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>0.8.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<publishingServerId>central</publishingServerId>
+					<deploymentName>Sweble</deploymentName>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 
 	<!-- =================================================================== -->
@@ -295,7 +308,7 @@
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
