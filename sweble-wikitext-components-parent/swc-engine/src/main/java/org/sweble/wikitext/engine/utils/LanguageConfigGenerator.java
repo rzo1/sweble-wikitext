@@ -15,10 +15,12 @@
 package org.sweble.wikitext.engine.utils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -57,7 +59,11 @@ public class LanguageConfigGenerator
 	public static final String API_ENDPOINT_NAMESPACEALIASES =
 			".wikipedia.org/w/api.php?action=query&meta=siteinfo&siprop=namespacealiases&format=xml";
 
-	// =========================================================================
+    private static final String DEFAULT_FALLBACK_USER_AGENT =
+            "Sweble Wikitext/unknown (+https://github.com/rzo1/sweble-wikitext/";
+
+
+    // =========================================================================
 
 	public static WikiConfig generateWikiConfig(String languagePrefix)
 		throws IOException,
@@ -336,9 +342,24 @@ public class LanguageConfigGenerator
 	{
 		URL url = new URL(urlString);
 		URLConnection connection = url.openConnection();
-		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        connection.setRequestProperty("User-Agent", loadDefaultUserAgent());
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
 		Document document = docBuilder.parse(connection.getInputStream());
 		return document;
 	}
+
+    private static String loadDefaultUserAgent() {
+        final Properties properties = new Properties();
+        try (InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("sweble-http.properties")) {
+            if (input != null) {
+                properties.load(input);
+                return properties.getProperty("user.agent", DEFAULT_FALLBACK_USER_AGENT);
+            }
+        } catch (IOException e) {
+            logger.warn(e.getLocalizedMessage(), e);
+        }
+        return DEFAULT_FALLBACK_USER_AGENT;
+    }
+
 }

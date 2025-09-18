@@ -41,6 +41,7 @@
 
 	<properties>
 		<swc-parent.path>../</swc-parent.path>
+        <user.agent>Sweble Wikitext/${project.version} (+https://github.com/rzo1/sweble-wikitext/)</user.agent>
 	</properties>
 
 	<!-- =================================================================== -->
@@ -128,6 +129,13 @@
 	</dependencies>
 
 	<build>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
 
 		<!-- =============================================================== -->
 		<!-- Plugins - Plugins - Plugins - Plugins - Plugins - Plugins - Plu -->
