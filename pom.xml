@@ -60,7 +60,7 @@
 		<!-- Should be ${project.version} but that causes trouble with the release plugin -->
 		<sweble.version>4.0.0</sweble.version>
 		<jaxb-api.version>4.0.5</jaxb-api.version>
-		<jaxb-impl.version>4.0.7</jaxb-impl.version>
+		<jaxb-impl.version>4.0.8</jaxb-impl.version>
 
 		<!-- override from osr parent -->
 		<maven.compiler.source>11</maven.compiler.source>
