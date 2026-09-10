@@ -1,0 +1,1 @@
+<table><colgroup><col span="2" /><col /></colgroup><tr><td>a</td><td>b</td><td>c</td></tr></table>

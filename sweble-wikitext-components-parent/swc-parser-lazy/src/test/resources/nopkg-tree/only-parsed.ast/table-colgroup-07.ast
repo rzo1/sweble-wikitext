@@ -1,0 +1,97 @@
+WtParsedWikitextPage(
+	{P} entityMap = -
+	{P} warnings = C[]
+	[0] = WtImStartTag(
+		{P} name = "@p"
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[1] = WtXmlStartTag(
+		{P} name = "table"
+		{P} rtd = RTD[ "<table" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[2] = WtXmlStartTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "<tr" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[3] = WtXmlStartTag(
+		{P} name = "td"
+		{P} rtd = RTD[ "<td" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[4] = "a",
+	[5] = WtXmlEmptyTag(
+		{P} name = "col"
+		{P} rtd = RTD[ "<col" <o> "/>" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[6] = WtXmlEndTag(
+		{P} name = "td"
+		{P} rtd = RTD[ "</td>" ]
+	),
+	[7] = WtXmlEndTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "</tr>" ]
+	),
+	[8] = WtXmlEndTag(
+		{P} name = "table"
+		{P} rtd = RTD[ "</table>" ]
+	),
+	[9] = WtNewline("\n"),
+	[10] = WtXmlStartTag(
+		{P} name = "table"
+		{P} rtd = RTD[ "<table" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[11] = WtXmlStartTag(
+		{P} name = "tbody"
+		{P} rtd = RTD[ "<tbody" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[12] = WtXmlStartTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "<tr" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[13] = WtXmlStartTag(
+		{P} name = "td"
+		{P} rtd = RTD[ "<td" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[14] = "a",
+	[15] = WtXmlEndTag(
+		{P} name = "td"
+		{P} rtd = RTD[ "</td>" ]
+	),
+	[16] = WtXmlEndTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "</tr>" ]
+	),
+	[17] = WtXmlStartTag(
+		{P} name = "colgroup"
+		{P} rtd = RTD[ "<colgroup" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[18] = WtXmlEmptyTag(
+		{P} name = "col"
+		{P} rtd = RTD[ "<col" <o> "/>" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[19] = WtXmlEndTag(
+		{P} name = "colgroup"
+		{P} rtd = RTD[ "</colgroup>" ]
+	),
+	[20] = WtXmlEndTag(
+		{P} name = "tbody"
+		{P} rtd = RTD[ "</tbody>" ]
+	),
+	[21] = WtXmlEndTag(
+		{P} name = "table"
+		{P} rtd = RTD[ "</table>" ]
+	),
+	[22] = WtImEndTag(
+		{P} name = "@p"
+	),
+	[23] = WtNewline("\n")
+)

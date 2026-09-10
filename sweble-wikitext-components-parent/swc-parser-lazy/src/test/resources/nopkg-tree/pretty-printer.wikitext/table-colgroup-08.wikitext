@@ -1,0 +1,6 @@
+
+{|
+<colgroup><col span="2" /></colgroup>
+| a 
+| b
+|}

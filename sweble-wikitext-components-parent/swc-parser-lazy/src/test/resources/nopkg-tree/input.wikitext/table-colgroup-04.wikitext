@@ -1,0 +1,2 @@
+<table><caption>c</caption><colgroup><col/></colgroup><thead><tr><th>h</th></tr></thead><tr><td>a</td></tr></table>
+<table><caption>c<colgroup><col/></colgroup><tr><td>a</td></tr></table>

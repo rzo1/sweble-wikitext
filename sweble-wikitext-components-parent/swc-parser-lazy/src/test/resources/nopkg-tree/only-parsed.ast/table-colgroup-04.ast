@@ -1,0 +1,141 @@
+WtParsedWikitextPage(
+	{P} entityMap = -
+	{P} warnings = C[]
+	[0] = WtImStartTag(
+		{P} name = "@p"
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[1] = WtXmlStartTag(
+		{P} name = "table"
+		{P} rtd = RTD[ "<table" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[2] = WtXmlStartTag(
+		{P} name = "caption"
+		{P} rtd = RTD[ "<caption" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[3] = "c",
+	[4] = WtXmlEndTag(
+		{P} name = "caption"
+		{P} rtd = RTD[ "</caption>" ]
+	),
+	[5] = WtXmlStartTag(
+		{P} name = "colgroup"
+		{P} rtd = RTD[ "<colgroup" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[6] = WtXmlEmptyTag(
+		{P} name = "col"
+		{P} rtd = RTD[ "<col" <o> "/>" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[7] = WtXmlEndTag(
+		{P} name = "colgroup"
+		{P} rtd = RTD[ "</colgroup>" ]
+	),
+	[8] = WtXmlStartTag(
+		{P} name = "thead"
+		{P} rtd = RTD[ "<thead" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[9] = WtXmlStartTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "<tr" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[10] = WtXmlStartTag(
+		{P} name = "th"
+		{P} rtd = RTD[ "<th" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[11] = "h",
+	[12] = WtXmlEndTag(
+		{P} name = "th"
+		{P} rtd = RTD[ "</th>" ]
+	),
+	[13] = WtXmlEndTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "</tr>" ]
+	),
+	[14] = WtXmlEndTag(
+		{P} name = "thead"
+		{P} rtd = RTD[ "</thead>" ]
+	),
+	[15] = WtXmlStartTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "<tr" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[16] = WtXmlStartTag(
+		{P} name = "td"
+		{P} rtd = RTD[ "<td" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[17] = "a",
+	[18] = WtXmlEndTag(
+		{P} name = "td"
+		{P} rtd = RTD[ "</td>" ]
+	),
+	[19] = WtXmlEndTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "</tr>" ]
+	),
+	[20] = WtXmlEndTag(
+		{P} name = "table"
+		{P} rtd = RTD[ "</table>" ]
+	),
+	[21] = WtNewline("\n"),
+	[22] = WtXmlStartTag(
+		{P} name = "table"
+		{P} rtd = RTD[ "<table" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[23] = WtXmlStartTag(
+		{P} name = "caption"
+		{P} rtd = RTD[ "<caption" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[24] = "c",
+	[25] = WtXmlStartTag(
+		{P} name = "colgroup"
+		{P} rtd = RTD[ "<colgroup" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[26] = WtXmlEmptyTag(
+		{P} name = "col"
+		{P} rtd = RTD[ "<col" <o> "/>" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[27] = WtXmlEndTag(
+		{P} name = "colgroup"
+		{P} rtd = RTD[ "</colgroup>" ]
+	),
+	[28] = WtXmlStartTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "<tr" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[29] = WtXmlStartTag(
+		{P} name = "td"
+		{P} rtd = RTD[ "<td" <o> ">" ]
+		xmlAttributes = WtXmlAttributes[]
+	),
+	[30] = "a",
+	[31] = WtXmlEndTag(
+		{P} name = "td"
+		{P} rtd = RTD[ "</td>" ]
+	),
+	[32] = WtXmlEndTag(
+		{P} name = "tr"
+		{P} rtd = RTD[ "</tr>" ]
+	),
+	[33] = WtXmlEndTag(
+		{P} name = "table"
+		{P} rtd = RTD[ "</table>" ]
+	),
+	[34] = WtImEndTag(
+		{P} name = "@p"
+	),
+	[35] = WtNewline("\n")
+)
