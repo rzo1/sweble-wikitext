@@ -134,7 +134,8 @@ public abstract class TagExtensionBase
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		return true;
+		TagExtensionBase other = (TagExtensionBase) obj;
+		return id.equals(other.id);
 	}
 
 	// =========================================================================
@@ -160,6 +161,13 @@ public abstract class TagExtensionBase
 		@XmlAttribute(name = "class")
 		public String className;
 
+		/**
+		 * Only required for tag extension classes that implement more than
+		 * one tag extension and therefore take the id as constructor argument.
+		 */
+		@XmlAttribute(name = "id", required = false)
+		public String id;
+
 		public TagExtensionRef()
 		{
 		}
@@ -167,6 +175,12 @@ public abstract class TagExtensionBase
 		public TagExtensionRef(String name)
 		{
 			this.className = name;
+		}
+
+		public TagExtensionRef(String name, String id)
+		{
+			this.className = name;
+			this.id = id;
 		}
 	}
 
@@ -181,12 +195,24 @@ public abstract class TagExtensionBase
 		@Override
 		public TagExtensionRef marshal(TagExtensionBase v)
 		{
-			return new TagExtensionRef(v.getClass().getName());
+			return new TagExtensionRef(v.getClass().getName(), v.getId());
 		}
 
 		@Override
 		public TagExtensionBase unmarshal(TagExtensionRef v) throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
 			Class<?> clazz = Class.forName(v.className);
+			if (v.id != null)
+			{
+				try
+				{
+					return (TagExtensionBase) clazz.getConstructor(String.class).newInstance(v.id);
+				}
+				catch (NoSuchMethodException e)
+				{
+					// The class implements exactly one tag extension and
+					// knows its id.
+				}
+			}
 			/*
 			Constructor<?> ctor = clazz.getDeclaredConstructor(WikiConfig.class);
 			// We don't have a wiki config object yet :(

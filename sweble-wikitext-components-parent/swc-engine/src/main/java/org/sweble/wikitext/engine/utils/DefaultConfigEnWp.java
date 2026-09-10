@@ -25,6 +25,7 @@ import org.sweble.wikitext.engine.config.InterwikiImpl;
 import org.sweble.wikitext.engine.config.NamespaceImpl;
 import org.sweble.wikitext.engine.config.ParserConfigImpl;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
+import org.sweble.wikitext.engine.ext.generic.WikipediaTagExtensions;
 
 /**
  * Programatically generate a default configuration for that is similar to that
@@ -62,6 +63,13 @@ public class DefaultConfigEnWp
 		pc.setInternalLinkPostfixPattern("[a-z]+");
 
 		return pc;
+	}
+
+	protected void addTagExtensions(WikiConfigImpl c)
+	{
+		super.addTagExtensions(c);
+
+		c.addTagExtensionGroup(WikipediaTagExtensions.group(c));
 	}
 
 	protected void addNamespaces(WikiConfigImpl c)

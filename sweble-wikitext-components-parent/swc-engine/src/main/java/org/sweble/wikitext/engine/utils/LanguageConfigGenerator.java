@@ -25,6 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -36,8 +38,10 @@ import org.slf4j.LoggerFactory;
 import org.sweble.wikitext.engine.config.I18nAliasImpl;
 import org.sweble.wikitext.engine.config.InterwikiImpl;
 import org.sweble.wikitext.engine.config.NamespaceImpl;
+import org.sweble.wikitext.engine.config.TagExtensionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
+import org.sweble.wikitext.engine.ext.generic.GenericTagExtension;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -62,6 +66,18 @@ public class LanguageConfigGenerator
 
 	public static final String API_ENDPOINT_NAMESPACEALIASES =
 			".wikipedia.org/w/api.php?action=query&meta=siteinfo&siprop=namespacealiases&format=xml";
+
+	public static final String API_ENDPOINT_EXTENSIONTAGS =
+			".wikipedia.org/w/api.php?action=query&meta=siteinfo&siprop=extensiontags&format=xml";
+
+	/**
+	 * Name of the group holding the extension tags reported by the wiki for
+	 * which no implementation is available.
+	 */
+	public static final String SITE_TAG_EXTENSION_GROUP = "Extension - Site (generic)";
+
+	/** Extension tags are reported as {@code <name>}. */
+	private static final Pattern EXTENSION_TAG = Pattern.compile("^\\s*<?\\s*([^<>\\s]+)\\s*>?\\s*$");
 
     private static final String DEFAULT_FALLBACK_USER_AGENT =
             "Sweble Wikitext/unknown (+https://github.com/rzo1/sweble-wikitext/";
@@ -96,9 +112,14 @@ public class LanguageConfigGenerator
 				endpointPrefix + API_ENDPOINT_NAMESPACEALIASES,
 				endpointPrefix + API_ENDPOINT_NAMESPACES,
 				endpointPrefix + API_ENDPOINT_INTERWIKIMAP,
-				endpointPrefix + API_ENDPOINT_MAGICWORDS);
+				endpointPrefix + API_ENDPOINT_MAGICWORDS,
+				endpointPrefix + API_ENDPOINT_EXTENSIONTAGS);
 	}
 
+	/**
+	 * Does not query the extension tags of the wiki but registers the
+	 * extension tags of {@link DefaultConfigEnWp} instead.
+	 */
 	public static WikiConfig generateWikiConfig(
 			String siteName,
 			String siteUrl,
@@ -107,6 +128,35 @@ public class LanguageConfigGenerator
 			String apiUrlNamespaces,
 			String apiUrlInterwikimap,
 			String apiUrlMagicwords)
+		throws IOException,
+			ParserConfigurationException,
+			SAXException
+	{
+		return generateWikiConfig(
+				siteName,
+				siteUrl,
+				languagePrefix,
+				apiUrlNamespacealiases,
+				apiUrlNamespaces,
+				apiUrlInterwikimap,
+				apiUrlMagicwords,
+				null);
+	}
+
+	/**
+	 * @param apiUrlExtensiontags
+	 *            If {@code null}, the extension tags of
+	 *            {@link DefaultConfigEnWp} are registered.
+	 */
+	public static WikiConfig generateWikiConfig(
+			String siteName,
+			String siteUrl,
+			String languagePrefix,
+			String apiUrlNamespacealiases,
+			String apiUrlNamespaces,
+			String apiUrlInterwikimap,
+			String apiUrlMagicwords,
+			String apiUrlExtensiontags)
 		throws IOException,
 			ParserConfigurationException,
 			SAXException
@@ -126,9 +176,65 @@ public class LanguageConfigGenerator
 		addi18NAliases(wikiConfig, apiUrlMagicwords);
 
 		config.addParserFunctions(wikiConfig, true);
-		config.addTagExtensions(wikiConfig);
+		if (apiUrlExtensiontags != null)
+		{
+			// Only the implemented tag extensions and the ones the wiki knows
+			new DefaultConfig().addTagExtensions(wikiConfig);
+			addTagExtensions(wikiConfig, apiUrlExtensiontags);
+		}
+		else
+		{
+			config.addTagExtensions(wikiConfig);
+		}
 
 		return wikiConfig;
+	}
+
+	/**
+	 * Registers every extension tag reported by the wiki which is not
+	 * registered yet as {@link GenericTagExtension}, so that its body is not
+	 * parsed as wikitext.
+	 */
+	public static void addTagExtensions(
+			WikiConfigImpl wikiConfig,
+			String apiUrlExtensionTags)
+		throws IOException,
+			ParserConfigurationException,
+			SAXException
+	{
+		Document document = getXMLFromUrl(apiUrlExtensionTags);
+		NodeList apiExtensionTagLists = document.getElementsByTagName("extensiontags");
+
+		TagExtensionGroup group = new TagExtensionGroup(SITE_TAG_EXTENSION_GROUP);
+		List<String> added = new ArrayList<String>();
+		for (int i = 0; i < apiExtensionTagLists.getLength(); i++)
+		{
+			NodeList apiExtensionTags = apiExtensionTagLists.item(i).getChildNodes();
+			for (int j = 0; j < apiExtensionTags.getLength(); j++)
+			{
+				Node apiExtensionTag = apiExtensionTags.item(j);
+				if (apiExtensionTag.getNodeType() != Node.ELEMENT_NODE)
+					continue;
+
+				Matcher m = EXTENSION_TAG.matcher(apiExtensionTag.getTextContent());
+				if (!m.matches())
+				{
+					logger.warn("Skipping malformed extension tag `{}'", apiExtensionTag.getTextContent());
+					continue;
+				}
+
+				// MediaWiki registers extension tags in lower case
+				String name = m.group(1).toLowerCase();
+				if (wikiConfig.getTagExtension(name) != null || added.contains(name))
+					continue;
+
+				group.addTagExtension(new GenericTagExtension(wikiConfig, name));
+				added.add(name);
+			}
+		}
+
+		if (!added.isEmpty())
+			wikiConfig.addTagExtensionGroup(group);
 	}
 
 	public static void addi18NAliases(
