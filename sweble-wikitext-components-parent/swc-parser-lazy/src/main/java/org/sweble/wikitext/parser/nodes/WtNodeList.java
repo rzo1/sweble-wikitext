@@ -18,7 +18,9 @@
 package org.sweble.wikitext.parser.nodes;
 
 import java.io.ObjectStreamException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.sweble.wikitext.parser.WtRtData;
 import org.sweble.wikitext.parser.nodes.WtContentNode.WtEmptyContentNode;
@@ -95,12 +97,12 @@ public interface WtNodeList
 
 		protected WtNodeListImpl(Collection<? extends WtNode> list)
 		{
-			super(list);
+			super(mergeTextNodes(list));
 		}
 
 		protected WtNodeListImpl(Pair<? extends WtNode> list)
 		{
-			super(list);
+			super(mergeTextNodes(list));
 		}
 
 		protected WtNodeListImpl(WtNode child)
@@ -137,6 +139,71 @@ public interface WtNodeList
 					throw new IllegalArgumentException("Can't add object of type: " + o.getClass().getName());
 				}
 			}
+		}
+
+		// =====================================================================
+
+		/**
+		 * Merges runs of adjacent text nodes like adding them one by one
+		 * would, but builds the text of each run only once. Adding them one
+		 * by one copies the text merged so far for every node, which takes
+		 * quadratic time for long runs, e.g. for text interrupted by many
+		 * "&lt;".
+		 */
+		private static List<WtNode> mergeTextNodes(Iterable<? extends WtNode> nodes)
+		{
+			List<WtNode> result = new ArrayList<WtNode>();
+			List<WtText> run = new ArrayList<WtText>();
+			for (WtNode n : nodes)
+			{
+				if (n == null)
+					continue;
+
+				if (n.getNodeType() == NT_TEXT && (n instanceof WtText))
+				{
+					WtText text = (WtText) n;
+					if (text.getContent().isEmpty())
+						continue;
+
+					if (!text.hasAttributes())
+					{
+						run.add(text);
+						continue;
+					}
+				}
+
+				flushTextRun(run, result);
+				result.add(n);
+			}
+			flushTextRun(run, result);
+			return result;
+		}
+
+		private static void flushTextRun(List<WtText> run, List<WtNode> result)
+		{
+			if (run.size() == 1)
+			{
+				result.add(run.get(0));
+			}
+			else if (run.size() > 1)
+			{
+				StringBuilder sb = new StringBuilder();
+				for (WtText text : run)
+					sb.append(text.getContent());
+
+				try
+				{
+					WtText merged = (WtText) run.get(0).clone();
+					merged.setContent(sb.toString());
+					result.add(merged);
+				}
+				catch (CloneNotSupportedException e)
+				{
+					// Leave the merging to the list
+					result.addAll(run);
+				}
+			}
+			run.clear();
 		}
 
 		// =====================================================================

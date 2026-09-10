@@ -47,6 +47,8 @@ import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.nodes.WtTemplateParameter;
 import org.sweble.wikitext.parser.nodes.WtText;
 import org.sweble.wikitext.parser.nodes.WtXmlComment;
+import org.sweble.wikitext.parser.nodes.WtXmlElement;
+import org.sweble.wikitext.parser.nodes.WtXmlStartTag;
 import org.sweble.wikitext.parser.parser.PreprocessorToParserTransformer;
 import org.sweble.wikitext.parser.parser.RatsWikitextParser;
 import org.sweble.wikitext.parser.preprocessor.PreprocessedWikitext;
@@ -198,6 +200,23 @@ public class ParserRobustnessTest
 		assertEquals(0, count(prepro, WtTagExtension.class));
 	}
 
+	/**
+	 * Issue #167: Every text node used to be merged into the previous one by
+	 * copying its content, which took quadratic time for text interrupted by
+	 * many angle brackets.
+	 */
+	@Test(timeout = TIMEOUT)
+	public void testManyLeftAngleBracketsTakeLinearTime() throws Exception
+	{
+		String wikitext = StringUtils.repeat("<b>abcdef", 40000);
+
+		WtNode prepro = preprocess(wikitext, false);
+		assertEquals(wikitext, textOf(prepro));
+
+		WtNode ast = parse(wikitext);
+		assertTrue(count(ast, WtXmlElement.class) > 0);
+	}
+
 	@Test
 	public void testExternalLinkTitleSpanningLinesViaInternalLinkIsUnchanged() throws Exception
 	{
@@ -220,6 +239,46 @@ public class ParserRobustnessTest
 		assertEquals(0, count(ast, WtTagExtension.class));
 		assertEquals(1, count(ast, WtItalics.class));
 		assertEquals(1, count(ast, WtInternalLink.class));
+	}
+
+	/**
+	 * Issue #167: The parser and the post-processor must not turn the opening
+	 * tag, which the preprocessor left as text, into an HTML element that
+	 * wraps the rest of the page.
+	 */
+	@Test
+	public void testUnclosedExtensionTagStaysTextAfterParsing() throws Exception
+	{
+		for (String tag : new String[] { "<nowiki>", "<NoWiki>", "<ref name=a>", "<ref name=a >", "</ref>" })
+		{
+			String wikitext = "a " + tag + "b ''c''\n\nd [[Foo]]";
+
+			WtNode ast = parse(wikitext);
+			assertEquals(tag, 0, count(ast, WtXmlElement.class));
+			assertEquals(tag, 0, count(ast, WtXmlStartTag.class));
+			assertEquals(tag, 0, count(ast, WtTagExtension.class));
+			assertEquals(tag, 1, count(ast, WtItalics.class));
+			assertEquals(tag, 1, count(ast, WtInternalLink.class));
+			assertTrue(tag, textOf(ast).startsWith("a " + tag + "b "));
+		}
+	}
+
+	@Test
+	public void testClosedExtensionTagAfterUnclosedOneIsRecognized() throws Exception
+	{
+		WtNode ast = parse("<nowiki>a</nowiki> <nowiki>b");
+		assertEquals(1, count(ast, WtTagExtension.class));
+		assertEquals(0, count(ast, WtXmlElement.class));
+		assertTrue(textOf(ast).endsWith(" <nowiki>b"));
+	}
+
+	@Test
+	public void testUnclosedPreStaysAnElementLikeInMediaWiki() throws Exception
+	{
+		// pre is an HTML element as well, MediaWiki turns it into one
+		WtNode ast = parse("a <pre class=\"x\">b");
+		assertEquals(0, count(ast, WtTagExtension.class));
+		assertEquals(1, count(ast, WtXmlElement.class));
 	}
 
 	@Test

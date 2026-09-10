@@ -473,6 +473,17 @@ public enum ElementType
 		}
 	}
 
+	/**
+	 * @return Whether the given name is the name of an HTML element known to
+	 *         the tree builder.
+	 */
+	public static boolean isKnownHtmlElementName(String name)
+	{
+		return !name.isEmpty() &&
+				(name.charAt(0) != '#') &&
+				(xmlElementTypeMap.get(name.toLowerCase()) != null);
+	}
+
 	public static ElementType getType(WtNamedXmlElement e)
 	{
 		String name = e.getName().toLowerCase();
