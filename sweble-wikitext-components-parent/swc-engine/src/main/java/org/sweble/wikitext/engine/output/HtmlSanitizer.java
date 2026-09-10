@@ -38,7 +38,9 @@ import de.fau.cs.osr.utils.StringTools;
  * <ul>
  * <li>Only a fixed set of HTML elements may be written in wikitext (see
  * {@link #isAllowedElement(String)}). Callers are expected to render all
- * other elements as escaped text.</li>
+ * other elements as escaped text. Unlike MediaWiki, the table sections
+ * ({@code tbody}, {@code thead}, {@code tfoot}) and column groups
+ * ({@code colgroup}, {@code col}) are allowed as well.</li>
  * <li>Every element has its own list of allowed attributes. Event handlers
  * ({@code on*}) and all other attributes not on the list are dropped.
  * {@code data-*} attributes are allowed unless reserved by MediaWiki.</li>
@@ -73,7 +75,14 @@ public final class HtmlSanitizer
 			// Tags that can be self-closed
 			"br", "wbr", "hr", "li", "dt", "dd", "meta", "link",
 			// Tags that can be nested
-			"tr", "td", "th", "q", "bdo");
+			"tr", "td", "th", "q", "bdo",
+			// Table sections and column groups. MediaWiki's Sanitizer does not
+			// list them because its tidy stage generates them. Sweble's tree
+			// builder, however, keeps them as part of the table structure (and
+			// the renderer emitted them before). Escaping them would put text
+			// into table context and break the table. They carry neither URLs
+			// nor scripts and their attributes are still sanitized.
+			"tbody", "thead", "tfoot", "colgroup", "col");
 
 	private static final Map<String, Set<String>> ALLOWED_ATTRIBUTES =
 			buildAllowedAttributes();

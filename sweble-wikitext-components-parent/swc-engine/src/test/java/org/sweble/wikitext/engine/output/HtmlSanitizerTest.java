@@ -35,10 +35,10 @@ public class HtmlSanitizerTest
 	@Test
 	public void testElements()
 	{
-		for (String e : new String[] { "span", "SPAN", "div", "table", "td", "br", "sup", "abbr" })
+		for (String e : new String[] { "span", "SPAN", "div", "table", "td", "br", "sup", "abbr", "tbody", "thead", "tfoot", "colgroup", "col" })
 			assertTrue(e, HtmlSanitizer.isAllowedElement(e));
 
-		for (String e : new String[] { "script", "iframe", "object", "embed", "style", "a", "img", "form", "input", "svg", "math", "gallery", "references" })
+		for (String e : new String[] { "script", "iframe", "object", "embed", "style", "a", "img", "form", "input", "svg", "math", "gallery", "references", "html", "body" })
 			assertFalse(e, HtmlSanitizer.isAllowedElement(e));
 	}
 

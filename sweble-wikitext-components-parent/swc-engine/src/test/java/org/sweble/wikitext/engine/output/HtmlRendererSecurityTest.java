@@ -330,6 +330,116 @@ public class HtmlRendererSecurityTest
 
 	// =========================================================================
 
+	// Table structure and elements created by the tree builder
+
+	@Test
+	public void testHtmlTableKeepsStructure() throws Exception
+	{
+		String html = render("<table><tr><td>x</td></tr></table>");
+
+		assertNoEscapedMarkup(html);
+		assertInOrder(html, "<table>", "<tr>", "<td>", "x", "</td>", "</tr>", "</table>");
+	}
+
+	@Test
+	public void testHtmlTableWithCaptionKeepsStructure() throws Exception
+	{
+		String html = render("<table><caption>c</caption><tr><th>h</th></tr></table>");
+
+		assertNoEscapedMarkup(html);
+		assertInOrder(html, "<table>", "<caption>", "c", "</caption>", "<tr>", "<th>", "h", "</th>", "</tr>", "</table>");
+	}
+
+	@Test
+	public void testWikitableWithHtmlRowKeepsStructure() throws Exception
+	{
+		String html = render("{|\n|-\n| a\n<tr><td>b</td></tr>\n|}");
+
+		assertNoEscapedMarkup(html);
+		assertInOrder(html, "<table>", "<tr>", "<td>", "a", "</td>", "</tr>", "<tr>", "<td>", "b", "</td>", "</tr>", "</table>");
+	}
+
+	@Test
+	public void testUnclosedHtmlTableKeepsStructure() throws Exception
+	{
+		String html = render("<table><tr><td>a</table>");
+
+		assertNoEscapedMarkup(html);
+		assertInOrder(html, "<table>", "<tr>", "<td>", "a", "</td>", "</tr>", "</table>");
+	}
+
+	@Test
+	public void testTableSectionsAreRendered() throws Exception
+	{
+		String html = render(""
+				+ "<table>"
+				+ "<thead><tr><th>h</th></tr></thead>"
+				+ "<tbody class=\"b\" onclick=\"alert(1)\"><tr><td>x</td></tr></tbody>"
+				+ "<tfoot><tr><td>f</td></tr></tfoot>"
+				+ "</table>");
+
+		assertNoEscapedMarkup(html);
+		assertFalse(html, html.contains("onclick"));
+		assertInOrder(html, "<table>", "<thead>", "<th>", "</thead>", "<tbody class=\"b\">", "<td>", "</tbody>", "<tfoot>", "</tfoot>", "</table>");
+	}
+
+	@Test
+	public void testColgroupIsRendered() throws Exception
+	{
+		String html = render("<table><colgroup span=\"2\" onclick=\"alert(1)\"></colgroup><tr><td>x</td></tr></table>");
+
+		assertNoEscapedMarkup(html);
+		assertInOrder(html, "<table>", "<colgroup span=\"2\">", "</colgroup>", "<tr>", "</table>");
+	}
+
+	@Test
+	public void testRepairedElementsAreRendered() throws Exception
+	{
+		String html = render("<b>a<i>b</b>c</i>") + render("<p>a<div>b</div>c</p>");
+
+		assertNoEscapedMarkup(html);
+		assertContains(html, "<b>a<i>b</i></b><i>c</i>");
+		assertInOrder(html, "<p>", "a", "</p>", "<div>", "b", "</div>", "c", "<p>", "</p>");
+	}
+
+	@Test
+	public void testStrayEndTagsDoNotCreateElements() throws Exception
+	{
+		String html = render("a</script>b</iframe>c</tbody>d");
+
+		assertNoTag(html, "script");
+		assertNoTag(html, "iframe");
+		assertNoTag(html, "tbody");
+	}
+
+	@Test
+	public void testHtmlAndBodyWrittenInSourceAreEscaped() throws Exception
+	{
+		String html = render("<html><body>x</body></html>");
+
+		assertNoTag(html, "html");
+		assertNoTag(html, "body");
+		assertContains(html, "&lt;html&gt;&lt;body&gt;x&lt;/body&gt;&lt;/html&gt;");
+	}
+
+	// =========================================================================
+
+	private static void assertNoEscapedMarkup(String html)
+	{
+		assertFalse(html, html.contains("&lt;"));
+	}
+
+	private static void assertInOrder(String html, String... parts)
+	{
+		int pos = 0;
+		for (String part : parts)
+		{
+			int i = html.indexOf(part, pos);
+			assertTrue("Expected <" + part + "> after position " + pos + " in:\n" + html, i >= 0);
+			pos = i + part.length();
+		}
+	}
+
 	private static void assertContains(String html, String expected)
 	{
 		assertTrue("Expected <" + expected + "> in:\n" + html, html.contains(expected));
