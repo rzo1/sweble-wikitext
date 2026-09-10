@@ -56,6 +56,12 @@
 			<artifactId>jopt-simple</artifactId>
 		</dependency>
 
+		<!-- Joda-Time - Java date and time API -->
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+		</dependency>
+
 		<!-- SLF4J -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -95,6 +101,17 @@
 		<dependency>
 			<groupId>jakarta.xml.bind</groupId>
 			<artifactId>jakarta.xml.bind-api</artifactId>
+		</dependency>
+
+		<!-- =============================================================== -->
+		<!-- Testing - Testing - Testing - Testing - Testing - Testing - Tes -->
+		<!-- =============================================================== -->
+
+		<!-- JUnit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 	</dependencies>
