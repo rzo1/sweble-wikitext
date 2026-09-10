@@ -29,6 +29,7 @@ import org.sweble.wikitext.parser.WtRtData;
 import org.sweble.wikitext.parser.nodes.*;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageHorizAlign;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageViewFormat;
+import org.sweble.wikitext.parser.nodes.WtLinkTarget.LinkTargetType;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 import org.sweble.wikitext.parser.utils.StringConversionException;
 import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
@@ -350,22 +351,25 @@ public class HtmlRenderer
 
 		// -- <a> title --
 
+		// Like MediaWiki's Linker::makeImageLink(): Frameless images get the
+		// caption as title like inline images. Without a caption they only get
+		// the title of a page given with the link option.
+		boolean frameless = n.getFormat() == ImageViewFormat.FRAMELESS;
+
 		String aTitle = "";
-		if (n.getFormat() != ImageViewFormat.FRAMELESS)
+		if (strCaption != null)
 		{
-			if (strCaption != null)
-			{
-				// Already escaped by the SafeLinkTitlePrinter
-				aTitle = escAttrKeepCharRefs(strCaption);
-			}
-			else if (linkTarget != null)
-			{
+			// Already escaped by the SafeLinkTitlePrinter
+			aTitle = escAttrKeepCharRefs(strCaption);
+		}
+		else if (linkTarget != null)
+		{
+			if (!frameless || n.getLink().getTargetType() == LinkTargetType.PAGE)
 				aTitle = esc(makeImageTitle(n, linkTarget), true);
-			}
-			else if (linkUrl != null)
-			{
-				aTitle = escAttrKeepCharRefs(callback.makeUrl(linkUrl));
-			}
+		}
+		else if (linkUrl != null && !frameless)
+		{
+			aTitle = escAttrKeepCharRefs(callback.makeUrl(linkUrl));
 		}
 		if (!aTitle.isEmpty())
 			aTitle = String.format(" title=\"%s\"", aTitle);
@@ -628,6 +632,27 @@ public class HtmlRenderer
 			return;
 		}
 
+		// Like MediaWiki: A link to the rendered page is not rendered as link,
+		// no matter whether the page exists or not
+		if (target.equals(pageTitle))
+		{
+			if (n.hasTitle())
+			{
+				pt("<strong class=\"selflink\">%=%!%=</strong>",
+						n.getPrefix(),
+						n.getTitle(),
+						n.getPostfix());
+			}
+			else
+			{
+				pt("<strong class=\"selflink\">%=%=%=</strong>",
+						n.getPrefix(),
+						makeTitleFromTarget(n, target),
+						n.getPostfix());
+			}
+			return;
+		}
+
 		if (!callback.resourceExists(target))
 		{
 			String title = target.getDenormalizedFullTitle();
@@ -657,43 +682,23 @@ public class HtmlRenderer
 		}
 		else
 		{
-			if (!target.equals(pageTitle))
+			if (n.hasTitle())
 			{
-				if (n.hasTitle())
-				{
-					pt("<a href=\"%s\" title=\"%~\">%=%!%=</a>",
-							escAttrKeepCharRefs(callback.makeUrl(target)),
-							makeLinkTitle(n, target),
-							n.getPrefix(),
-							n.getTitle(),
-							n.getPostfix());
-				}
-				else
-				{
-					pt("<a href=\"%s\" title=\"%~\">%=%=%=</a>",
-							escAttrKeepCharRefs(callback.makeUrl(target)),
-							makeLinkTitle(n, target),
-							n.getPrefix(),
-							makeTitleFromTarget(n, target),
-							n.getPostfix());
-				}
+				pt("<a href=\"%s\" title=\"%~\">%=%!%=</a>",
+						escAttrKeepCharRefs(callback.makeUrl(target)),
+						makeLinkTitle(n, target),
+						n.getPrefix(),
+						n.getTitle(),
+						n.getPostfix());
 			}
 			else
 			{
-				if (n.hasTitle())
-				{
-					pt("<strong class=\"selflink\">%=%!%=</strong>",
-							n.getPrefix(),
-							n.getTitle(),
-							n.getPostfix());
-				}
-				else
-				{
-					pt("<strong class=\"selflink\">%=%=%=</strong>",
-							n.getPrefix(),
-							makeTitleFromTarget(n, target),
-							n.getPostfix());
-				}
+				pt("<a href=\"%s\" title=\"%~\">%=%=%=</a>",
+						escAttrKeepCharRefs(callback.makeUrl(target)),
+						makeLinkTitle(n, target),
+						n.getPrefix(),
+						makeTitleFromTarget(n, target),
+						n.getPostfix());
 			}
 		}
 	}
@@ -759,6 +764,44 @@ public class HtmlRenderer
 		iterate(n);
 		p.decIndent();
 		p.indentAtBol("</i>");
+	}
+
+	// Language conversion markup: The text is shown without conversion into a
+	// variant. Flags and rules produce no output.
+
+	public void visit(WtLctVarConv n)
+	{
+		dispatch(n.getText());
+	}
+
+	public void visit(WtLctRuleConv n)
+	{
+		// Rules only convert text into a variant
+	}
+
+	public void visit(WtLctFlags n)
+	{
+		// Produce no output
+	}
+
+	public void visit(WtLctRules n)
+	{
+		// Produce no output
+	}
+
+	public void visit(WtLctRule n)
+	{
+		// Produce no output
+	}
+
+	public void visit(WtLctRuleText n)
+	{
+		// Produce no output
+	}
+
+	public void visit(WtLctRuleGarbage n)
+	{
+		// Produce no output
 	}
 
 	@Override
@@ -866,21 +909,16 @@ public class HtmlRenderer
 
 	public void visit(WtParagraph n)
 	{
-		if (!containsPre(n))
-		{
-			printParagraph(n);
-			return;
-		}
-
-		// Like MediaWiki, close the paragraph in front of a <pre> and open a
-		// new one after it if there is anything left to wrap.
+		// Like MediaWiki, close the paragraph in front of block output (a
+		// <pre> or a block tag extension) and open a new one after it if there
+		// is anything left to wrap. Paragraphs without visible content are
+		// left out.
 		WtNodeList content = nf.list();
 		for (WtNode c : n)
 		{
-			if (isPre(c))
+			if (isBlockOutput(c))
 			{
-				if (!isBlank(content))
-					printParagraph(content);
+				printParagraph(content);
 				content = nf.list();
 				dispatch(c);
 			}
@@ -889,12 +927,14 @@ public class HtmlRenderer
 				content.add(c);
 			}
 		}
-		if (!isBlank(content))
-			printParagraph(content);
+		printParagraph(content);
 	}
 
 	private void printParagraph(WtNodeList content)
 	{
+		if (isInvisible(content))
+			return;
+
 		p.indentln("<p>");
 		p.incIndent();
 		iterate(content);
@@ -902,30 +942,44 @@ public class HtmlRenderer
 		p.indentln("</p>");
 	}
 
-	private static boolean containsPre(WtNodeList content)
-	{
-		for (WtNode c : content)
-		{
-			if (isPre(c))
-				return true;
-		}
-		return false;
-	}
-
 	/**
-	 * @return Whether the node is a {@code <pre>} tag, either as tag
-	 *         extension or as element created by the tag extension.
+	 * @return Whether the node is rendered as block: A {@code <pre>} tag
+	 *         (either as tag extension or as element created by the tag
+	 *         extension) or another tag extension with block output.
 	 */
-	private static boolean isPre(WtNode n)
+	private boolean isBlockOutput(WtNode n)
 	{
 		if (n instanceof WtTagExtension)
-			return ((WtTagExtension) n).getName().trim().equalsIgnoreCase("pre");
+			return isBlockTagExtension((WtTagExtension) n);
 		if (n instanceof WtXmlElement)
 			return ((WtXmlElement) n).getName().equalsIgnoreCase("pre");
 		return false;
 	}
 
-	private static boolean isBlank(WtNodeList content)
+	/**
+	 * @return Whether the tag extension is rendered as block, see
+	 *         {@link #visit(WtTagExtension)}.
+	 */
+	private boolean isBlockTagExtension(WtTagExtension n)
+	{
+		String name = getTagExtensionName(n);
+		if (isHiddenTagExtension(n)
+				|| name.equals("nowiki")
+				|| INLINE_TAG_EXTENSIONS.contains(name))
+			return false;
+
+		if (CODE_TAG_EXTENSIONS.contains(name))
+			return getTagExtensionAttribute(n, "inline") == null;
+
+		return true;
+	}
+
+	/**
+	 * @return Whether the content does not render anything visible, e.g. if
+	 *         it only consists of whitespace, comments, behavior switches or
+	 *         category links.
+	 */
+	private boolean isInvisible(WtNodeList content)
 	{
 		for (WtNode c : content)
 		{
@@ -934,12 +988,47 @@ public class HtmlRenderer
 				if (!((WtText) c).getContent().trim().isEmpty())
 					return false;
 			}
-			else if (!(c instanceof WtNewline))
+			else if (c instanceof WtTagExtension)
+			{
+				if (!isHiddenTagExtension((WtTagExtension) c))
+					return false;
+			}
+			else if (c instanceof WtInternalLink)
+			{
+				if (!isCategoryLink((WtInternalLink) c))
+					return false;
+			}
+			else if (!(c instanceof WtNewline
+					|| c instanceof WtWhitespace
+					|| c instanceof WtIgnored
+					|| c instanceof WtXmlComment
+					|| c instanceof WtPageSwitch))
 			{
 				return false;
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * @return Whether the link puts the page into a category. Those links are
+	 *         not rendered.
+	 */
+	private boolean isCategoryLink(WtInternalLink n)
+	{
+		if (!n.getTarget().isResolved())
+			return false;
+
+		try
+		{
+			PageTitle target = PageTitle.make(wikiConfig, n.getTarget().getAsString());
+			return target.getNamespace() == wikiConfig.getNamespace("Category")
+					&& !target.hasInitialColon();
+		}
+		catch (LinkTargetException e)
+		{
+			return false;
+		}
 	}
 
 	@Override
@@ -1104,53 +1193,15 @@ public class HtmlRenderer
 		iterate(n.getBody());
 	}
 
-	/**
-	 * Tag extensions which do not show up in the page output.
-	 */
-	private static final Set<String> INVISIBLE_TAG_EXTENSIONS = setOf(
-			"categorytree",
-			"indicator",
-			"inputbox",
-			"section",
-			"templatedata",
-			"templatestyles");
-
-	/**
-	 * Tag extensions whose body is code and rendered as preformatted text.
-	 */
-	private static final Set<String> CODE_TAG_EXTENSIONS = setOf(
-			"graph",
-			"score",
-			"source",
-			"syntaxhighlight",
-			"timeline");
-
-	/**
-	 * Tag extensions which produce inline content.
-	 */
-	private static final Set<String> INLINE_TAG_EXTENSIONS = setOf(
-			"ce",
-			"charinsert",
-			"chem",
-			"hiero",
-			"langconvert",
-			"maplink",
-			"math");
-
 	public void visit(WtTagExtension n)
 	{
-		String name = n.getName().trim().toLowerCase();
-
-		// TODO: Should not get skipped!
-		if (name.equals("ref") || name.equals("references"))
-			return;
-
 		// Tag extensions that were not expanded (e.g. because there is no
 		// implementation for them): Keep the body visible but never interpret
 		// it as wikitext or HTML.
-		if (!n.hasBody() || INVISIBLE_TAG_EXTENSIONS.contains(name))
+		if (isHiddenTagExtension(n))
 			return;
 
+		String name = getTagExtensionName(n);
 		if (name.equals("pre"))
 		{
 			printPre(
@@ -1232,14 +1283,6 @@ public class HtmlRenderer
 		if (name == null)
 			return "";
 		return name.toLowerCase().replaceAll("[^a-z0-9_-]", "");
-	}
-
-	private static Set<String> setOf(String... names)
-	{
-		Set<String> set = new HashSet<String>();
-		for (String name : names)
-			set.add(name);
-		return set;
 	}
 
 	@Override
@@ -1393,8 +1436,20 @@ public class HtmlRenderer
 			return;
 		}
 
-		if (!VOID_ELEMENTS.contains(name.toLowerCase())
-				&& (!n.hasBody() || isSelfClosing(n)))
+		if (VOID_ELEMENTS.contains(name.toLowerCase()))
+		{
+			// Void elements have no content. If the tree builder moved the
+			// following content into the element, that content is rendered
+			// after the element.
+			p.indentAtBol();
+			pt("<%s%! />", name, attribs);
+
+			if (n.hasBody())
+				dispatch(n.getBody());
+			return;
+		}
+
+		if (!n.hasBody() || isSelfClosing(n))
 		{
 			// Like MediaWiki: A self-closing tag of a non-void element becomes
 			// an empty element. Browsers would treat it as a start tag. If the
@@ -1415,7 +1470,7 @@ public class HtmlRenderer
 			if (n.hasBody())
 				dispatch(n.getBody());
 		}
-		else if (n.hasBody())
+		else
 		{
 			if (blockElements.contains(name.toLowerCase()))
 			{
@@ -1439,11 +1494,6 @@ public class HtmlRenderer
 				p.indentAtBol();
 				pf("</%s>", name);
 			}
-		}
-		else
-		{
-			p.indentAtBol();
-			pt("<%s%! />", name, attribs);
 		}
 	}
 
@@ -1543,7 +1593,7 @@ public class HtmlRenderer
 			{
 				String content = ((WtText) c).getContent();
 				content = NOWIKI_TAGS.matcher(content).replaceAll("$1");
-				printPreformatted(escTextKeepCharRefs(content));
+				printPreformatted(escTextKeepValidCharRefs(content));
 			}
 			else
 			{
@@ -1563,7 +1613,7 @@ public class HtmlRenderer
 	private void printNowiki(String content)
 	{
 		String html = LANG_CONVERTER_MARKUP
-				.matcher(escTextKeepCharRefs(content))
+				.matcher(escTextKeepValidCharRefs(content))
 				.replaceAll(m -> m.group().equals("-{") ? "-&#123;" : "&#125;-");
 
 		if (inPre > 0)
@@ -1666,18 +1716,22 @@ public class HtmlRenderer
 	}
 	*/
 
+	/**
+	 * Like MediaWiki show markup which was not expanded or resolved (e.g. a
+	 * template or a template parameter) as text.
+	 */
 	private void printAsWikitext(WtNode n)
 	{
-		// TODO: Implement
-		//throw new FmtNotYetImplementedError();
-		//p.indentAtBol();
+		wrapText(toWikitext(n));
 	}
 
-	private String toWikitext(WtNode value)
+	/**
+	 * Escapes text but keeps valid character references. Like in normal text
+	 * invalid character references are escaped.
+	 */
+	private String escTextKeepValidCharRefs(String content)
 	{
-		// TODO: Implement
-		//throw new FmtNotYetImplementedError();
-		return "";
+		return HtmlSanitizer.escapeTextKeepingValidCharRefs(content, wikiConfig.getParserConfig());
 	}
 
 	// =====================================================================
@@ -1901,7 +1955,7 @@ public class HtmlRenderer
 		}
 		catch (StringConversionException e)
 		{
-			return toWikitext(value);
+			return StringTools.collapseWhitespace(toWikitext(value)).trim();
 		}
 	}
 
@@ -2024,9 +2078,6 @@ public class HtmlRenderer
 	private boolean inSemiPre = false;
 
 	private boolean semiPreLineStart = false;
-
-	private static final Pattern NOWIKI_TAGS =
-			Pattern.compile("<nowiki>(.*?)</nowiki>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 	private static final Pattern LANG_CONVERTER_MARKUP = Pattern.compile("-\\{|\\}-");
 

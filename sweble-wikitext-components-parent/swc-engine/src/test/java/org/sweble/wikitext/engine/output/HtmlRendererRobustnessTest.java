@@ -27,7 +27,9 @@ import org.junit.Test;
 import org.sweble.wikitext.engine.PageId;
 import org.sweble.wikitext.engine.PageTitle;
 import org.sweble.wikitext.engine.WtEngineImpl;
+import org.sweble.wikitext.engine.config.ParserConfigImpl;
 import org.sweble.wikitext.engine.config.WikiConfig;
+import org.sweble.wikitext.engine.config.WikiConfigImpl;
 import org.sweble.wikitext.engine.nodes.EngProcessedPage;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
 import org.sweble.wikitext.engine.utils.UrlEncoding;
@@ -259,6 +261,74 @@ public class HtmlRendererRobustnessTest
 	}
 
 	// =========================================================================
+	// Language conversion markup (issue #136)
+	// =========================================================================
+
+	@Test
+	public void testLanguageConversionShowsTextWithoutConversion() throws Exception
+	{
+		String html = render("a -{foo}- b -{R|bar}- c");
+
+		assertEquals("a foo b bar c", toText(html));
+	}
+
+	@Test
+	public void testLanguageConversionInHeadingAndCaption() throws Exception
+	{
+		assertContains(render("== x -{y}- ==\nText"), "id=\"x_y\"");
+		assertContains(render("[[File:X.png|-{cap}-]]"), "alt=\"cap\"");
+	}
+
+	@Test
+	public void testLanguageConversionFlagsAndRulesProduceNothing() throws Exception
+	{
+		// The parser only knows variants which are registered with their
+		// upper case names
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+		ParserConfigImpl pc = (ParserConfigImpl) config.getParserConfig();
+		pc.addLctVariantMapping("ZH-HANS", "ZH-HANS");
+		pc.addLctVariantMapping("ZH-HANT", "ZH-HANT");
+
+		String html = render(config, "a -{zh-hans:X;zh-hant:Y}- b -{zh-hans|c}- d");
+		assertEquals("a b c d", toText(html));
+
+		html = render(config, "== a -{zh-hans:X;zh-hant:Y}- -{zh-hans|c}- ==\nText");
+		assertContains(html, "id=\"a_c\"");
+	}
+
+	// =========================================================================
+	// Links to the rendered page (issue #136)
+	// =========================================================================
+
+	@Test
+	public void testSelfLinkToMissingPage() throws Exception
+	{
+		String html = render("[[Example]] [[Example|X]]");
+
+		assertContains(html, "<strong class=\"selflink\">Example</strong>");
+		assertContains(html, "<strong class=\"selflink\">X</strong>");
+		assertFalse(html, html.contains("class=\"new\""));
+	}
+
+	// =========================================================================
+	// Tag extensions in image captions (issue #136)
+	// =========================================================================
+
+	@Test
+	public void testTagExtensionsInInlineImageCaption() throws Exception
+	{
+		String html = render("[[File:X.png|<nowiki>a</nowiki> b<ref>r</ref> <syntaxhighlight lang=\"x\" inline>c</syntaxhighlight>]]");
+
+		assertContains(html, "alt=\"a b c\"");
+		assertContains(html, "title=\"a b c\"");
+	}
+
+	// =========================================================================
+
+	private static String toText(String html)
+	{
+		return html.replaceAll("<[^>]*>", "").replaceAll("\\s+", " ").trim();
+	}
 
 	private static void assertContains(String html, String expected)
 	{
@@ -274,7 +344,11 @@ public class HtmlRendererRobustnessTest
 
 	private static String render(String wikitext) throws Exception
 	{
-		WikiConfig config = DefaultConfigEnWp.generate();
+		return render(DefaultConfigEnWp.generate(), wikitext);
+	}
+
+	private static String render(WikiConfig config, String wikitext) throws Exception
+	{
 		WtEngineImpl engine = new WtEngineImpl(config);
 
 		PageTitle pageTitle = PageTitle.make(config, "Example");

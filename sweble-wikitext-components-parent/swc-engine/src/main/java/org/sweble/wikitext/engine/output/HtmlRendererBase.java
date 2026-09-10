@@ -18,9 +18,14 @@ package org.sweble.wikitext.engine.output;
 
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.sweble.wikitext.engine.utils.EngineRtDataPrettyPrinter;
 import org.sweble.wikitext.parser.nodes.WtNode;
+import org.sweble.wikitext.parser.nodes.WtTagExtension;
 import org.sweble.wikitext.parser.nodes.WtXmlCharRef;
 import org.sweble.wikitext.parser.nodes.WtXmlEntityRef;
 
@@ -32,6 +37,42 @@ public class HtmlRendererBase
 		extends
 			AstVisitor<WtNode>
 {
+	/**
+	 * Tag extensions which do not show up in the page output.
+	 */
+	protected static final Set<String> INVISIBLE_TAG_EXTENSIONS = setOf(
+			"categorytree",
+			"indicator",
+			"inputbox",
+			"section",
+			"templatedata",
+			"templatestyles");
+
+	/**
+	 * Tag extensions whose body is code and rendered as preformatted text.
+	 */
+	protected static final Set<String> CODE_TAG_EXTENSIONS = setOf(
+			"graph",
+			"score",
+			"source",
+			"syntaxhighlight",
+			"timeline");
+
+	/**
+	 * Tag extensions which produce inline content.
+	 */
+	protected static final Set<String> INLINE_TAG_EXTENSIONS = setOf(
+			"ce",
+			"charinsert",
+			"chem",
+			"hiero",
+			"langconvert",
+			"maplink",
+			"math");
+
+	protected static final Pattern NOWIKI_TAGS =
+			Pattern.compile("<nowiki>(.*?)</nowiki>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
 	protected final PrinterBase p;
 
 	// =========================================================================
@@ -96,6 +137,47 @@ public class HtmlRendererBase
 	protected static String capitalize(String text)
 	{
 		return StringUtils.capitalize(text);
+	}
+
+	/**
+	 * The wikitext of the given node. Used for markup which was not expanded
+	 * or resolved, like a template or a template parameter.
+	 */
+	protected static String toWikitext(WtNode n)
+	{
+		return EngineRtDataPrettyPrinter.print(n);
+	}
+
+	protected static Set<String> setOf(String... names)
+	{
+		Set<String> set = new HashSet<String>();
+		for (String name : names)
+			set.add(name);
+		return set;
+	}
+
+	// =========================================================================
+
+	/**
+	 * @return The lower case name of the tag extension.
+	 */
+	protected static String getTagExtensionName(WtTagExtension n)
+	{
+		return n.getName().trim().toLowerCase();
+	}
+
+	/**
+	 * Whether the tag extension shows up in the page output: Tag extensions
+	 * without body, references and invisible tag extensions don't.
+	 */
+	protected static boolean isHiddenTagExtension(WtTagExtension n)
+	{
+		// TODO: References should not get skipped!
+		String name = getTagExtensionName(n);
+		return !n.hasBody()
+				|| name.equals("ref")
+				|| name.equals("references")
+				|| INVISIBLE_TAG_EXTENSIONS.contains(name);
 	}
 
 	// =========================================================================

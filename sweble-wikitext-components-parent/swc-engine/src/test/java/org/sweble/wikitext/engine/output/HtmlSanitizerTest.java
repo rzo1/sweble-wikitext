@@ -204,6 +204,29 @@ public class HtmlSanitizerTest
 	}
 
 	@Test
+	public void testEscapeKeepingValidCharRefs()
+	{
+		XmlEntityResolver resolver = new XmlEntityResolver()
+		{
+			@Override
+			public String resolveXmlEntity(String name)
+			{
+				return name.equals("eacute") ? "é" : null;
+			}
+		};
+
+		assertEquals(
+				"&amp;#0; &amp;#xD800; &amp;#99999999999; &amp;#x7F; &amp;foo; &amp; &#65; &#x3C; &nbsp; &eacute; \"&lt;",
+				HtmlSanitizer.escapeTextKeepingValidCharRefs(
+						"&#0; &#xD800; &#99999999999; &#x7F; &foo; &amp; &#65; &#x3C; &nbsp; &eacute; \"<",
+						resolver));
+		assertEquals(
+				"&amp;#0; &amp;eacute; &amp; &#65; &quot;",
+				HtmlSanitizer.escapeAttributeKeepingValidCharRefs("&#0; &eacute; &amp; &#65; \"", null));
+		assertEquals("", HtmlSanitizer.escapeTextKeepingValidCharRefs(null, resolver));
+	}
+
+	@Test
 	public void testDecodeCharReferencesWithResolver()
 	{
 		XmlEntityResolver resolver = new XmlEntityResolver()

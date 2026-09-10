@@ -133,6 +133,49 @@ public class HtmlRendererHeadingIdTest
 	}
 
 	@Test
+	public void testCategoryLinkWithLeadingColonContributesItsText() throws Exception
+	{
+		// Issue #136
+		assertHeadingIds("== [[:Category:X]] ==\nText", "Category:X");
+	}
+
+	@Test
+	public void testNowikiContributesItsText() throws Exception
+	{
+		// Issue #136
+		assertHeadingIds("== <nowiki>a b</nowiki> ==\nText", "a_b");
+		assertContains(render("== <nowiki>&amp;</nowiki> ==\nText"), "id=\"&amp;\"");
+	}
+
+	@Test
+	public void testCodeAndPreTagExtensionsContributeTheirText() throws Exception
+	{
+		// Issue #136
+		assertHeadingIds(
+				"== <syntaxhighlight lang=\"x\" inline>y z</syntaxhighlight> <pre>p</pre> ==\nText",
+				"y_z_p");
+	}
+
+	@Test
+	public void testReferencesAndInvisibleTagExtensionsAreIgnored() throws Exception
+	{
+		// Issue #136
+		assertHeadingIds(
+				"== a<ref>r</ref> <references/> <templatestyles src=\"x\"/> ==\nText",
+				"a");
+	}
+
+	@Test
+	public void testUnexpandedTemplatesAreKeptAsWikitext() throws Exception
+	{
+		// Issue #136
+		String html = render("== {{foo}} {{{1}}} ==\nText");
+
+		assertHeadingIds(html, Arrays.asList("{{foo}}_{{{1}}}"));
+		assertContains(html, "> {{foo}} {{{1}}} </span></h2>");
+	}
+
+	@Test
 	public void testEntitiesAreDecoded() throws Exception
 	{
 		assertHeadingIds(

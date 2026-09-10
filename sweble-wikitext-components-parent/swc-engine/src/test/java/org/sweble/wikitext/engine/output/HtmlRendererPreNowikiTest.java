@@ -88,6 +88,14 @@ public class HtmlRendererPreNowikiTest
 	}
 
 	@Test
+	public void testInvalidCharRefsInPreAreEscaped() throws Exception
+	{
+		// Issue #136: Like in normal text
+		for (String html : renderBoth("<pre>&#0; &#xD800; &#99999999999; &foo; &amp; &#65; &nbsp;</pre>"))
+			assertContains(html, "<pre>&amp;#0; &amp;#xD800; &amp;#99999999999; &amp;foo; &amp; &#65; &nbsp;</pre>");
+	}
+
+	@Test
 	public void testBlankLinesInPreAreKept() throws Exception
 	{
 		for (String html : renderBoth("<pre>a\n\n\nb\n</pre>"))
@@ -149,6 +157,14 @@ public class HtmlRendererPreNowikiTest
 	{
 		for (String html : renderBoth("<nowiki>-{a}-</nowiki>"))
 			assertContains(html, "-&#123;a&#125;-");
+	}
+
+	@Test
+	public void testInvalidCharRefsInNowikiAreEscaped() throws Exception
+	{
+		// Issue #136: Like in normal text
+		for (String html : renderBoth("x <nowiki>&#0; &#xD800; &foo; &amp; &#65; &nbsp;</nowiki> y"))
+			assertContains(html, "x &amp;#0; &amp;#xD800; &amp;foo; &amp; &#65; &nbsp; y");
 	}
 
 	@Test
