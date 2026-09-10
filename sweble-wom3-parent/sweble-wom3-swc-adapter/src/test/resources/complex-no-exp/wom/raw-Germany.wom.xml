@@ -2193,112 +2193,115 @@
                      <rtd>]]</rtd>
                   </image>
                   <text>
-The </text>
-                  <intlink target="ethnogenesis">
-                     <rtd>[[ethnogenesis]]</rtd>
-                  </intlink>
-                  <text> of the </text>
-                  <intlink target="Germanic peoples">
-                     <rtd>[[Germanic peoples</rtd>
-                     <title>
-                        <rtd>|</rtd>
-                        <text>Germanic tribes</text>
-                     </title>
-                     <rtd>]]</rtd>
-                  </intlink>
-                  <text> is assumed to have occurred during the </text>
-                  <intlink target="Nordic Bronze Age">
-                     <rtd>[[Nordic Bronze Age]]</rtd>
-                  </intlink>
-                  <text>, or at the latest during the </text>
-                  <intlink target="Pre-Roman Iron Age">
-                     <rtd>[[Pre-Roman Iron Age]]</rtd>
-                  </intlink>
-                  <text>. From southern Scandinavia and northern Germany, the tribes began expanding south, east and west in the 1st century</text>
-                  <subst>
-                     <repl>
-                        <text> </text>
-                     </repl>
-                     <for>
-                        <mww:xml-entity-ref name="nbsp">
-                           <rtd>&amp;nbsp;</rtd>
-                        </mww:xml-entity-ref>
-                     </for>
-                  </subst>
-                  <text>BC, coming into contact with the </text>
-                  <subst>
-                     <repl>
-                        <intlink target="Celt">
-                           <title>
-                              <text>Celtic</text>
-                           </title>
-                        </intlink>
-                     </repl>
-                     <for>
-                        <mww:intlink target="Celt" postfix="ic">
-                           <rtd>[[Celt]]ic</rtd>
-                        </mww:intlink>
-                     </for>
-                  </subst>
-                  <text> tribes of </text>
-                  <intlink target="Gaul">
-                     <rtd>[[Gaul]]</rtd>
-                  </intlink>
-                  <text> as well as </text>
-                  <intlink target="Iranian peoples">
-                     <rtd>[[Iranian peoples</rtd>
-                     <title>
-                        <rtd>|</rtd>
-                        <text>Iranian</text>
-                     </title>
-                     <rtd>]]</rtd>
-                  </intlink>
-                  <text>, </text>
-                  <intlink target="Balts">
-                     <rtd>[[Balts</rtd>
-                     <title>
-                        <rtd>|</rtd>
-                        <text>Baltic</text>
-                     </title>
-                     <rtd>]]</rtd>
-                  </intlink>
-                  <text>, and </text>
-                  <intlink target="Slavic peoples">
-                     <rtd>[[Slavic peoples</rtd>
-                     <title>
-                        <rtd>|</rtd>
-                        <text>Slavic</text>
-                     </title>
-                     <rtd>]]</rtd>
-                  </intlink>
-                  <text> tribes in </text>
-                  <intlink target="Eastern Europe">
-                     <rtd>[[Eastern Europe]]</rtd>
-                  </intlink>
-                  <text>. Little is known about early Germanic history, except through their recorded interactions with the </text>
-                  <intlink target="Roman Empire">
-                     <rtd>[[Roman Empire]]</rtd>
-                  </intlink>
-                  <text>, etymological research and archaeological finds.</text>
-                  <mww:tagext name="ref">
-                     <rtd>&lt;ref</rtd>
-                     <mww:attr>
-                        <rtd> </rtd>
-                        <mww:name>
-                           <text>name</text>
-                        </mww:name>
-                        <rtd>="</rtd>
-                        <mww:value>
-                           <text>Claster</text>
-                        </mww:value>
-                        <rtd>"</rtd>
-                     </mww:attr>
-                     <rtd>&gt;</rtd>
-                     <mww:tagext-body>
-                        <text>{{cite book | first = Jill N. | last = Claster | title = Medieval Experience: 300–1400 | publisher = [[New York University Press]] | year = 1982 | page = 35 | isbn=0-8147-1381-5 }}</text>
-                     </mww:tagext-body>
-                     <rtd>&lt;/ref&gt;</rtd>
-                  </mww:tagext>
+</text>
+                  <p topgap="0" bottomgap="0">
+                     <text>The </text>
+                     <intlink target="ethnogenesis">
+                        <rtd>[[ethnogenesis]]</rtd>
+                     </intlink>
+                     <text> of the </text>
+                     <intlink target="Germanic peoples">
+                        <rtd>[[Germanic peoples</rtd>
+                        <title>
+                           <rtd>|</rtd>
+                           <text>Germanic tribes</text>
+                        </title>
+                        <rtd>]]</rtd>
+                     </intlink>
+                     <text> is assumed to have occurred during the </text>
+                     <intlink target="Nordic Bronze Age">
+                        <rtd>[[Nordic Bronze Age]]</rtd>
+                     </intlink>
+                     <text>, or at the latest during the </text>
+                     <intlink target="Pre-Roman Iron Age">
+                        <rtd>[[Pre-Roman Iron Age]]</rtd>
+                     </intlink>
+                     <text>. From southern Scandinavia and northern Germany, the tribes began expanding south, east and west in the 1st century</text>
+                     <subst>
+                        <repl>
+                           <text> </text>
+                        </repl>
+                        <for>
+                           <mww:xml-entity-ref name="nbsp">
+                              <rtd>&amp;nbsp;</rtd>
+                           </mww:xml-entity-ref>
+                        </for>
+                     </subst>
+                     <text>BC, coming into contact with the </text>
+                     <subst>
+                        <repl>
+                           <intlink target="Celt">
+                              <title>
+                                 <text>Celtic</text>
+                              </title>
+                           </intlink>
+                        </repl>
+                        <for>
+                           <mww:intlink target="Celt" postfix="ic">
+                              <rtd>[[Celt]]ic</rtd>
+                           </mww:intlink>
+                        </for>
+                     </subst>
+                     <text> tribes of </text>
+                     <intlink target="Gaul">
+                        <rtd>[[Gaul]]</rtd>
+                     </intlink>
+                     <text> as well as </text>
+                     <intlink target="Iranian peoples">
+                        <rtd>[[Iranian peoples</rtd>
+                        <title>
+                           <rtd>|</rtd>
+                           <text>Iranian</text>
+                        </title>
+                        <rtd>]]</rtd>
+                     </intlink>
+                     <text>, </text>
+                     <intlink target="Balts">
+                        <rtd>[[Balts</rtd>
+                        <title>
+                           <rtd>|</rtd>
+                           <text>Baltic</text>
+                        </title>
+                        <rtd>]]</rtd>
+                     </intlink>
+                     <text>, and </text>
+                     <intlink target="Slavic peoples">
+                        <rtd>[[Slavic peoples</rtd>
+                        <title>
+                           <rtd>|</rtd>
+                           <text>Slavic</text>
+                        </title>
+                        <rtd>]]</rtd>
+                     </intlink>
+                     <text> tribes in </text>
+                     <intlink target="Eastern Europe">
+                        <rtd>[[Eastern Europe]]</rtd>
+                     </intlink>
+                     <text>. Little is known about early Germanic history, except through their recorded interactions with the </text>
+                     <intlink target="Roman Empire">
+                        <rtd>[[Roman Empire]]</rtd>
+                     </intlink>
+                     <text>, etymological research and archaeological finds.</text>
+                     <mww:tagext name="ref">
+                        <rtd>&lt;ref</rtd>
+                        <mww:attr>
+                           <rtd> </rtd>
+                           <mww:name>
+                              <text>name</text>
+                           </mww:name>
+                           <rtd>="</rtd>
+                           <mww:value>
+                              <text>Claster</text>
+                           </mww:value>
+                           <rtd>"</rtd>
+                        </mww:attr>
+                        <rtd>&gt;</rtd>
+                        <mww:tagext-body>
+                           <text>{{cite book | first = Jill N. | last = Claster | title = Medieval Experience: 300–1400 | publisher = [[New York University Press]] | year = 1982 | page = 35 | isbn=0-8147-1381-5 }}</text>
+                        </mww:tagext-body>
+                        <rtd>&lt;/ref&gt;</rtd>
+                     </mww:tagext>
+                  </p>
                   <text>
 
 </text>
@@ -9979,27 +9982,30 @@ This had devastating effects on the </text>
                      <rtd>]]</rtd>
                   </image>
                   <text>
-Germany's achievements in sciences have been significant and </text>
-                  <intlink target="research and development">
-                     <rtd>[[research and development]]</rtd>
-                  </intlink>
-                  <text> efforts form an integral part of the </text>
-                  <intlink target="Economy of Germany">
-                     <rtd>[[Economy of Germany</rtd>
-                     <title>
-                        <rtd>|</rtd>
-                        <text>country's economy</text>
-                     </title>
-                     <rtd>]]</rtd>
-                  </intlink>
-                  <text>. Germany has been the home of some of the most prominent researchers in various scientific fields.</text>
-                  <mww:tagext name="ref">
-                     <rtd>&lt;ref&gt;</rtd>
-                     <mww:tagext-body>
-                        <text>[http://www.campus-germany.de/english/2.60.260.html Back to the Future: Germany – A Country of Research] German Academic Exchange Service (23 February 2005). Retrieved 8 December 2006.</text>
-                     </mww:tagext-body>
-                     <rtd>&lt;/ref&gt;</rtd>
-                  </mww:tagext>
+</text>
+                  <p topgap="0" bottomgap="0">
+                     <text>Germany's achievements in sciences have been significant and </text>
+                     <intlink target="research and development">
+                        <rtd>[[research and development]]</rtd>
+                     </intlink>
+                     <text> efforts form an integral part of the </text>
+                     <intlink target="Economy of Germany">
+                        <rtd>[[Economy of Germany</rtd>
+                        <title>
+                           <rtd>|</rtd>
+                           <text>country's economy</text>
+                        </title>
+                        <rtd>]]</rtd>
+                     </intlink>
+                     <text>. Germany has been the home of some of the most prominent researchers in various scientific fields.</text>
+                     <mww:tagext name="ref">
+                        <rtd>&lt;ref&gt;</rtd>
+                        <mww:tagext-body>
+                           <text>[http://www.campus-germany.de/english/2.60.260.html Back to the Future: Germany – A Country of Research] German Academic Exchange Service (23 February 2005). Retrieved 8 December 2006.</text>
+                        </mww:tagext-body>
+                        <rtd>&lt;/ref&gt;</rtd>
+                     </mww:tagext>
+                  </p>
                   <text>
 
 </text>
