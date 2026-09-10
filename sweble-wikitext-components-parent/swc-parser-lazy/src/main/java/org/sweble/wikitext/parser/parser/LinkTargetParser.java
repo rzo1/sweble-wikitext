@@ -17,6 +17,11 @@
 
 package org.sweble.wikitext.parser.parser;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -305,14 +310,85 @@ public class LinkTargetParser
 		return result;
 	}
 
-	private static String urlDecode(String text)
+	/**
+	 * Decodes percent encoded characters like PHP's rawurldecode(), which is
+	 * what MediaWiki applies to link targets containing a '%' character. Runs
+	 * of consecutive percent encoded bytes are decoded as UTF-8. Invalid
+	 * UTF-8 sequences are replaced with U+FFFD and will render the title
+	 * invalid, just like MediaWiki rejects titles containing invalid UTF-8.
+	 * Unlike urldecode(), '+' characters are not converted into spaces.
+	 */
+	static String urlDecode(String text)
 	{
-		// It's intentional that only '%' characters trigger the decoding.
-		// MediaWiki does not decode '+' characters if there's not at least
-		// one '%' character :D
-		if (text.indexOf('%') >= 0)
-			return StringTools.urlDecode(text);
-		return text;
+		int i = text.indexOf('%');
+		if (i < 0)
+			return text;
+
+		CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+				.onMalformedInput(CodingErrorAction.REPLACE)
+				.onUnmappableCharacter(CodingErrorAction.REPLACE);
+
+		StringBuilder b = new StringBuilder(text.length());
+		b.append(text, 0, i);
+
+		ByteBuffer bytes = ByteBuffer.allocate(text.length() / 3);
+		while (i < text.length())
+		{
+			char ch = text.charAt(i);
+			if (ch == '%' && isPercentEscape(text, i))
+			{
+				bytes.put((byte) ((hexValue(text.charAt(i + 1)) << 4) | hexValue(text.charAt(i + 2))));
+				i += 3;
+			}
+			else
+			{
+				flushBytes(decoder, bytes, b);
+				b.append(ch);
+				++i;
+			}
+		}
+		flushBytes(decoder, bytes, b);
+
+		return b.toString();
+	}
+
+	private static boolean isPercentEscape(String text, int i)
+	{
+		return (i + 2 < text.length()) &&
+				(hexValue(text.charAt(i + 1)) >= 0) &&
+				(hexValue(text.charAt(i + 2)) >= 0);
+	}
+
+	private static int hexValue(char ch)
+	{
+		if (ch >= '0' && ch <= '9')
+			return ch - '0';
+		if (ch >= 'a' && ch <= 'f')
+			return ch - 'a' + 10;
+		if (ch >= 'A' && ch <= 'F')
+			return ch - 'A' + 10;
+		return -1;
+	}
+
+	private static void flushBytes(
+			CharsetDecoder decoder,
+			ByteBuffer bytes,
+			StringBuilder b)
+	{
+		if (bytes.position() == 0)
+			return;
+
+		bytes.flip();
+		try
+		{
+			b.append(decoder.decode(bytes));
+		}
+		catch (CharacterCodingException e)
+		{
+			// Cannot happen, malformed input is replaced
+			throw new AssertionError(e);
+		}
+		bytes.clear();
 	}
 
 	private static String xmlDecode(ParserConfig config, String text)
