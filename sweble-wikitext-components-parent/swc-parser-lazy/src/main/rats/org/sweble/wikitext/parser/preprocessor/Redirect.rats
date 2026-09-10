@@ -37,6 +37,36 @@ body
     WtPageName target;
     String rt1;
   }
+
+  /**
+   * Like MediaWiki (WikitextContentHandler::extractRedirectTargetAndText()
+   * and Title::isValidRedirectTarget()) the target has to be a valid title.
+   * Relative section links are not valid redirect targets.
+   */
+  private boolean isValidRedirectTarget(WtPageName target)
+  {
+    if (!target.isResolved())
+      return false;
+
+    ParserConfig config = getState().getConfig();
+    String title = target.getAsString();
+
+    if (config.classifyTarget(title) == org.sweble.wikitext.parser.parser.LinkBuilder.LinkType.INVALID)
+      return false;
+
+    org.sweble.wikitext.parser.parser.LinkTargetParser ltp =
+        new org.sweble.wikitext.parser.parser.LinkTargetParser();
+    try
+    {
+      ltp.parse(config, title);
+    }
+    catch (org.sweble.wikitext.parser.parser.LinkTargetException e)
+    {
+      return false;
+    }
+
+    return !ltp.getTitle().isEmpty();
+  }
 }
 
 
@@ -46,6 +76,7 @@ body
 
 WtNode Redirect =
   ws0:pWsStar keyword:RedirectKeyword &{ isRedirectKeyword(keyword) } rt0:":"? ws1:pWsStar target:RedirectLink
+  &{ isValidRedirectTarget(target.target) }
   {
     yyValue = setRtd(
       nf.redirect(target.target),

@@ -19,6 +19,7 @@ package org.sweble.wikitext.parser.parser;
 
 import java.util.ArrayList;
 import java.util.ListIterator;
+import java.util.regex.Pattern;
 
 import org.sweble.wikitext.parser.ImageLinkOptionAliases;
 import org.sweble.wikitext.parser.ParserConfig;
@@ -39,6 +40,23 @@ import de.fau.cs.osr.ptk.common.Warning;
 
 public class LinkBuilder
 {
+	/**
+	 * PHP's is_numeric() applied to a trimmed string.
+	 */
+	private static final Pattern NUMERIC_PATTERN = Pattern.compile(
+			"[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?");
+
+	private static final Pattern PAGE_NUMBER_PATTERN = Pattern.compile(
+			"[1-9][0-9]{0,17}");
+
+	/**
+	 * Approximates MediaWiki's LanguageCode::isWellFormedLanguageTag().
+	 */
+	private static final Pattern LANGUAGE_TAG_PATTERN = Pattern.compile(
+			"(?:[A-Za-z]{2,8}|[xXiI])(?:-[A-Za-z0-9]{1,8})*");
+
+	// =========================================================================
+
 	private final WtPageName target;
 
 	// -- format
@@ -140,6 +158,48 @@ public class LinkBuilder
 	}
 
 	/**
+	 * Whether name and value form a parameterized option other than the
+	 * size, link target and alt text options (e.g. {@code "upright=1.5"}).
+	 * Like MediaWiki the option has to be an alias with the value in place of
+	 * {@code $1} and the value has to be valid for the option. Otherwise the
+	 * option is a caption.
+	 *
+	 * @param name
+	 *            The name of the option including the separator, which is
+	 *            either {@code '='} or {@code ' '} (e.g. {@code "upright="} or
+	 *            {@code "page "}).
+	 * @param value
+	 *            The value of the option without trailing whitespace.
+	 */
+	public boolean isValueOption(String name, String value)
+	{
+		String id = resolveOptionId(name + "$1");
+		if (id == null)
+			return false;
+
+		switch (id)
+		{
+			case ImageLinkOptionAliases.IMG_WIDTH:
+			case ImageLinkOptionAliases.IMG_LINK:
+			case ImageLinkOptionAliases.IMG_ALT:
+				// Parsed as options of their own
+				return false;
+			case ImageLinkOptionAliases.IMG_CLASS:
+			case ImageLinkOptionAliases.IMG_MANUALTHUMB:
+				return true;
+			case ImageLinkOptionAliases.IMG_LANG:
+				// MediaWiki only accepts well-formed language tags
+				return LANGUAGE_TAG_PATTERN.matcher(value).matches();
+			case ImageLinkOptionAliases.IMG_PAGE:
+				// Like MediaWiki's DjVuHandler: A positive integer
+				return PAGE_NUMBER_PATTERN.matcher(value.trim()).matches();
+			default:
+				// Like MediaWiki: Most other things are numeric
+				return NUMERIC_PATTERN.matcher(value.trim()).matches();
+		}
+	}
+
+	/**
 	 * Resolves an image link option alias using the parser configuration and
 	 * falls back to the English aliases.
 	 */
@@ -153,9 +213,14 @@ public class LinkBuilder
 
 	public void addOption(WtLinkOptionKeyword option)
 	{
-		String id = resolveOptionId(option.getKeyword());
+		String keyword = option.getKeyword();
+
+		String id = resolveOptionId(keyword);
 		if (id == null)
+		{
+			addValueOption(keyword);
 			return;
+		}
 
 		switch (id)
 		{
@@ -209,6 +274,38 @@ public class LinkBuilder
 				break;
 			case ImageLinkOptionAliases.IMG_UPRIGHT:
 				upright = true;
+				break;
+			default:
+				break;
+		}
+	}
+
+	/**
+	 * Parameterized options are stored as keyword option with name and value
+	 * (e.g. {@code "upright=1.5"}). The name cannot contain {@code '='} or
+	 * {@code ' '}, the first one separates name and value.
+	 */
+	private void addValueOption(String keyword)
+	{
+		int i = 0;
+		while (i < keyword.length() && keyword.charAt(i) != '=' && keyword.charAt(i) != ' ')
+			++i;
+		if (i >= keyword.length())
+			return;
+
+		String name = keyword.substring(0, i + 1);
+		String value = keyword.substring(i + 1);
+		if (!isValueOption(name, value))
+			return;
+
+		switch (resolveOptionId(name + "$1"))
+		{
+			case ImageLinkOptionAliases.IMG_UPRIGHT:
+				upright = true;
+				break;
+			case ImageLinkOptionAliases.IMG_MANUALTHUMB:
+				// MediaWiki renders images with a manual thumbnail as thumbnail
+				addFormat(ImageViewFormat.THUMBNAIL);
 				break;
 			default:
 				break;

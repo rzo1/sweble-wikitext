@@ -202,6 +202,28 @@ public class HtmlRendererMediaWikiOutputTest
 	}
 
 	@Test
+	public void testParameterizedImageOptionsAreNotCaptions() throws Exception
+	{
+		// Like in MediaWiki the last caption wins, options are no captions
+		String html = render("[[File:X.png|thumb|Caption|upright=1.5|class=noviewer|lang=de|page=2]]");
+
+		assertInOrder(html, "<div class=\"thumbcaption\">", "Caption", "</div>");
+		assertNotContains(html, "upright=1.5");
+		assertNotContains(html, "class=noviewer");
+		assertNotContains(html, "lang=de");
+		assertNotContains(html, "page=2");
+	}
+
+	@Test
+	public void testManualThumbIsNotCaption() throws Exception
+	{
+		String html = render("[[File:X.png|Caption|thumb=Y.png]]");
+
+		assertContains(html, "<div class=\"thumb tright\">");
+		assertNotContains(html, "thumb=Y.png");
+	}
+
+	@Test
 	public void testInvalidCharReferencesInCaptionAreEscaped() throws Exception
 	{
 		String html = render("[[File:X.png|&foo; &#0;]]");

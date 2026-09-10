@@ -72,10 +72,20 @@ public final class ImageLinkOptionAliases
 
 	public static final String IMG_ALT = "img_alt";
 
+	public static final String IMG_CLASS = "img_class";
+
+	public static final String IMG_LANG = "img_lang";
+
+	public static final String IMG_PAGE = "img_page";
+
+	public static final String IMG_MANUALTHUMB = "img_manualthumb";
+
 	// =========================================================================
 
 	/**
-	 * English keyword aliases, matched case-insensitively.
+	 * English keyword aliases (see {@code $magicWords} in MediaWiki's
+	 * MessagesEn.php). Like all image link option magic words they are
+	 * case-sensitive.
 	 */
 	private static final Map<String, String> DEFAULT_KEYWORDS;
 
@@ -90,14 +100,18 @@ public final class ImageLinkOptionAliases
 		k.put("thumb", IMG_THUMBNAIL);
 		k.put("thumbnail", IMG_THUMBNAIL);
 		k.put("frame", IMG_FRAMED);
+		k.put("framed", IMG_FRAMED);
+		k.put("enframed", IMG_FRAMED);
 		k.put("frameless", IMG_FRAMELESS);
 		k.put("left", IMG_LEFT);
 		k.put("right", IMG_RIGHT);
 		k.put("center", IMG_CENTER);
+		k.put("centre", IMG_CENTER);
 		k.put("none", IMG_NONE);
 		k.put("baseline", IMG_BASELINE);
 		k.put("sub", IMG_SUB);
 		k.put("super", IMG_SUPER);
+		k.put("sup", IMG_SUPER);
 		k.put("top", IMG_TOP);
 		k.put("text-top", IMG_TEXT_TOP);
 		k.put("middle", IMG_MIDDLE);
@@ -111,6 +125,14 @@ public final class ImageLinkOptionAliases
 		p.put("$1px", IMG_WIDTH);
 		p.put("link=$1", IMG_LINK);
 		p.put("alt=$1", IMG_ALT);
+		p.put("upright=$1", IMG_UPRIGHT);
+		p.put("upright $1", IMG_UPRIGHT);
+		p.put("class=$1", IMG_CLASS);
+		p.put("lang=$1", IMG_LANG);
+		p.put("page=$1", IMG_PAGE);
+		p.put("page $1", IMG_PAGE);
+		p.put("thumbnail=$1", IMG_MANUALTHUMB);
+		p.put("thumb=$1", IMG_MANUALTHUMB);
 		DEFAULT_PARAMETERIZED = Collections.unmodifiableMap(p);
 	}
 
@@ -134,7 +156,7 @@ public final class ImageLinkOptionAliases
 
 		String id = DEFAULT_PARAMETERIZED.get(alias);
 		if (id == null)
-			id = DEFAULT_KEYWORDS.get(alias.trim().toLowerCase());
+			id = DEFAULT_KEYWORDS.get(alias.trim());
 		return id;
 	}
 

@@ -166,13 +166,13 @@ body
 // -- Url ----------------------------------------------------------------------
 
 WtUrl Url =
-    protocol:UrlProtocolString ':' path:UrlPathString &{ isProtocol(protocol, path) }
+    protocol:UrlProtocolString ':' path:LinkUrlPathString &{ isProtocol(protocol, path) }
     {
       yyValue = setRtd(
         nf.url(protocol, path),
         protocol, ':', path);
     }
-  / &"//" path:UrlPathString
+  / &"//" path:LinkUrlPathString
     {
       yyValue = setRtd(
         nf.url("", path),
@@ -197,7 +197,14 @@ WtUrl UrlNoPipe =
 
 String UrlProtocolString = tUrlProtocolString ;
 
-String UrlPathString = tUrlPathString ;
+/* The path of a URL in an external link.
+ */
+private String LinkUrlPathString = tUrlPathString ;
+
+/* The path of a plain (free) URL. Outside of this module only plain URLs are
+ * parsed with this production.
+ */
+String UrlPathString = tFreeUrlPathString ;
 
 String UrlPathNoPipeString = tUrlPathNoPipeString ;
 
@@ -214,6 +221,28 @@ private transient String tUrlProtocolString =
  */
 private transient String tUrlPathString =
   ( ![\u0000-\u0020] ![\"\[\]<>\u007F\uE000\u2028\u2029\u0085] _ )+
+;
+
+/* Like MediaWiki's Parser::EXT_LINK_URL_CLASS a plain URL additionally ends
+ * at space separators (\p{Zs}) and at U+FFFD. Like
+ * Parser::makeFreeExternalLink() it also ends at escaped angle brackets and
+ * non-breaking spaces.
+ */
+private transient String tFreeUrlPathString =
+  ( !FreeUrlStopper ![\u0000-\u0020] ![\"\[\]<>\u007F\uE000\u2028\u2029\u0085] _ )+
+;
+
+/* The space separators (\p{Zs} without U+0020) and U+FFFD are given as a
+ * positive character class. Rats! generates invalid code for ranges in
+ * negated character classes.
+ *
+ * "&(lt|gt|nbsp|#x0*(3[CcEe]|[Aa]0)|#0*(60|62|160));" in MediaWiki. None of
+ * the alternatives after the zeros starts with a zero, so matching the zeros
+ * greedily is fine.
+ */
+private transient void FreeUrlStopper =
+    [\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\uFFFD]
+  / '&' ( "lt" / "gt" / "nbsp" / "#x" '0'* ( '3' [CcEe] / [Aa] '0' ) / '#' '0'* ( "60" / "62" / "160" ) ) ';'
 ;
 
 private transient String tUrlPathNoPipeString =

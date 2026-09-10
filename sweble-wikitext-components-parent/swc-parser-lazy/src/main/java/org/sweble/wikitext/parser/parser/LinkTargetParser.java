@@ -95,11 +95,27 @@ public class LinkTargetParser
 	private final static Pattern bidiCharPattern = Pattern.compile(
 			"[\u200E\u200F\u202A-\u202E]");
 
-	private final static Pattern spacePlusPattern = Pattern.compile(
-			"[ _\u00A0\u1680\u180E\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+");
+	/**
+	 * The characters MediaWiki converts into underscores in titles.
+	 */
+	private final static String SPACE_CHARS =
+			" _\u00A0\u1680\u180E\u2000-\u200A\u2028\u2029\u202F\u205F\u3000";
 
+	private final static Pattern spacePlusPattern = Pattern.compile(
+			"[" + SPACE_CHARS + "]+");
+
+	private final static Pattern trimSpacesPattern = Pattern.compile(
+			"^[" + SPACE_CHARS + "]+|[" + SPACE_CHARS + "]+$");
+
+	/**
+	 * MediaWiki's prefix regexp "^(.+?)_*:_*(.*)$". MediaWiki converts all
+	 * whitespace into underscores before matching, we have not done that yet.
+	 */
 	private final static Pattern namespaceSeparatorPattern = Pattern.compile(
-			"^(.+?)_*:_*(.*)$");
+			"^(.+?)[" + SPACE_CHARS + "]*:[" + SPACE_CHARS + "]*(.*)$");
+
+	private final static Pattern xmlReferencePattern = Pattern.compile(
+			"&" + XmlGrammar.RE_XML_NAME + ";|&#([0-9]+);|&#[xX]([0-9A-Fa-f]+);");
 
 	private final static Pattern invalidTitle = Pattern.compile(
 			// Percent encoding for URIs
@@ -126,6 +142,12 @@ public class LinkTargetParser
 
 	public void parse(ParserConfig config, final String target) throws LinkTargetException
 	{
+		this.title = null;
+		this.fragment = null;
+		this.namespace = null;
+		this.interwiki = null;
+		this.initialColon = false;
+
 		String result = target;
 
 		// Decode URL encoded characters
@@ -162,7 +184,7 @@ public class LinkTargetParser
 		{
 			this.initialColon = true;
 			result = result.substring(1);
-			result = StringTools.trimUnderscores(result);
+			result = trimSpaces(result);
 		}
 
 		// Identify namespaces and interwiki names
@@ -269,7 +291,7 @@ public class LinkTargetParser
 					{
 						this.initialColon = true;
 						result = result.substring(1);
-						result = StringTools.trimUnderscores(result);
+						result = trimSpaces(result);
 					}
 				}
 			}
@@ -391,11 +413,76 @@ public class LinkTargetParser
 		bytes.clear();
 	}
 
+	private static String trimSpaces(String text)
+	{
+		return trimSpacesPattern.matcher(text).replaceAll("");
+	}
+
+	/**
+	 * Decodes entity and character references like MediaWiki's
+	 * Sanitizer::decodeCharReferences(). References to invalid code points
+	 * are replaced with U+FFFD and render the title invalid, just like
+	 * MediaWiki rejects titles containing U+FFFD. Unknown entity references
+	 * are kept and render the title invalid, too.
+	 */
 	private static String xmlDecode(ParserConfig config, String text)
 	{
-		if (text.indexOf('&') >= 0)
-			return StringTools.xmlDecode(text, config);
-		return text;
+		if (text.indexOf('&') < 0)
+			return text;
+
+		StringBuilder b = new StringBuilder(text.length());
+
+		int start = 0;
+		Matcher m = xmlReferencePattern.matcher(text);
+		while (m.find())
+		{
+			b.append(text, start, m.start());
+
+			String resolved;
+			if (m.group(1) != null)
+				resolved = config.resolveXmlEntity(m.group(1));
+			else if (m.group(2) != null)
+				resolved = decodeCharRef(m.group(2), 10);
+			else
+				resolved = decodeCharRef(m.group(3), 16);
+
+			b.append((resolved != null) ? resolved : m.group());
+			start = m.end();
+		}
+		b.append(text, start, text.length());
+
+		return b.toString();
+	}
+
+	private static String decodeCharRef(String digits, int radix)
+	{
+		int codePoint = -1;
+		try
+		{
+			codePoint = Integer.parseInt(digits, radix);
+		}
+		catch (NumberFormatException e)
+		{
+			// Too large
+		}
+
+		if (!isValidCodePoint(codePoint))
+			return "\uFFFD";
+
+		return new String(Character.toChars(codePoint));
+	}
+
+	/**
+	 * Like MediaWiki's Sanitizer::validateCodepoint().
+	 */
+	private static boolean isValidCodePoint(int cp)
+	{
+		return cp == 0x09 ||
+				cp == 0x0A ||
+				(cp >= 0x20 && cp <= 0x7E) ||
+				(cp >= 0xA0 && cp <= 0xD7FF) ||
+				(cp >= 0xE000 && cp <= 0xFFFD) ||
+				(cp >= 0x10000 && cp <= 0x10FFFF);
 	}
 
 	// =========================================================================
