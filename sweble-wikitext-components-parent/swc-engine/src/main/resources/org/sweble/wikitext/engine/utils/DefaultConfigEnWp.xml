@@ -849,6 +849,65 @@
         <i18nAlias id="convert" caseSensitive="false">
             <alias>convert</alias>
         </i18nAlias>
+        <i18nAlias id="archivedtalk" caseSensitive="false">
+            <alias>__ARCHIVEDTALK__</alias>
+        </i18nAlias>
+        <i18nAlias id="disambiguation" caseSensitive="false">
+            <alias>__DISAMBIG__</alias>
+        </i18nAlias>
+        <i18nAlias id="expectunusedcategory" caseSensitive="true">
+            <alias>__EXPECTUNUSEDCATEGORY__</alias>
+        </i18nAlias>
+        <i18nAlias id="expectunusedtemplate" caseSensitive="true">
+            <alias>__EXPECTUNUSEDTEMPLATE__</alias>
+        </i18nAlias>
+        <i18nAlias id="forcetoc" caseSensitive="false">
+            <alias>__FORCETOC__</alias>
+        </i18nAlias>
+        <i18nAlias id="hiddencat" caseSensitive="true">
+            <alias>__HIDDENCAT__</alias>
+        </i18nAlias>
+        <i18nAlias id="index" caseSensitive="true">
+            <alias>__INDEX__</alias>
+        </i18nAlias>
+        <i18nAlias id="newsectionlink" caseSensitive="true">
+            <alias>__NEWSECTIONLINK__</alias>
+        </i18nAlias>
+        <i18nAlias id="nocontentconvert" caseSensitive="false">
+            <alias>__NOCC__</alias>
+            <alias>__NOCONTENTCONVERT__</alias>
+        </i18nAlias>
+        <i18nAlias id="noeditsection" caseSensitive="false">
+            <alias>__NOEDITSECTION__</alias>
+        </i18nAlias>
+        <i18nAlias id="nogallery" caseSensitive="false">
+            <alias>__NOGALLERY__</alias>
+        </i18nAlias>
+        <i18nAlias id="noglobal" caseSensitive="true">
+            <alias>__NOGLOBAL__</alias>
+        </i18nAlias>
+        <i18nAlias id="noindex" caseSensitive="true">
+            <alias>__NOINDEX__</alias>
+        </i18nAlias>
+        <i18nAlias id="nonewsectionlink" caseSensitive="true">
+            <alias>__NONEWSECTIONLINK__</alias>
+        </i18nAlias>
+        <i18nAlias id="notalk" caseSensitive="false">
+            <alias>__NOTALK__</alias>
+        </i18nAlias>
+        <i18nAlias id="notitleconvert" caseSensitive="false">
+            <alias>__NOTC__</alias>
+            <alias>__NOTITLECONVERT__</alias>
+        </i18nAlias>
+        <i18nAlias id="notoc" caseSensitive="false">
+            <alias>__NOTOC__</alias>
+        </i18nAlias>
+        <i18nAlias id="staticredirect" caseSensitive="true">
+            <alias>__STATICREDIRECT__</alias>
+        </i18nAlias>
+        <i18nAlias id="toc" caseSensitive="false">
+            <alias>__TOC__</alias>
+        </i18nAlias>
     </i18nAliases>
     <pfnGroups>
         <pfnGroup name="Built-in Parser Functions">
@@ -873,7 +932,27 @@
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$FullurlPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$UrlencodePfn"/>
         </pfnGroup>
-        <pfnGroup name="Core - Variables - Behavior Switches"/>
+        <pfnGroup name="Core - Variables - Behavior Switches">
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$ArchivedTalkSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$DisambiguationSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$ExpectUnusedCategorySwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$ExpectUnusedTemplateSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$ForceTocSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$HiddenCatSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$IndexSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NewSectionLinkSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoContentConvertSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoEditSectionSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoGallerySwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoGlobalSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoIndexSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoNewSectionLinkSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoTalkSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoTitleConvertSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$NoTocSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$StaticRedirectSwitch"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$TocSwitch"/>
+        </pfnGroup>
         <pfnGroup name="Core - Variables - Date and Time">
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentDayPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentMonthPfn"/>

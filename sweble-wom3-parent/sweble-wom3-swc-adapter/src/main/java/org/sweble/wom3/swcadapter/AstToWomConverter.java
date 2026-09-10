@@ -1742,11 +1742,14 @@ public class AstToWomConverter
 
 	public Wom3ElementNode visit(WtPageSwitch n)
 	{
-		throw new UnsupportedOperationException("not yet implemented");
-
 		// FIXME: Attach page switches to page element first!
 		// See categories about how it's done.
 		//return new WomPageSwitch(n.getName());
+
+		// Until then page switches only survive as round-trip data. They
+		// don't produce any output anyway.
+		appendRtd(convertToText(n));
+		return null;
 	}
 
 	// == [ Page roots ] =======================================================
