@@ -131,6 +131,55 @@ public class LinkTargetParserTest
 	}
 
 	@Test
+	public void testSpacesInFrontOfFragmentAreTrimmed() throws Exception
+	{
+		String[] targets = {
+				"A #b",
+				"A  #b",
+				"A_#b",
+				"A #b",
+				"A 　_#b" };
+
+		for (String target : targets)
+		{
+			LinkTargetParser ltp = new LinkTargetParser();
+			ltp.parse(new SimpleParserConfig(), target);
+
+			assertEquals(target, "A", ltp.getTitle());
+			assertEquals(target, "b", ltp.getFragment());
+		}
+	}
+
+	@Test
+	public void testSpacesInNamespaceNamesAreNormalized() throws Exception
+	{
+		String[] targets = {
+				"User talk:A",
+				"User_talk:A",
+				"User  talk:A",
+				"User talk:A",
+				"User _talk:A" };
+
+		SimpleParserConfig config = new SimpleParserConfig()
+		{
+			@Override
+			public boolean isNamespace(String name)
+			{
+				return "user talk".equalsIgnoreCase(name) || super.isNamespace(name);
+			}
+		};
+
+		for (String target : targets)
+		{
+			LinkTargetParser ltp = new LinkTargetParser();
+			ltp.parse(config, target);
+
+			assertEquals(target, "User talk", ltp.getNamespace());
+			assertEquals(target, "A", ltp.getTitle());
+		}
+	}
+
+	@Test
 	public void testSpacesAfterInitialColon() throws Exception
 	{
 		LinkTargetParser ltp = new LinkTargetParser();
