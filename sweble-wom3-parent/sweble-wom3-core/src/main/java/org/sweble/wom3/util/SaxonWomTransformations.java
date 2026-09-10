@@ -47,10 +47,14 @@ import de.fau.cs.osr.utils.WrappedException;
  */
 public class SaxonWomTransformations
 {
+	/**
+	 * Returns a Saxon transformer factory that uses secure processing, see
+	 * {@link SecureTransformerFactories#secure(TransformerFactory)}.
+	 */
 	public static TransformerFactory getSaxonTransformerFactory() throws TransformerFactoryConfigurationError
 	{
-		return TransformerFactory.newInstance(
-				net.sf.saxon.TransformerFactoryImpl.class.getName(), null);
+		return SecureTransformerFactories.newInstance(
+				net.sf.saxon.TransformerFactoryImpl.class.getName());
 	}
 
 	public static String printWom(Wom3Node node)
