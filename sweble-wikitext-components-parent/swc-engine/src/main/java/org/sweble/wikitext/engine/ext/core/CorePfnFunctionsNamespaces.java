@@ -23,6 +23,7 @@ import org.sweble.wikitext.engine.ExpansionFrame;
 import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
+import org.sweble.wikitext.engine.utils.UrlEncoding;
 import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
@@ -40,11 +41,29 @@ public class CorePfnFunctionsNamespaces
 	{
 		super("Core - Parser Functions - Namespaces");
 		addParserFunction(new NsPfn(wikiConfig));
+		addParserFunction(new NsePfn(wikiConfig));
 	}
 
 	public static CorePfnFunctionsNamespaces group(WikiConfig wikiConfig)
 	{
 		return new CorePfnFunctionsNamespaces(wikiConfig);
+	}
+
+	// =========================================================================
+
+	/**
+	 * Looks up a namespace by name, alias or index.
+	 *
+	 * @return The namespace or {@code null} if the given index is unknown.
+	 * @throws NumberFormatException
+	 *             Thrown if the argument is neither a known name nor an index.
+	 */
+	private static Namespace getNamespace(WikiConfig wikiConfig, String arg)
+	{
+		Namespace namespace = wikiConfig.getNamespace(arg);
+		if (namespace == null)
+			namespace = wikiConfig.getNamespace(Integer.parseInt(arg));
+		return namespace;
 	}
 
 	// =========================================================================
@@ -96,30 +115,100 @@ public class CorePfnFunctionsNamespaces
 				return null;
 			}
 
-			Namespace namespace = preprocessorFrame.getWikiConfig().getNamespace(arg);
-			if (namespace == null)
+			Namespace namespace;
+			try
 			{
-				int ns;
-				try
-				{
-					ns = Integer.parseInt(arg);
-				}
-				catch (NumberFormatException e)
-				{
-					fileIllegalArgumentsWarning(
-							preprocessorFrame,
-							WarningSeverity.NORMAL,
-							wtTemplate,
-							"Unknown namespace `" + arg + "'");
-					return null;
-				}
-
-				namespace = preprocessorFrame.getWikiConfig().getNamespace(ns);
+				namespace = getNamespace(preprocessorFrame.getWikiConfig(), arg);
+			}
+			catch (NumberFormatException e)
+			{
+				fileIllegalArgumentsWarning(
+						preprocessorFrame,
+						WarningSeverity.NORMAL,
+						wtTemplate,
+						"Unknown namespace `" + arg + "'");
+				return null;
 			}
 
 			String result = "";
 			if (namespace != null)
 				result = namespace.getName();
+
+			return nf().text(result);
+		}
+	}
+
+	// =========================================================================
+	// ==
+	// == {{nse:index}}
+	// == {{nse:canonical name}}
+	// == {{nse:local alias}}
+	// ==
+	// =========================================================================
+
+	/**
+	 * Like {@code ns} but the name of the namespace is URL-encoded like
+	 * MediaWiki's wfUrlencode() after spaces were replaced by underscores.
+	 */
+	public static final class NsePfn
+			extends
+				CorePfnFunction
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public NsePfn()
+		{
+			super("nse");
+		}
+
+		public NsePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "nse");
+		}
+
+		@Override
+		public WtNode invoke(
+				WtTemplate pfn,
+				ExpansionFrame frame,
+				List<? extends WtNode> args)
+		{
+			if (args.size() < 1)
+				return pfn;
+
+			WtNode arg0 = frame.expand(args.get(0));
+
+			String arg;
+			try
+			{
+				arg = tu().astToText(arg0).trim();
+			}
+			catch (StringConversionException e)
+			{
+				fileInvalidNameWarning(frame, WarningSeverity.NORMAL, arg0);
+				return pfn;
+			}
+
+			Namespace namespace;
+			try
+			{
+				namespace = getNamespace(frame.getWikiConfig(), arg);
+			}
+			catch (NumberFormatException e)
+			{
+				fileIllegalArgumentsWarning(
+						frame,
+						WarningSeverity.NORMAL,
+						pfn,
+						"Unknown namespace `" + arg + "'");
+				return pfn;
+			}
+
+			String result = "";
+			if (namespace != null)
+				result = UrlEncoding.WIKI.encode(namespace.getName().replace(' ', '_'));
 
 			return nf().text(result);
 		}

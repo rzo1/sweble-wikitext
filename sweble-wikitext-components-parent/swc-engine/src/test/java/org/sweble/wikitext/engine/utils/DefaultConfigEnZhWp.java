@@ -4653,11 +4653,11 @@ public class DefaultConfigEnZhWp
 				"safesubst",
 				false,
 				Arrays.asList("SAFESUBST:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"msgnw",
 				false,
 				Arrays.asList("MSGNW:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"img_thumbnail",
 				true,
@@ -4745,11 +4745,11 @@ public class DefaultConfigEnZhWp
 				"img_alt",
 				true,
 				Arrays.asList("alt=$1")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"int",
 				false,
 				Arrays.asList("INT:")));
-		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"sitename",
 				true,
@@ -4758,7 +4758,6 @@ public class DefaultConfigEnZhWp
 				"ns",
 				false,
 				Arrays.asList("NS:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"nse",
 				false,
@@ -4771,10 +4770,12 @@ public class DefaultConfigEnZhWp
 				"localurle",
 				false,
 				Arrays.asList("LOCALURLE:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"articlepath",
 				false,
 				Arrays.asList("ARTICLEPATH")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"server",
 				false,
@@ -4787,14 +4788,17 @@ public class DefaultConfigEnZhWp
 				"scriptpath",
 				false,
 				Arrays.asList("SCRIPTPATH")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"stylepath",
 				false,
 				Arrays.asList("STYLEPATH")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"grammar",
 				false,
 				Arrays.asList("GRAMMAR:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"gender",
 				false,
@@ -4855,16 +4859,15 @@ public class DefaultConfigEnZhWp
 				"revisionuser",
 				true,
 				Arrays.asList("REVISIONUSER")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"plural",
 				false,
 				Arrays.asList("PLURAL:")));
-		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"fullurl",
 				false,
 				Arrays.asList("FULLURL:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"fullurle",
 				false,
@@ -4877,7 +4880,6 @@ public class DefaultConfigEnZhWp
 				"canonicalurle",
 				false,
 				Arrays.asList("CANONICALURLE:")));
-		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"lcfirst",
 				false,
@@ -4899,10 +4901,12 @@ public class DefaultConfigEnZhWp
 				"raw",
 				false,
 				Arrays.asList("RAW:")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"displaytitle",
 				true,
-				Arrays.asList("DISPLAYTITLE")));
+				Arrays.asList("DISPLAYTITLE:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"rawsuffix",
 				true,
@@ -4924,11 +4928,11 @@ public class DefaultConfigEnZhWp
 				"urlencode",
 				false,
 				Arrays.asList("URLENCODE:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"anchorencode",
 				false,
-				Arrays.asList("ANCHORENCODE")));
+				Arrays.asList("ANCHORENCODE:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"currenttimestamp",
 				true,
@@ -4955,20 +4959,20 @@ public class DefaultConfigEnZhWp
 				"numberofadmins",
 				true,
 				Arrays.asList("NUMBEROFADMINS")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"formatnum",
 				false,
-				Arrays.asList("FORMATNUM")));
-		*/
+				Arrays.asList("FORMATNUM:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"padleft",
 				false,
 				Arrays.asList("PADLEFT:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"padright",
 				false,
-				Arrays.asList("PADRIGHT")));
+				Arrays.asList("PADRIGHT:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"special",
 				false,

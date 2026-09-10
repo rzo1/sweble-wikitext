@@ -254,7 +254,7 @@ public class LanguageConfigGeneratorSiteInfoTest
 
 		assertEquals("Wikipedia", expand(config, "{{SITENAME}}"));
 		assertEquals("https://de.wikipedia.org/wiki/Foo_bar", expand(config, "{{fullurl:Foo bar}}"));
-		assertEquals("https://de.wikipedia.org/wiki/Foo?action=edit", expand(config, "{{fullurl:Foo|action=edit}}"));
+		assertEquals("https://de.wikipedia.org/w/index.php?title=Foo&action=edit", expand(config, "{{fullurl:Foo|action=edit}}"));
 	}
 
 	@Test

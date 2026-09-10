@@ -20,14 +20,20 @@ package org.sweble.wikitext.engine.ext.builtin;
 import java.util.List;
 
 import org.sweble.wikitext.engine.ExpansionFrame;
+import org.sweble.wikitext.engine.FullPage;
+import org.sweble.wikitext.engine.PageTitle;
 import org.sweble.wikitext.engine.ParserFunctionBase;
 import org.sweble.wikitext.engine.PfnArgumentMode;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
+import org.sweble.wikitext.engine.nodes.EngineRtData;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtNodeList;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.nodes.WtTemplateArgument;
+import org.sweble.wikitext.parser.parser.LinkTargetException;
+import org.sweble.wikitext.parser.utils.StringConversionException;
 
 public class BuiltInParserFunctions
 		extends
@@ -41,6 +47,7 @@ public class BuiltInParserFunctions
 	{
 		super("Built-in Parser Functions");
 		addParserFunction(new ParserFunctionSafeSubst(wikiConfig));
+		addParserFunction(new ParserFunctionMsgnw(wikiConfig));
 	}
 
 	public static BuiltInParserFunctions group(WikiConfig wikiConfig)
@@ -95,6 +102,81 @@ public class BuiltInParserFunctions
 			tmpl.setRtd(template.getRtd());
 
 			return preprocessorFrame.expand(tmpl);
+		}
+	}
+
+	// =========================================================================
+	// ==
+	// == {{msgnw:template}}
+	// ==
+	// =========================================================================
+
+	/**
+	 * Returns the source of a template (without expanding it) as nowiki
+	 * text, like MediaWiki does for the prefix MSGNW:. Like MediaWiki a page
+	 * that does not exist yields the (escaped) link to it.
+	 */
+	public static final class ParserFunctionMsgnw
+			extends
+				ParserFunctionBase
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public ParserFunctionMsgnw()
+		{
+			super(PfnArgumentMode.UNEXPANDED_VALUES, "msgnw");
+		}
+
+		public ParserFunctionMsgnw(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, PfnArgumentMode.UNEXPANDED_VALUES, "msgnw");
+		}
+
+		@Override
+		public WtNode invoke(
+				WtNode template,
+				ExpansionFrame frame,
+				List<? extends WtNode> args)
+		{
+			if (args.size() < 1)
+				return template;
+
+			WtNode nameNode = frame.expand(args.get(0));
+
+			String name;
+			try
+			{
+				name = tu().astToText(nameNode).trim();
+			}
+			catch (StringConversionException e)
+			{
+				fileInvalidNameWarning(frame, WarningSeverity.NORMAL, nameNode);
+				return template;
+			}
+
+			WikiConfig wikiConfig = frame.getWikiConfig();
+
+			PageTitle title;
+			try
+			{
+				title = PageTitle.make(wikiConfig, name, wikiConfig.getTemplateNamespace());
+			}
+			catch (LinkTargetException e)
+			{
+				fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, nameNode, name);
+				return template;
+			}
+
+			FullPage page = frame.getCallback().retrieveWikitext(frame, title);
+
+			String source = (page != null) ?
+					page.getText() :
+					"[[:" + title.getPrefixedText() + "]]";
+
+			return EngineRtData.set(nf().nowiki(source));
 		}
 	}
 }

@@ -448,7 +448,7 @@ public final class ExpansionVisitor
 	}
 
 	/**
-	 * Right now only identifies the special {{!}} => |
+	 * Right now only identifies the special {{!}} => | and {{=}} => =
 	 */
 	private WtNode resolveTemplateAsExceptional(
 			WtTemplate n,
@@ -457,8 +457,12 @@ public final class ExpansionVisitor
 			ArrayList<WtTemplateArgument> args,
 			boolean hadNewline) throws ExpansionException
 	{
-		if (title.trim().equals("!") && tail.isEmpty() && args.isEmpty())
+		if (!tail.isEmpty() || !args.isEmpty())
+			return null;
+		if (title.trim().equals("!"))
 			return nf.text("|");
+		if (title.trim().equals("="))
+			return nf.text("=");
 		return null;
 	}
 
