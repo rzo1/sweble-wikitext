@@ -38,6 +38,8 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class HtmlRenderer
@@ -132,7 +134,7 @@ public class HtmlRenderer
 			p.indentAtBol();
 
 			pt("<a rel=\"nofollow\" class=\"external text\" href=\"%s\">%!</a>",
-					callback.makeUrl(n.getTarget()),
+					escAttrKeepCharRefs(callback.makeUrl(n.getTarget())),
 					n.getTitle());
 		}
 		else
@@ -140,7 +142,7 @@ public class HtmlRenderer
 			// Fix #62: Use sequential number if the title is missing
 			long seqNumber = untitledLinkCounter++;
 			pt("<a rel=\"nofollow\" class=\"external text\" href=\"%s\">[" + seqNumber + "]</a>",
-					callback.makeUrl(n.getTarget()));
+					escAttrKeepCharRefs(callback.makeUrl(n.getTarget())));
 		}
 	}
 
@@ -336,15 +338,16 @@ public class HtmlRenderer
 		{
 			if (strCaption != null)
 			{
-				aTitle = strCaption;
+				// Already escaped by the SafeLinkTitlePrinter
+				aTitle = escAttrKeepCharRefs(strCaption);
 			}
 			else if (linkTarget != null)
 			{
-				aTitle = makeImageTitle(n, target);//makeUrl(linkTarget);
+				aTitle = esc(makeImageTitle(n, target), true);//makeUrl(linkTarget);
 			}
 			else if (linkUrl != null)
 			{
-				aTitle = callback.makeUrl(linkUrl);
+				aTitle = escAttrKeepCharRefs(callback.makeUrl(linkUrl));
 			}
 		}
 		if (!aTitle.isEmpty())
@@ -408,7 +411,7 @@ public class HtmlRenderer
 
 			aTitle = "";
 			if (!exists)
-				aTitle = String.format(" title=\"%s\"", makeImageTitle(n, target));
+				aTitle = String.format(" title=\"%s\"", esc(makeImageTitle(n, target), true));
 		}
 		else
 		{
@@ -423,7 +426,7 @@ public class HtmlRenderer
 		if (linkTarget != null || linkUrl != null)
 		{
 			pf("<a href=\"%s\"%s%s>",
-					linkTarget != null ? callback.makeUrl(linkTarget) : callback.makeUrl(linkUrl),
+					escAttrKeepCharRefs(linkTarget != null ? callback.makeUrl(linkTarget) : callback.makeUrl(linkUrl)),
 					aClasses,
 					aTitle);
 		}
@@ -436,8 +439,8 @@ public class HtmlRenderer
 			if (isImage)
 			{
 				pt("<img alt=\"%s\" src=\"%s\" width=\"%d\" height=\"%d\"%s />",
-						alt.trim(),
-						imgUrl,
+						escAttrKeepCharRefs(alt.trim()),
+						escAttrKeepCharRefs(imgUrl),
 						width,
 						height,
 						imgClasses);
@@ -465,7 +468,7 @@ public class HtmlRenderer
 				p.incIndent();
 				p.indent();
 				pf("<a href=\"%s\" class=\"internal\" title=\"Enlarge\"><img src=\"/mediawiki/skins/common/images/magnify-clip.png\" width=\"15\" height=\"11\" alt=\"\" /></a>",
-						callback.makeUrl(linkTarget));
+						escAttrKeepCharRefs(callback.makeUrl(linkTarget)));
 				p.decIndent();
 				p.indentln("</div>");
 				dispatch(n.getTitle());
@@ -534,8 +537,8 @@ public class HtmlRenderer
 
 			if (n.hasTitle())
 			{
-				pt("<a href=\"%s\" class=\"new\" title=\"%s (page does not exist)\">%=%!%=</a>",
-						callback.makeUrlMissingTarget(path),
+				pt("<a href=\"%s\" class=\"new\" title=\"%~ (page does not exist)\">%=%!%=</a>",
+						escAttrKeepCharRefs(callback.makeUrlMissingTarget(path)),
 						title,
 						n.getPrefix(),
 						n.getTitle(),
@@ -545,8 +548,8 @@ public class HtmlRenderer
 			{
 				String linkText = makeTitleFromTarget(n, target);
 
-				pt("<a href=\"%s\" class=\"new\" title=\"%s (page does not exist)\">%=%=%=</a>",
-						callback.makeUrlMissingTarget(path),
+				pt("<a href=\"%s\" class=\"new\" title=\"%~ (page does not exist)\">%=%=%=</a>",
+						escAttrKeepCharRefs(callback.makeUrlMissingTarget(path)),
 						title,
 						n.getPrefix(),
 						linkText,
@@ -559,8 +562,8 @@ public class HtmlRenderer
 			{
 				if (n.hasTitle())
 				{
-					pt("<a href=\"%s\" title=\"%s\">%=%!%=</a>",
-							callback.makeUrl(target),
+					pt("<a href=\"%s\" title=\"%~\">%=%!%=</a>",
+							escAttrKeepCharRefs(callback.makeUrl(target)),
 							makeLinkTitle(n, target),
 							n.getPrefix(),
 							n.getTitle(),
@@ -568,8 +571,8 @@ public class HtmlRenderer
 				}
 				else
 				{
-					pt("<a href=\"%s\" title=\"%s\">%=%=%=</a>",
-							callback.makeUrl(target),
+					pt("<a href=\"%s\" title=\"%~\">%=%=%=</a>",
+							escAttrKeepCharRefs(callback.makeUrl(target)),
 							makeLinkTitle(n, target),
 							n.getPrefix(),
 							makeTitleFromTarget(n, target),
@@ -733,18 +736,19 @@ public class HtmlRenderer
 	public void visit(WtRedirect n)
 	{
 		// Fixes issue #65, we render a link to the redirect target
-		PageTitle pt;
+		PageTitle target;
 		try
 		{
-			pt = PageTitle.make(this.wikiConfig, n.getTarget().getAsString());
+			target = PageTitle.make(this.wikiConfig, n.getTarget().getAsString());
 		}
 		catch (LinkTargetException e)
 		{
 			throw new VisitingException(e);
 		}
 
-		String url = callback.makeUrl(pt);
-		pf("<a href=\"%s\">%s</a>", url, pt.getDenormalizedFullTitle());
+		pt("<a href=\"%s\">%=</a>",
+				escAttrKeepCharRefs(callback.makeUrl(target)),
+				target.getDenormalizedFullTitle());
 	}
 
 	public void visit(WtSection n)
@@ -752,7 +756,7 @@ public class HtmlRenderer
 		p.indent();
 		pt("<h%d><span class=\"mw-headline\" id=\"%s\">%!</span></h%d>",
 				n.getLevel(),
-				makeSectionTitle(n.getHeading()),
+				escAttrKeepCharRefs(makeSectionTitle(n.getHeading())),
 				n.getHeading(),
 				n.getLevel());
 
@@ -785,7 +789,7 @@ public class HtmlRenderer
 	public void visit(WtTable n)
 	{
 		p.indent();
-		pt("<table%!>", cleanAttribs(n.getXmlAttributes()));
+		pt("<table%!>", sanitizeAttribs("table", n.getXmlAttributes()));
 		p.println();
 
 		p.incIndent();
@@ -799,7 +803,7 @@ public class HtmlRenderer
 	public void visit(WtTableCaption n)
 	{
 		p.indent();
-		pt("<caption%!>", cleanAttribs(n.getXmlAttributes()));
+		pt("<caption%!>", sanitizeAttribs("caption", n.getXmlAttributes()));
 		p.println();
 		p.incIndent();
 		dispatch(getCellContent(n.getBody()));
@@ -810,7 +814,7 @@ public class HtmlRenderer
 	public void visit(WtTableCell n)
 	{
 		p.indent();
-		pt("<td%!>", cleanAttribs(n.getXmlAttributes()));
+		pt("<td%!>", sanitizeAttribs("td", n.getXmlAttributes()));
 		p.println();
 		p.incIndent();
 		dispatch(getCellContent(n.getBody()));
@@ -821,7 +825,7 @@ public class HtmlRenderer
 	public void visit(WtTableHeader n)
 	{
 		p.indent();
-		pt("<th%!>", cleanAttribs(n.getXmlAttributes()));
+		pt("<th%!>", sanitizeAttribs("th", n.getXmlAttributes()));
 		p.println();
 		p.incIndent();
 		dispatch(getCellContent(n.getBody()));
@@ -846,7 +850,7 @@ public class HtmlRenderer
 		if (cellsDefined)
 		{
 			p.indent();
-			pt("<tr%!>", cleanAttribs(n.getXmlAttributes()));
+			pt("<tr%!>", sanitizeAttribs("tr", n.getXmlAttributes()));
 			p.println();
 			p.incIndent();
 			dispatch(getCellContent(n.getBody()));
@@ -939,7 +943,7 @@ public class HtmlRenderer
 	{
 		p.indentAtBol();
 
-		String url = callback.makeUrl(n);
+		String url = escAttrKeepCharRefs(callback.makeUrl(n));
 		pf("<a href=\"%s\">%s</a>", url, url);
 	}
 
@@ -1012,35 +1016,81 @@ public class HtmlRenderer
 
 	public void visit(WtXmlElement n)
 	{
+		String name = n.getName();
+		if (!HtmlSanitizer.isAllowedElement(name))
+		{
+			printEscapedXmlElement(n);
+			return;
+		}
+
+		Map<String, String> sanitized = sanitizeAttribMap(name, n.getXmlAttributes());
+		if (!HtmlSanitizer.isValidTag(name, sanitized))
+		{
+			printEscapedXmlElement(n);
+			return;
+		}
+
+		WtNodeList attribs = toXmlAttributes(sanitized);
 		if (n.hasBody())
 		{
-			if (blockElements.contains(n.getName().toLowerCase()))
+			if (blockElements.contains(name.toLowerCase()))
 			{
 				p.indent();
-				pt("<%s%!>", n.getName(), cleanAttribs(n.getXmlAttributes()));
+				pt("<%s%!>", name, attribs);
 				p.println();
 				p.incIndent();
 				dispatch(n.getBody());
 				p.decIndent();
 				p.indent();
-				pf("</%s>", n.getName());
+				pf("</%s>", name);
 				p.println();
 			}
 			else
 			{
 				p.indentAtBol();
-				pt("<%s%!>", n.getName(), cleanAttribs(n.getXmlAttributes()));
+				pt("<%s%!>", name, attribs);
 				p.incIndent();
 				dispatch(n.getBody());
 				p.decIndent();
 				p.indentAtBol();
-				pf("</%s>", n.getName());
+				pf("</%s>", name);
 			}
 		}
 		else
 		{
 			p.indentAtBol();
-			pt("<%s%! />", n.getName(), cleanAttribs(n.getXmlAttributes()));
+			pt("<%s%! />", name, attribs);
+		}
+	}
+
+	/**
+	 * Renders an element that is not allowed in the output as escaped text
+	 * (like MediaWiki does). The content of the element is rendered as usual.
+	 */
+	private void printEscapedXmlElement(WtXmlElement n)
+	{
+		StringBuilder tag = new StringBuilder();
+		tag.append('<').append(n.getName());
+		for (WtNode a : n.getXmlAttributes())
+		{
+			if (!(a instanceof WtXmlAttribute))
+				continue;
+
+			WtXmlAttribute attr = (WtXmlAttribute) a;
+			if (!attr.getName().isResolved())
+				continue;
+
+			tag.append(' ').append(attr.getName().getAsString());
+			if (attr.hasValue())
+				tag.append("=\"").append(cleanAttribValue(attr.getValue())).append('"');
+		}
+		tag.append(n.hasBody() ? ">" : " />");
+
+		p.indentAtBol(esc(tag.toString()));
+		if (n.hasBody())
+		{
+			dispatch(n.getBody());
+			p.indentAtBol(esc("</" + n.getName() + ">"));
 		}
 	}
 
@@ -1416,6 +1466,56 @@ public class HtmlRenderer
 			newAttribs.add(newStyleAttrib);
 
 		return newAttribs;
+	}
+
+	/**
+	 * Cleans the attributes (see {@link #cleanAttribs(WtNodeList)}) and
+	 * removes or neutralizes everything that is not allowed on the given
+	 * element (see {@link HtmlSanitizer}).
+	 */
+	protected WtNodeList sanitizeAttribs(String element, WtNodeList xmlAttributes)
+	{
+		return toXmlAttributes(sanitizeAttribMap(element, xmlAttributes));
+	}
+
+	private Map<String, String> sanitizeAttribMap(String element, WtNodeList xmlAttributes)
+	{
+		return HtmlSanitizer.sanitizeAttributes(
+				element,
+				toAttribMap(cleanAttribs(xmlAttributes)));
+	}
+
+	private Map<String, String> toAttribMap(WtNodeList xmlAttributes)
+	{
+		Map<String, String> attribs = new LinkedHashMap<String, String>();
+		for (WtNode a : xmlAttributes)
+		{
+			if (!(a instanceof WtXmlAttribute))
+				continue;
+
+			WtXmlAttribute attr = (WtXmlAttribute) a;
+			if (!attr.getName().isResolved())
+			{
+				logger.warn("Unresolved attribute name: " + WtRtDataPrinter.print(attr));
+				continue;
+			}
+
+			String name = attr.getName().getAsString();
+			attribs.put(name, attr.hasValue() ? cleanAttribValue(attr.getValue()) : name);
+		}
+		return attribs;
+	}
+
+	private WtNodeList toXmlAttributes(Map<String, String> attribs)
+	{
+		WtNodeList result = nf.attrs(nf.list());
+		for (Map.Entry<String, String> e : attribs.entrySet())
+		{
+			result.add(nf.attr(
+					nf.name(nf.list(nf.text(e.getKey()))),
+					nf.value(nf.list(nf.text(e.getValue())))));
+		}
+		return result;
 	}
 
 	// =========================================================================
