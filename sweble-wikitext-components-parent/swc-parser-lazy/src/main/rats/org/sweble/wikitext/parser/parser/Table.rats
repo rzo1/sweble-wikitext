@@ -152,11 +152,16 @@ private inline TableHead TableHead =
   }
 ;
 
+/* The content in front of the first table element starts at the beginning of
+ * a line (after the EOL of the table head). Like MediaWiki we recognize lists,
+ * headings, etc. on its first line as well. The post-processor moves them in
+ * front of the table (foster parenting).
+ */
 private transient stateful WtBody TableContentStar =
   {
     enter(ParserScopes.TABLE_ELEMENTS);
   }
-  garbage:InlineBlockContent content:TableElement* &TableDoneSanityCheck
+  garbage:BolInlineBlockContent content:TableElement* &TableDoneSanityCheck
   {
     yyValue = nf.body(nf.list(garbage, content));
   }

@@ -239,7 +239,7 @@ public class LinkTargetParser
 		if (matcher.matches())
 		{
 			// We have at least ONE namespace
-			String nsName = matcher.group(1);
+			String nsName = normalizeNsName(matcher.group(1));
 
 			if (config.isNamespace(nsName))
 			{
@@ -267,7 +267,7 @@ public class LinkTargetParser
 						if (matcher.matches())
 						{
 							// There are more namespace parts
-							nsName = matcher.group(1);
+							nsName = normalizeNsName(matcher.group(1));
 
 							if (config.isNamespace(nsName))
 							{
@@ -311,7 +311,7 @@ public class LinkTargetParser
 			matcher = namespaceSeparatorPattern.matcher(result);
 			if (matcher.matches())
 			{
-				nsName = matcher.group(1);
+				nsName = normalizeNsName(matcher.group(1));
 				if ((config.isNamespace(nsName) || config.isInterwikiName(nsName)))
 					throw new LinkTargetException(Reason.TALK_NS_IW_LINK, target, nsName);
 			}
@@ -326,8 +326,9 @@ public class LinkTargetParser
 			String fragment = result.substring(i + 1);
 			this.fragment = StringTools.trimUnderscores(fragment);
 
-			result = result.substring(0, i);
-			result = StringTools.trimUnderscores(result);
+			// All whitespace becomes an underscore later on, so trim all of
+			// it like MediaWiki's rtrim($dbkey, '_').
+			result = trimSpaces(result.substring(0, i));
 		}
 		return result;
 	}
@@ -416,6 +417,17 @@ public class LinkTargetParser
 	private static String trimSpaces(String text)
 	{
 		return trimSpacesPattern.matcher(text).replaceAll("");
+	}
+
+	/**
+	 * MediaWiki converts all whitespace into single underscores before it
+	 * looks up namespace names. Namespaces are registered with spaces, so we
+	 * convert into single spaces instead: "User _talk" becomes "User
+	 * talk".
+	 */
+	private static String normalizeNsName(String nsName)
+	{
+		return spacePlusPattern.matcher(nsName).replaceAll(" ");
 	}
 
 	/**

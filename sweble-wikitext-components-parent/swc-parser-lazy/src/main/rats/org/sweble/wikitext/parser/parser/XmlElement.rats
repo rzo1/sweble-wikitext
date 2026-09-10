@@ -27,6 +27,13 @@
  *     - '<' XmlName XmlAttribute* Ws* "/>"
  *     - '<' XmlName XmlAttribute* Ws* ">"
  *
+ *   Tags with the name of a tag extension that is not also an HTML element
+ *   (e.g. nowiki, ref) are text: The preprocessor only leaves such a tag in
+ *   the text if it has no closing tag or if it is a stray closing tag. Like
+ *   MediaWiki, which escapes these tags, we must not turn them into an
+ *   element that wraps the rest of the page. Tags like pre, which are also
+ *   HTML elements, are recognized as elements.
+ *
  */
 
 module org.sweble.wikitext.parser.parser.XmlElement;
@@ -35,6 +42,20 @@ import org.sweble.wikitext.parser.utils.Whitespace as Whitespace;
 
 import org.sweble.wikitext.parser.utils.XmlName;
 import org.sweble.wikitext.parser.utils.XmlAttribute(Whitespace);
+
+
+
+
+// -- Body ---------------------------------------------------------------------
+
+body
+{
+  private boolean isTagExtensionName(String name)
+  {
+    return getState().getConfig().isValidExtensionTagName(name)
+        && !org.sweble.wikitext.parser.postprocessor.ElementType.isKnownHtmlElementName(name);
+  }
+}
 
 
 
@@ -51,7 +72,7 @@ WtNode XmlElement =
 ;
 
 private inline WtNode XmlEndTag =
-    name:XmlName ws:pWsStar '>'
+    name:XmlName &{ !isTagExtensionName(name) } ws:pWsStar '>'
     {
       yyValue = setRtd(
         nf.endTag(name),
@@ -61,13 +82,13 @@ private inline WtNode XmlEndTag =
 ;
 
 private inline WtNode XmlStartTag =
-    name:XmlName attributes:AttributeStar ws:pWsStar "/>"
+    name:XmlName &{ !isTagExtensionName(name) } attributes:AttributeStar ws:pWsStar "/>"
     {
       yyValue = setRtd(
         nf.emptyTag(name, attributes),
         "<", name, SEP, ws, "/>");
     }
-  / name:XmlName attributes:AttributeStar ws:pWsStar '>'
+  / name:XmlName &{ !isTagExtensionName(name) } attributes:AttributeStar ws:pWsStar '>'
     {
       yyValue = setRtd(
         nf.startTag(name, attributes),

@@ -136,6 +136,30 @@ public class PageTitleTest
 		}
 	}
 
+	/** Titles are normalized like MediaWiki's TitleParser (issue #167). */
+	@Test
+	public void testSpacesAreNormalizedLikeMediaWiki() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+
+		PageTitle title = PageTitle.make(config, "A #b");
+		assertEquals("A", title.getTitle());
+		assertEquals("b", title.getFragment());
+		assertEquals("A", title.getPrefixedText());
+
+		for (String target : new String[] {
+				"User talk:Foo",
+				"User_talk:Foo",
+				"User talk:Foo",
+				"User　 talk:Foo" })
+		{
+			title = PageTitle.make(config, target);
+			assertEquals(target, 3, title.getNamespace().getId());
+			assertEquals(target, "Foo", title.getTitle());
+			assertEquals(target, "User talk:Foo", title.getPrefixedText());
+		}
+	}
+
 	/** Titles in first-letter namespaces are capitalized (issue #103). */
 	@Test
 	public void testFirstLetterNamespaceCapitalizesTitle() throws Exception

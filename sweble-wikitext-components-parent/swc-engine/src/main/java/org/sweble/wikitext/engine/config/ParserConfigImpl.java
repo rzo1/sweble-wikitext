@@ -44,6 +44,7 @@ import java.util.regex.PatternSyntaxException;
 		"fosterParenting",
 		"fosterParentingForTransclusions",
 		"preserveSemiPreLeadingSpace",
+		"maxNestingDepth",
 		"internalLinkPrefixPattern",
 		"internalLinkPostfixPattern",
 		"jaxbAllowedUrlProtocols",
@@ -91,6 +92,9 @@ public class ParserConfigImpl
 
 	@XmlElement
 	private boolean preserveSemiPreLeadingSpace = false /*be backward compatible*/;
+
+	@XmlElement
+	private int maxNestingDepth = DEFAULT_MAX_NESTING_DEPTH /*be backward compatible*/;
 
 	private final Set<String> allowedUrlProtocols = new HashSet<String>();
 
@@ -438,6 +442,26 @@ public class ParserConfigImpl
 		return preserveSemiPreLeadingSpace;
 	}
 
+	// ==[ Robustness ]=========================================================
+
+	/**
+	 * @param maxNestingDepth
+	 *            See {@link ParserConfig#getMaxNestingDepth()}. Must be at
+	 *            least 1.
+	 */
+	public void setMaxNestingDepth(int maxNestingDepth)
+	{
+		if (maxNestingDepth < 1)
+			throw new IllegalArgumentException("The maximum nesting depth must be at least 1: " + maxNestingDepth);
+		this.maxNestingDepth = maxNestingDepth;
+	}
+
+	@Override
+	public int getMaxNestingDepth()
+	{
+		return maxNestingDepth;
+	}
+
 	// ==[ Language Conversion Tags ]===========================================
 
 	public void setLangConvTagsEnabled(boolean langConvTagsEnabled)
@@ -697,6 +721,7 @@ public class ParserConfigImpl
 		result = prime * result + (langConvTagsEnabled ? 1231 : 1237);
 		result = prime * result + ((lctFlagMap == null) ? 0 : lctFlagMap.hashCode());
 		result = prime * result + ((lctVariantMap == null) ? 0 : lctVariantMap.hashCode());
+		result = prime * result + maxNestingDepth;
 		result = prime * result + ((minSeverity == null) ? 0 : minSeverity.hashCode());
 		result = prime * result + ((nonStandardElementBehavior == null) ? 0 : nonStandardElementBehavior.hashCode());
 		result = prime * result + (preserveSemiPreLeadingSpace ? 1231 : 1237);
@@ -761,6 +786,8 @@ public class ParserConfigImpl
 				return false;
 		}
 		else if (!lctVariantMap.equals(other.lctVariantMap))
+			return false;
+		if (maxNestingDepth != other.maxNestingDepth)
 			return false;
 		if (minSeverity != other.minSeverity)
 			return false;

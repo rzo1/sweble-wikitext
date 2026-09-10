@@ -345,6 +345,19 @@ noinline transient WtNodeList InlineBlockContent =
   }
 ;
 
+/* BolInlineBlockContent = ( LineStartProd / InlineTextBlock )*
+ *
+ * Like InlineBlockContent but starts at the beginning of a line. Therefore
+ * the first line can already be a line start production.
+ */
+
+noinline transient WtNodeList BolInlineBlockContent =
+  content:InlineBlock*
+  {
+    yyValue = nf.list(content);
+  }
+;
+
 private inline WtNode InlineBlock =
   !BlockStopper ( LineStartProd / InlineTextBlock )
 ;
