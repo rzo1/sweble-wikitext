@@ -1,4 +1,4 @@
 
 {| <!-- some comment -->
- | A cell
- |}
+| A cell
+|}

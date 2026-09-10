@@ -1,0 +1,11 @@
+{|
+|+ caption
+|-
+! a
+ pre
+! b
+|-
+| c
+ pre
+| d
+|}

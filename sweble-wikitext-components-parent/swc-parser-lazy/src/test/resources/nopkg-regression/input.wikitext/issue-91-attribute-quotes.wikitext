@@ -1,0 +1,12 @@
+<span title='a " b'>x</span>
+
+<span title='a"b'>x</span>
+
+<span title="a'b">x</span>
+
+<ref name='a"b'>x</ref>
+
+{| title='a"b'
+|- title='a"b'
+| title='a"b' | c
+|}

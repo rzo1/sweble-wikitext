@@ -255,96 +255,96 @@ Germany comprises [[States of Germany|16 states]] (''Bundesländer''), which are
 {{German Federal States|options=float:left; font-size:90%; border:3px; max-width:480px; width:50%;}}
 
 {| style="background:none;" cellspacing="2px"
- |
+|
 
 {| class="sortable wikitable" style="text-align:left; font-size:90%;"
- |- style="font-size:100%; text-align:right;"
- ! style="width:140px;" | [[States of Germany|State]] 
- ! style="width:85px;" | Capital 
- ! style="width:85px;" | Area (km²)
- ! style="width:85px;" | Population
- |-
- | [[Baden-Württemberg]] 
- | [[Stuttgart]] 
- | style="text-align:right" |35,752
- | style="text-align:right" |10,717,000
- |-
- | [[Bavaria]] 
- | [[Munich]] 
- | style="text-align:right" |70,549
- | style="text-align:right" |12,444,000
- |-
- | Berlin 
- | Berlin 
- | style="text-align:right" |892
- | style="text-align:right" |3,400,000
- |-
- | [[Brandenburg]] 
- | [[Potsdam]] 
- | style="text-align:right" |29,477
- | style="text-align:right" |2,568,000
- |-
- | [[Bremen (state)|Bremen]] 
- | [[Bremen]] 
- | style="text-align:right" |404
- | style="text-align:right" |663,000
- |-
- | [[Hamburg]] 
- | [[Hamburg]] 
- | style="text-align:right" |755
- | style="text-align:right" |1,735,000
- |-
- | [[Hesse]] 
- | [[Wiesbaden]] 
- | style="text-align:right" |21,115
- | style="text-align:right" |6,098,000
- |-
- | [[Mecklenburg-Vorpommern]] 
- | [[Schwerin]] 
- | style="text-align:right" |23,174
- | style="text-align:right" |1,720,000
- |-
- | [[Lower Saxony]] 
- | [[Hanover]] 
- | style="text-align:right" |47,618
- | style="text-align:right" |8,001,000
- |-
- | [[North Rhine-Westphalia]] 
- | [[Düsseldorf]] 
- | style="text-align:right" |34,043
- | style="text-align:right" |18,075,000
- |-
- | [[Rhineland-Palatinate]] 
- | [[Mainz]] 
- | style="text-align:right" |19,847
- | style="text-align:right" |4,061,000
- |-
- | [[Saarland]] 
- | [[Saarbrücken]] 
- | style="text-align:right" |2,569
- | style="text-align:right" |1,056,000
- |-
- | [[Saxony]] 
- | [[Dresden]] 
- | style="text-align:right" |18,416
- | style="text-align:right" |4,296,000
- |-
- | [[Saxony-Anhalt]] 
- | [[Magdeburg]] 
- | style="text-align:right" |20,445
- | style="text-align:right" |2,494,000
- |-
- | [[Schleswig-Holstein]] 
- | [[Kiel]] 
- | style="text-align:right" |15,763
- | style="text-align:right" |2,829,000
- |-
- | [[Thuringia]] 
- | [[Erfurt]] 
- | style="text-align:right" |16,172
- | style="text-align:right" |2,355,000
- |}
- |}
+|- style="font-size:100%; text-align:right;"
+! style="width:140px;" | [[States of Germany|State]] 
+! style="width:85px;" | Capital 
+! style="width:85px;" | Area (km²)
+! style="width:85px;" | Population
+|-
+| [[Baden-Württemberg]] 
+| [[Stuttgart]] 
+| style="text-align:right" |35,752
+| style="text-align:right" |10,717,000
+|-
+| [[Bavaria]] 
+| [[Munich]] 
+| style="text-align:right" |70,549
+| style="text-align:right" |12,444,000
+|-
+| Berlin 
+| Berlin 
+| style="text-align:right" |892
+| style="text-align:right" |3,400,000
+|-
+| [[Brandenburg]] 
+| [[Potsdam]] 
+| style="text-align:right" |29,477
+| style="text-align:right" |2,568,000
+|-
+| [[Bremen (state)|Bremen]] 
+| [[Bremen]] 
+| style="text-align:right" |404
+| style="text-align:right" |663,000
+|-
+| [[Hamburg]] 
+| [[Hamburg]] 
+| style="text-align:right" |755
+| style="text-align:right" |1,735,000
+|-
+| [[Hesse]] 
+| [[Wiesbaden]] 
+| style="text-align:right" |21,115
+| style="text-align:right" |6,098,000
+|-
+| [[Mecklenburg-Vorpommern]] 
+| [[Schwerin]] 
+| style="text-align:right" |23,174
+| style="text-align:right" |1,720,000
+|-
+| [[Lower Saxony]] 
+| [[Hanover]] 
+| style="text-align:right" |47,618
+| style="text-align:right" |8,001,000
+|-
+| [[North Rhine-Westphalia]] 
+| [[Düsseldorf]] 
+| style="text-align:right" |34,043
+| style="text-align:right" |18,075,000
+|-
+| [[Rhineland-Palatinate]] 
+| [[Mainz]] 
+| style="text-align:right" |19,847
+| style="text-align:right" |4,061,000
+|-
+| [[Saarland]] 
+| [[Saarbrücken]] 
+| style="text-align:right" |2,569
+| style="text-align:right" |1,056,000
+|-
+| [[Saxony]] 
+| [[Dresden]] 
+| style="text-align:right" |18,416
+| style="text-align:right" |4,296,000
+|-
+| [[Saxony-Anhalt]] 
+| [[Magdeburg]] 
+| style="text-align:right" |20,445
+| style="text-align:right" |2,494,000
+|-
+| [[Schleswig-Holstein]] 
+| [[Kiel]] 
+| style="text-align:right" |15,763
+| style="text-align:right" |2,829,000
+|-
+| [[Thuringia]] 
+| [[Erfurt]] 
+| style="text-align:right" |16,172
+| style="text-align:right" |2,355,000
+|}
+|}
 
 ===Climate===
 
@@ -525,84 +525,84 @@ Germany is recognised for its highly specialised [[small and medium enterprises]
 The list includes the largest companies by turnover in 2009. Unranked are the largest bank and the largest insurance company in 2007:
 
 {| class="wikitable sortable" style="text-align:right;"
- |- style="background:#efefef;"
- ! style="text-align:center;" | Rank<ref>[http://money.cnn.com/magazines/fortune/global500/2010/countries/Germany.html], CNN Money. Retrieved 7 August 2010.</ref>
- ! style="text-align:center;" | Name
- ! style="text-align:center;" | Headquarters
- ! style="text-align:center;" | Revenue<br />(Mil.&nbsp;€) 
- ! style="text-align:center;" | Profit<br />(Mil.&nbsp;€) 
- ! style="text-align:center;" | Employees<br />(World)
- |-
- | 1. 
- | style="text-align:left;" | [[Volkswagen AG]] 
- | style="text-align:left;" | [[Wolfsburg]] 
- | 108,897 
- | 4,120 
- | 329,305
- |-
- | 2. 
- | style="text-align:left;" | [[Daimler AG]] 
- | style="text-align:left;" | [[Stuttgart]] 
- | 99,399 
- | 3,985 
- | 272,382
- |-
- | 3. 
- | style="text-align:left;" | [[Siemens AG]] 
- | style="text-align:left;" | [[Munich]]/Berlin 
- | 72,488 
- | 3,806 
- | 398,200
- |-
- | 4. 
- | style="text-align:left;" | [[E.ON|E.ON AG]] 
- | style="text-align:left;" | [[Düsseldorf]] 
- | 68,731 
- | 7,204 
- | 87,815
- |-
- | 5. 
- | style="text-align:left;" | [[Metro AG]] 
- | style="text-align:left;" | [[Düsseldorf]] 
- | 64,337 
- | 825 
- | 242,378
- |-
- | 6. 
- | style="text-align:left;" | [[Deutsche Post AG]] 
- | style="text-align:left;" | [[Bonn]] 
- | 63,512 
- | 1,389 
- | 475,100
- |-
- | 7. 
- | style="text-align:left;" | [[Deutsche Telekom AG]] 
- | style="text-align:left;" | [[Bonn]] 
- | 62,516 
- | 569 
- | 241,426
- |-
- | 8. 
- | style="text-align:left;" | [[BASF|BASF SE]] 
- | style="text-align:left;" | [[Ludwigshafen am Rhein|Ludwigshafen]] 
- | 57,951 
- | 4,065 
- | 95,175
- |-
- | 9. 
- | style="text-align:left;" | [[BMW AG]] 
- | style="text-align:left;" | [[Munich]] 
- | 56,018 
- | 3,126 
- | 107,539
- |-
- | 10. 
- | style="text-align:left;" | [[ThyssenKrupp AG]] 
- | style="text-align:left;" | [[Essen]]/[[Duisburg]] 
- | 51,723 
- | 2,102 
- | 191,350
- |}
+|- style="background:#efefef;"
+! style="text-align:center;" | Rank<ref>[http://money.cnn.com/magazines/fortune/global500/2010/countries/Germany.html], CNN Money. Retrieved 7 August 2010.</ref>
+! style="text-align:center;" | Name
+! style="text-align:center;" | Headquarters
+! style="text-align:center;" | Revenue<br />(Mil.&nbsp;€) 
+! style="text-align:center;" | Profit<br />(Mil.&nbsp;€) 
+! style="text-align:center;" | Employees<br />(World)
+|-
+| 1. 
+| style="text-align:left;" | [[Volkswagen AG]] 
+| style="text-align:left;" | [[Wolfsburg]] 
+| 108,897 
+| 4,120 
+| 329,305
+|-
+| 2. 
+| style="text-align:left;" | [[Daimler AG]] 
+| style="text-align:left;" | [[Stuttgart]] 
+| 99,399 
+| 3,985 
+| 272,382
+|-
+| 3. 
+| style="text-align:left;" | [[Siemens AG]] 
+| style="text-align:left;" | [[Munich]]/Berlin 
+| 72,488 
+| 3,806 
+| 398,200
+|-
+| 4. 
+| style="text-align:left;" | [[E.ON|E.ON AG]] 
+| style="text-align:left;" | [[Düsseldorf]] 
+| 68,731 
+| 7,204 
+| 87,815
+|-
+| 5. 
+| style="text-align:left;" | [[Metro AG]] 
+| style="text-align:left;" | [[Düsseldorf]] 
+| 64,337 
+| 825 
+| 242,378
+|-
+| 6. 
+| style="text-align:left;" | [[Deutsche Post AG]] 
+| style="text-align:left;" | [[Bonn]] 
+| 63,512 
+| 1,389 
+| 475,100
+|-
+| 7. 
+| style="text-align:left;" | [[Deutsche Telekom AG]] 
+| style="text-align:left;" | [[Bonn]] 
+| 62,516 
+| 569 
+| 241,426
+|-
+| 8. 
+| style="text-align:left;" | [[BASF|BASF SE]] 
+| style="text-align:left;" | [[Ludwigshafen am Rhein|Ludwigshafen]] 
+| 57,951 
+| 4,065 
+| 95,175
+|-
+| 9. 
+| style="text-align:left;" | [[BMW AG]] 
+| style="text-align:left;" | [[Munich]] 
+| 56,018 
+| 3,126 
+| 107,539
+|-
+| 10. 
+| style="text-align:left;" | [[ThyssenKrupp AG]] 
+| style="text-align:left;" | [[Essen]]/[[Duisburg]] 
+| 51,723 
+| 2,102 
+| 191,350
+|}
 
 ===Transport===
 
@@ -689,91 +689,91 @@ United States (50&nbsp;million),<ref>{{Cite web |url=http://factfinder.census.go
 Germany has a number of large cities; the most populous are: [[Berlin]], [[Hamburg]], [[Munich]], [[Cologne]], [[Frankfurt]], and [[Stuttgart]]. The largest [[conurbation]] is the [[Rhine-Ruhr]] region (12&nbsp;million), including [[Düsseldorf]] (the capital of [[North Rhine-Westphalia]]), [[Cologne]], [[Essen]], [[Dortmund]], [[Duisburg]], and [[Bochum]].
 
 {| width="97%" align="center" style="border: 1px solid darkgray; background: #f9f9f9"
- ! colspan="9" style="padding:0.3em 0; font-size:120%;" | Largest cities of Germany
- |-
- | rowspan="11" align="center" valign="top" | [[File:Cityscapeberlin2006.JPG|border|160px|Berlin]]<br />[[Berlin]]<br />[[File:Hamburg-090612-0164-DSC 8261-Hafen-von-Jugendherberge.jpg|border|160px|Hamburg]]<br />[[Hamburg]]<br />[[File:München Panorama.JPG|border|160px|Munich]]<br />[[Munich|Munich (München)]]
- ! style="text-align:center; background:#f5f5f5;" | Rank
- ! style="text-align:left; background:#f5f5f5;" | City
- ! style="text-align:right; background:#f5f5f5;" | Population
- | rowspan="11" width="50" | &nbsp;
- ! style="text-align:center; background:#f5f5f5;" | Rank
- ! style="text-align:left; background:#f5f5f5;" | City
- ! style="text-align:right; background:#f5f5f5;" | Population
- | rowspan="11" align="center" valign="top" | [[File:Köln Panorama.jpg|border|160px|Cologne]]<br />[[Cologne|Cologne (Köln)]]<br />
+! colspan="9" style="padding:0.3em 0; font-size:120%;" | Largest cities of Germany
+|-
+| rowspan="11" align="center" valign="top" | [[File:Cityscapeberlin2006.JPG|border|160px|Berlin]]<br />[[Berlin]]<br />[[File:Hamburg-090612-0164-DSC 8261-Hafen-von-Jugendherberge.jpg|border|160px|Hamburg]]<br />[[Hamburg]]<br />[[File:München Panorama.JPG|border|160px|Munich]]<br />[[Munich|Munich (München)]]
+! style="text-align:center; background:#f5f5f5;" | Rank
+! style="text-align:left; background:#f5f5f5;" | City
+! style="text-align:right; background:#f5f5f5;" | Population
+| rowspan="11" width="50" | &nbsp;
+! style="text-align:center; background:#f5f5f5;" | Rank
+! style="text-align:left; background:#f5f5f5;" | City
+! style="text-align:right; background:#f5f5f5;" | Population
+| rowspan="11" align="center" valign="top" | [[File:Köln Panorama.jpg|border|160px|Cologne]]<br />[[Cologne|Cologne (Köln)]]<br />
 [[File:Hauptwache Frankfurt am Main.jpg|border|160px|Frankfurt am Main]]<br />[[Frankfurt am Main|Frankfurt]]<br />[[File:Stg-schlossplatz-kunstmuseum.jpg|border|160px|Stuttgart]]<br />[[Stuttgart]]
- |-
- | align="center" style="background:#f0f0f0;" |  1 
- | align="left" | [[Berlin]] 
- | align="right" | 3,442,675
- | align="center" style="background:#f0f0f0;" | 11 
- | align="left" | [[Hannover]] 
- | align="right" | 520,966
- |-
- | align="center" style="background:#f0f0f0;" |  2 
- | align="left" | [[Hamburg]] 
- | align="right" | 1,774,224
- | align="center" style="background:#f0f0f0;" | 12 
- | align="left" | [[Leipzig]] 
- | align="right" | 518,862
- |-
- | align="center" style="background:#f0f0f0;" |  3 
- | align="left" | [[Munich]] 
- | align="right" | 1,330,440
- | align="center" style="background:#f0f0f0;" | 13 
- | align="left" | [[Dresden]] 
- | align="right" | 517,052
- |-
- | align="center" style="background:#f0f0f0;" |  4 
- | align="left" | [[Cologne]] 
- | align="right" | 998,105
- | align="center" style="background:#f0f0f0;" | 14 
- | align="left" | [[Nuremberg]] 
- | align="right" | 503,673
- |-
- | align="center" style="background:#f0f0f0;" |  5 
- | align="left" | [[Frankfurt am Main|Frankfurt]] 
- | align="right" | 671,927
- | align="center" style="background:#f0f0f0;" | 15 
- | align="left" | [[Duisburg]] 
- | align="right" | 491,931
- |-
- | align="center" style="background:#f0f0f0;" |  6 
- | align="left" | [[Stuttgart]] 
- | align="right" | 601,646
- | align="center" style="background:#f0f0f0;" | 16 
- | align="left" | [[Bochum]] 
- | align="right" | 376,319
- |-
- | align="center" style="background:#f0f0f0;" |  7 
- | align="left" | [[Düsseldorf]] 
- | align="right" | 586,217
- | align="center" style="background:#f0f0f0;" | 17 
- | align="left" | [[Wuppertal]] 
- | align="right" | 351,050
- |-
- | align="center" style="background:#f0f0f0;" |  8 
- | align="left" | [[Dortmund]] 
- | align="right" | 581,308
- | align="center" style="background:#f0f0f0;" | 18 
- | align="left" | [[Bielefeld]] 
- | align="right" | 323,084
- |-
- | align="center" style="background:#f0f0f0;" |  9 
- | align="left" | [[Essen]] 
- | align="right" | 576,259
- | align="center" style="background:#f0f0f0;" | 19 
- | align="left" | [[Bonn]] 
- | align="right" | 319,841
- |-
- | align="center" style="background:#f0f0f0;" | 10 
- | align="left" | [[Bremen]] 
- | align="right" | 547,685
- | align="center" style="background:#f0f0f0;" | 20 
- | align="left" | [[Mannheim]] 
- | align="right" | 311,969
- |-
- | colspan="9" align="center" | <small>Source: {{cite web |title=Mitglieder des Deutschen Städtetages |publisher=Deutschen Städtetag |date=31 December 2009 |accessdate=18 February 2011 |url=http://www.staedtetag.de/10/staedte/nach_einwohner/index.html |language=German}}</small>
- |}
+|-
+| align="center" style="background:#f0f0f0;" |  1 
+| align="left" | [[Berlin]] 
+| align="right" | 3,442,675
+| align="center" style="background:#f0f0f0;" | 11 
+| align="left" | [[Hannover]] 
+| align="right" | 520,966
+|-
+| align="center" style="background:#f0f0f0;" |  2 
+| align="left" | [[Hamburg]] 
+| align="right" | 1,774,224
+| align="center" style="background:#f0f0f0;" | 12 
+| align="left" | [[Leipzig]] 
+| align="right" | 518,862
+|-
+| align="center" style="background:#f0f0f0;" |  3 
+| align="left" | [[Munich]] 
+| align="right" | 1,330,440
+| align="center" style="background:#f0f0f0;" | 13 
+| align="left" | [[Dresden]] 
+| align="right" | 517,052
+|-
+| align="center" style="background:#f0f0f0;" |  4 
+| align="left" | [[Cologne]] 
+| align="right" | 998,105
+| align="center" style="background:#f0f0f0;" | 14 
+| align="left" | [[Nuremberg]] 
+| align="right" | 503,673
+|-
+| align="center" style="background:#f0f0f0;" |  5 
+| align="left" | [[Frankfurt am Main|Frankfurt]] 
+| align="right" | 671,927
+| align="center" style="background:#f0f0f0;" | 15 
+| align="left" | [[Duisburg]] 
+| align="right" | 491,931
+|-
+| align="center" style="background:#f0f0f0;" |  6 
+| align="left" | [[Stuttgart]] 
+| align="right" | 601,646
+| align="center" style="background:#f0f0f0;" | 16 
+| align="left" | [[Bochum]] 
+| align="right" | 376,319
+|-
+| align="center" style="background:#f0f0f0;" |  7 
+| align="left" | [[Düsseldorf]] 
+| align="right" | 586,217
+| align="center" style="background:#f0f0f0;" | 17 
+| align="left" | [[Wuppertal]] 
+| align="right" | 351,050
+|-
+| align="center" style="background:#f0f0f0;" |  8 
+| align="left" | [[Dortmund]] 
+| align="right" | 581,308
+| align="center" style="background:#f0f0f0;" | 18 
+| align="left" | [[Bielefeld]] 
+| align="right" | 323,084
+|-
+| align="center" style="background:#f0f0f0;" |  9 
+| align="left" | [[Essen]] 
+| align="right" | 576,259
+| align="center" style="background:#f0f0f0;" | 19 
+| align="left" | [[Bonn]] 
+| align="right" | 319,841
+|-
+| align="center" style="background:#f0f0f0;" | 10 
+| align="left" | [[Bremen]] 
+| align="right" | 547,685
+| align="center" style="background:#f0f0f0;" | 20 
+| align="left" | [[Mannheim]] 
+| align="right" | 311,969
+|-
+| colspan="9" align="center" | <small>Source: {{cite web |title=Mitglieder des Deutschen Städtetages |publisher=Deutschen Städtetag |date=31 December 2009 |accessdate=18 February 2011 |url=http://www.staedtetag.de/10/staedte/nach_einwohner/index.html |language=German}}</small>
+|}
 
 ===Languages===
 
@@ -888,19 +888,19 @@ German literature can be traced back to the Middle Ages and the works of writers
 Influential authors of the 20th century include [[Thomas Mann]], [[Bertolt Brecht]], [[Hermann Hesse]], [[Heinrich Böll]], and [[Günter Grass]].<ref name="nobel">{{Cite web|url=http://nobelprize.org/nobel_prizes/literature/articles/espmark/index.html|title=The Nobel Prize in Literature|publisher=Nobelprize.org|date=3 December 1999|author=Kjell Espmark|accessdate=14 August 2006}}</ref>
 
 {| class="wikitable" style="text-align:right; margin-right:50px;"
- |-
- ! align="center" |[[Johann Wolfgang von Goethe|Johann Wolfgang v. Goethe]]<br /><small>(1749–1832)</small>
- ! align="center" |[[Friedrich Schiller]]<br /><small>(1759–1805)</small>
- ! align="center" |[[Brothers Grimm]]<br /><small>(1785–1863)</small>
- ! align="center" |[[Thomas Mann]]<br /><small>(1875–1955)</small>
- ! align="center" |[[Hermann Hesse]]<br /><small>(1877–1962)</small>
- |-
- | align="left" | [[File:Johann Heinrich Wilhelm Tischbein 007.jpg|190px]] 
- | align="left" | [[File:Gerhard von Kügelgen 001.jpg|129px]]
- | align="left" | [[File:Grimm1.jpg|125px]]
- | align="left" | [[File:Thomas Mann 1929.jpg|106px]] 
- | align="left" | [[File:Hermann Hesse 1927 Photo Gret Widmann.jpg|110px]]
- |}
+|-
+! align="center" |[[Johann Wolfgang von Goethe|Johann Wolfgang v. Goethe]]<br /><small>(1749–1832)</small>
+! align="center" |[[Friedrich Schiller]]<br /><small>(1759–1805)</small>
+! align="center" |[[Brothers Grimm]]<br /><small>(1785–1863)</small>
+! align="center" |[[Thomas Mann]]<br /><small>(1875–1955)</small>
+! align="center" |[[Hermann Hesse]]<br /><small>(1877–1962)</small>
+|-
+| align="left" | [[File:Johann Heinrich Wilhelm Tischbein 007.jpg|190px]] 
+| align="left" | [[File:Gerhard von Kügelgen 001.jpg|129px]]
+| align="left" | [[File:Grimm1.jpg|125px]]
+| align="left" | [[File:Thomas Mann 1929.jpg|106px]] 
+| align="left" | [[File:Hermann Hesse 1927 Photo Gret Widmann.jpg|110px]]
+|}
 
 ===Philosophy===
 
@@ -940,21 +940,21 @@ The [[Berlin Film Festival]], held annually since 1951, is one of the world's fo
 Germany claims some of the world's most renowned classical music composers, including [[Ludwig van Beethoven]], [[Johann Sebastian Bach]], [[Johannes Brahms]], and [[Richard Wagner]]. As of 2006, Germany is the fifth largest music market in the world and has influenced popular music through artists such as [[Kraftwerk]], [[Boney M.]], [[Nico]], [[Nina Hagen]], [[Scorpions (band)|Scorpions]], [[Toten Hosen]], [[Tokio Hotel]], [[Rammstein]] and [[Paul van Dyk]].<ref>[http://web.archive.org/web/20070205193206/http://news.warez.com/p2pnet/music-market-worth-us32-billion.html Music market worth US$ 32&nbsp;billion] P2pnet.net 7 April 2004. Retrieved 7 December 2006.</ref>
 
 {| class="wikitable" style="text-align:right; margin-right:50px;"
- |-
- ! align="center" |[[J.S.Bach]]<br /><small>[[Toccata and Fugue in D minor, BWV 565|Toccata und Fuge]]</small>
- ! align="center" |[[Ludwig van Beethoven|L.v. Beethoven]]<br /><small>[[Symphony No. 5 (Beethoven)|Symphonie 5 c-moll]]</small>
- ! align="center" |[[Richard Wagner|R. Wagner]]<br /><small>[[Die Walküre]]</small>
- ! align="center" |[[Kraftwerk]]<br /><small>[[Computer World|Computerwelt Pt. 2]]</small>
- ! align="center" |[[Modern Talking]]<br /><small>[[Brother Louie (Modern Talking song)|Brother Louie]]</small>
- ! align="center" |[[Rammstein]]<br /><small>[[Ohne dich]]</small>
- |-
- | style="text-align:left; background:#dcdcdc;" | [[File:Toccata et Fugue BWV565.ogg|110px]] 
- | style="text-align:left; background:#d3d3d3;" | [[File:Ludwig van Beethoven - Symphonie 5 c-moll - 1. Allegro con brio.ogg|110px]]
- | style="text-align:left; background:silver;" |[[File:Wagner - die walkure fantasie.ogg|110px]] 
- | style="text-align:left; background:darkGrey;" | [[File:Kraftwerk - computerwelt - computerwelt 2.ogg|110px]] 
- | style="text-align:left; background:gray;" | [[File:Brother Louie MT.ogg|110px]]
- | style="text-align:left; background:dimGrey;" | [[File:Rammstein - Ohne dich (sample).ogg|110px]]
- |}
+|-
+! align="center" |[[J.S.Bach]]<br /><small>[[Toccata and Fugue in D minor, BWV 565|Toccata und Fuge]]</small>
+! align="center" |[[Ludwig van Beethoven|L.v. Beethoven]]<br /><small>[[Symphony No. 5 (Beethoven)|Symphonie 5 c-moll]]</small>
+! align="center" |[[Richard Wagner|R. Wagner]]<br /><small>[[Die Walküre]]</small>
+! align="center" |[[Kraftwerk]]<br /><small>[[Computer World|Computerwelt Pt. 2]]</small>
+! align="center" |[[Modern Talking]]<br /><small>[[Brother Louie (Modern Talking song)|Brother Louie]]</small>
+! align="center" |[[Rammstein]]<br /><small>[[Ohne dich]]</small>
+|-
+| style="text-align:left; background:#dcdcdc;" | [[File:Toccata et Fugue BWV565.ogg|110px]] 
+| style="text-align:left; background:#d3d3d3;" | [[File:Ludwig van Beethoven - Symphonie 5 c-moll - 1. Allegro con brio.ogg|110px]]
+| style="text-align:left; background:silver;" |[[File:Wagner - die walkure fantasie.ogg|110px]] 
+| style="text-align:left; background:darkGrey;" | [[File:Kraftwerk - computerwelt - computerwelt 2.ogg|110px]] 
+| style="text-align:left; background:gray;" | [[File:Brother Louie MT.ogg|110px]]
+| style="text-align:left; background:dimGrey;" | [[File:Rammstein - Ohne dich (sample).ogg|110px]]
+|}
 
 ===Media===
 

@@ -1,0 +1,62 @@
+WtParsedWikitextPage(
+	{P} entityMap = {
+		[0] = WtXmlComment(
+				{P} content = " after a paragraph "
+				{P} prefix = ""
+				{P} rtd = RTD[ "<!-- after a paragraph -->\n" ]
+				{P} suffix = "\n"
+			),
+		[1] = WtXmlComment(
+				{P} content = " after a table "
+				{P} prefix = ""
+				{P} rtd = RTD[ "<!-- after a table -->\n" ]
+				{P} suffix = "\n"
+			)
+	}
+	{P} warnings = C[]
+	[0] = WtParagraph[ [0] = "a" ],
+	[1] = "\n",
+	[2] = WtXmlComment(
+		{P} content = " after a paragraph "
+		{P} prefix = ""
+		{P} rtd = RTD[ "<!-- after a paragraph -->\n" ]
+		{P} suffix = "\n"
+	),
+	[3] = "\n",
+	[4] = WtParagraph[ [0] = "b" ],
+	[5] = "\n\n",
+	[6] = WtTable(
+		{P} rtd = RTD[ "{|" <o> "\n" <o> "|}" ]
+		xmlAttributes = WtXmlAttributes[],
+		body = WtBody[
+			[0] = WtTableImplicitTableBody(
+				body = WtBody[
+					[0] = WtTableRow(
+						{P} implicit = true
+						xmlAttributes = WtXmlAttributes[],
+						body = WtBody[
+							[0] = WtTableCell(
+								{P} rtd = RTD[ "|" <o> "" <o> "" ]
+								xmlAttributes = WtXmlAttributes[],
+								body = WtBody[
+									[0] = WtParagraph[ [0] = " c" ],
+									[1] = "\n"
+								]
+							)
+						]
+					)
+				]
+			)
+		]
+	),
+	[7] = "\n",
+	[8] = WtXmlComment(
+		{P} content = " after a table "
+		{P} prefix = ""
+		{P} rtd = RTD[ "<!-- after a table -->\n" ]
+		{P} suffix = "\n"
+	),
+	[9] = "\n",
+	[10] = WtParagraph[ [0] = "d" ],
+	[11] = "\n"
+)

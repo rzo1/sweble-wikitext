@@ -1,0 +1,40 @@
+WtParsedWikitextPage(
+	{P} entityMap = -
+	{P} warnings = C[]
+	[0] = WtParagraph[
+		[0] = WtItalics(
+			{P} rtd = RTD[ "''" <o> "''" ]
+			[0] = WtBold(
+				{P} rtd = RTD[ "'''" <o> "" ]
+				[0] = "bold italic"
+			)
+		),
+		[1] = WtBold(
+			{P} rtd = RTD[ "" <o> "'''" ]
+			[0] = " bold"
+		)
+	],
+	[1] = "\n\n",
+	[2] = WtParagraph[
+		[0] = WtItalics(
+			{P} rtd = RTD[ "''" <o> "''" ]
+			[0] = WtBold(
+				{P} rtd = RTD[ "'''" <o> "'''" ]
+				[0] = "bold italic"
+			),
+			[1] = " italic"
+		)
+	],
+	[3] = "\n\n",
+	[4] = WtParagraph[
+		[0] = WtItalics(
+			{P} rtd = RTD[ "''" <o> "''" ]
+			[0] = "italic"
+		),
+		[1] = WtBold(
+			{P} rtd = RTD[ "'''" <o> "'''" ]
+			[0] = "bold"
+		)
+	],
+	[5] = "\n"
+)

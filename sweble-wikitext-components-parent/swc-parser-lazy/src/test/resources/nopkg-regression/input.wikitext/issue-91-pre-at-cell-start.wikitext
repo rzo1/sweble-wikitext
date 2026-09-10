@@ -1,0 +1,12 @@
+{|
+|+
+ caption pre
+|-
+!
+ header pre
+|-
+|
+ cell pre
+| x=y |
+ cell pre with attributes
+|}

@@ -1,0 +1,5 @@
+-{A|zh-hans:a;}-
+
+-{X|zh-hans:a;}-
+
+-{X;zh-hans|a}-

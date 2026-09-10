@@ -25,7 +25,9 @@ import java.util.Collections;
 
 import org.junit.Assert;
 import org.sweble.wikitext.parser.nodes.WtBody;
+import org.sweble.wikitext.parser.nodes.WtBold;
 import org.sweble.wikitext.parser.nodes.WtEmptyImmutableNode;
+import org.sweble.wikitext.parser.nodes.WtItalics;
 import org.sweble.wikitext.parser.nodes.WtLinkOptionGarbage;
 import org.sweble.wikitext.parser.nodes.WtNewline;
 import org.sweble.wikitext.parser.nodes.WtNode;
@@ -35,6 +37,7 @@ import org.sweble.wikitext.parser.nodes.WtParagraph;
 import org.sweble.wikitext.parser.nodes.WtTableCaption;
 import org.sweble.wikitext.parser.nodes.WtTableCell;
 import org.sweble.wikitext.parser.nodes.WtTableHeader;
+import org.sweble.wikitext.parser.nodes.WtTagExtension;
 import org.sweble.wikitext.parser.nodes.WtText;
 import org.sweble.wikitext.parser.nodes.WtXmlAttributeGarbage;
 import org.sweble.wikitext.parser.utils.TypedPrettyPrinter;
@@ -362,6 +365,33 @@ public abstract class ParserIntegrationTestBase
 			n.setContent(n.getContent().trim());
 			if (n.getContent().isEmpty())
 				return REMOVE;
+			return n;
+		}
+
+		public Object visit(WtBold n)
+		{
+			clearNode(n);
+			mapInPlace(n);
+			// The pretty printer does not print empty formatting
+			return n.isEmpty() ? REMOVE : n;
+		}
+
+		public Object visit(WtItalics n)
+		{
+			clearNode(n);
+			mapInPlace(n);
+			// The pretty printer does not print empty formatting
+			return n.isEmpty() ? REMOVE : n;
+		}
+
+		public Object visit(WtTagExtension n)
+		{
+			// The pretty printer separates ticks with empty nowiki tags
+			if (n.getName().equals("nowiki")
+					&& (!n.hasBody() || n.getBody().getContent().isEmpty()))
+				return REMOVE;
+			clearNode(n);
+			mapInPlace(n);
 			return n;
 		}
 
