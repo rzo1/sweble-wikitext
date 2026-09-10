@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,7 @@ import org.sweble.wikitext.parser.nodes.WtImageLink;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageHorizAlign;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageVertAlign;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageViewFormat;
+import org.sweble.wikitext.parser.nodes.WtLinkOptionKeyword;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtPageName;
 import org.sweble.wikitext.parser.utils.NonExpandingParser;
@@ -212,7 +214,162 @@ public class LocalizedImageLinkOptionsTest
 		assertEquals("Eine Bildunterschrift", toText(config, img.getTitle()));
 	}
 
+	@Test
+	public void testEnglishParameterizedOptionsAreNotCaptions() throws Exception
+	{
+		ParserConfig config = new SimpleParserConfig();
+
+		String[] options = {
+				"upright=1.5",
+				"upright 1.5",
+				"class=noviewer",
+				"lang=de",
+				"page=2",
+				"page 2",
+				"thumb=Other.png",
+				"thumbnail=Other.png" };
+
+		for (String option : options)
+		{
+			WtImageLink img = parseImageLink(
+					config,
+					"[[File:Example.jpg|" + option + "|A caption]]");
+
+			assertEquals(option, "A caption", toText(config, img.getTitle()));
+			assertEquals(option, option, findKeyword(img, option).getKeyword());
+		}
+	}
+
+	@Test
+	public void testEnglishParameterizedOptionsSetTheirProperties() throws Exception
+	{
+		ParserConfig config = new SimpleParserConfig();
+
+		WtImageLink img = parseImageLink(config, "[[File:Example.jpg|upright=1.5]]");
+		assertTrue(img.getUpright());
+		assertFalse(img.hasTitle());
+
+		img = parseImageLink(config, "[[File:Example.jpg|upright 0.5]]");
+		assertTrue(img.getUpright());
+
+		img = parseImageLink(config, "[[File:Example.jpg|thumb=Other.png]]");
+		assertEquals(ImageViewFormat.THUMBNAIL, img.getFormat());
+
+		img = parseImageLink(config, "[[File:Example.jpg|thumbnail=Other.png]]");
+		assertEquals(ImageViewFormat.THUMBNAIL, img.getFormat());
+	}
+
+	@Test
+	public void testParameterizedOptionsWithInvalidValuesAreCaptions() throws Exception
+	{
+		ParserConfig config = new SimpleParserConfig();
+
+		String[] captions = {
+				"upright=abc",
+				"upright=",
+				"upright big",
+				"page=two",
+				"page 2 of 3",
+				"page=0",
+				"lang=not a language",
+				"class=a\nb" };
+
+		for (String caption : captions)
+		{
+			WtImageLink img = parseImageLink(
+					config,
+					"[[File:Example.jpg|" + caption + "]]");
+
+			assertFalse(caption, img.getUpright());
+			assertTrue(caption, img.hasTitle());
+		}
+	}
+
+	@Test
+	public void testEnglishKeywordSynonyms() throws Exception
+	{
+		ParserConfig config = new SimpleParserConfig();
+
+		WtImageLink img = parseImageLink(config, "[[File:Example.jpg|centre|sup]]");
+		assertEquals(ImageHorizAlign.CENTER, img.getHAlign());
+		assertEquals(ImageVertAlign.SUPER, img.getVAlign());
+		assertFalse(img.hasTitle());
+
+		img = parseImageLink(config, "[[File:Example.jpg|framed]]");
+		assertEquals(ImageViewFormat.FRAME, img.getFormat());
+
+		img = parseImageLink(config, "[[File:Example.jpg|enframed]]");
+		assertEquals(ImageViewFormat.FRAME, img.getFormat());
+	}
+
+	/**
+	 * All img_* magic words are case-sensitive in MediaWiki (MessagesEn.php).
+	 */
+	@Test
+	public void testEnglishOptionsAreCaseSensitive() throws Exception
+	{
+		ParserConfig config = new SimpleParserConfig();
+
+		WtImageLink img = parseImageLink(config, "[[File:Example.jpg|Thumb]]");
+		assertEquals(ImageViewFormat.UNRESTRAINED, img.getFormat());
+		assertEquals("Thumb", toText(config, img.getTitle()));
+
+		img = parseImageLink(config, "[[File:Example.jpg|RIGHT]]");
+		assertEquals(ImageHorizAlign.UNSPECIFIED, img.getHAlign());
+		assertEquals("RIGHT", toText(config, img.getTitle()));
+
+		img = parseImageLink(config, "[[File:Example.jpg|Upright=1.5]]");
+		assertFalse(img.getUpright());
+		assertEquals("Upright=1.5", toText(config, img.getTitle()));
+
+		img = parseImageLink(config, "[[File:Example.jpg|100PX]]");
+		assertEquals(-1, img.getWidth());
+		assertEquals("100PX", toText(config, img.getTitle()));
+	}
+
+	@Test
+	public void testLocalizedParameterizedOptionsAreRecognized() throws Exception
+	{
+		ParserConfig config = new LocalizedParserConfig();
+
+		WtImageLink img = parseImageLink(
+				config,
+				"[[File:Beispiel.jpg|hochkant=1.2|klasse=rechts|Titel]]");
+
+		assertTrue(img.getUpright());
+		assertEquals("Titel", toText(config, img.getTitle()));
+		assertNotNull(findKeyword(img, "hochkant=1.2"));
+		assertNotNull(findKeyword(img, "klasse=rechts"));
+	}
+
+	@Test
+	public void testNodeFactoryResolvesParameterizedOptions() throws Exception
+	{
+		ParserConfig config = new SimpleParserConfig();
+
+		WtImageLink img = parseImageLink(
+				config,
+				"[[File:Example.jpg|upright=1.5|thumb=Other.png|A caption]]");
+
+		WtImageLink rebuilt = config.getNodeFactory().img(img.getTarget(), img.getOptions());
+
+		assertTrue(rebuilt.getUpright());
+		assertEquals(ImageViewFormat.THUMBNAIL, rebuilt.getFormat());
+	}
+
 	// =========================================================================
+
+	private WtLinkOptionKeyword findKeyword(WtImageLink img, String keyword)
+	{
+		for (WtNode option : img.getOptions())
+		{
+			if (option instanceof WtLinkOptionKeyword &&
+					keyword.equals(((WtLinkOptionKeyword) option).getKeyword()))
+				return (WtLinkOptionKeyword) option;
+		}
+		fail("No option keyword `" + keyword + "' found");
+		return null;
+	}
 
 	private WtImageLink parseImageLink(ParserConfig config, String wikitext) throws Exception
 	{
@@ -270,6 +427,7 @@ public class LocalizedImageLinkOptionsTest
 			addAliases(ImageLinkOptionAliases.IMG_WIDTH, "$1px", "$1пкс");
 			addAliases(ImageLinkOptionAliases.IMG_LINK, "verweis=$1");
 			addAliases(ImageLinkOptionAliases.IMG_ALT, "alternativtext=$1");
+			addAliases(ImageLinkOptionAliases.IMG_CLASS, "klasse=$1");
 		}
 
 		private void addAliases(String id, String... names)

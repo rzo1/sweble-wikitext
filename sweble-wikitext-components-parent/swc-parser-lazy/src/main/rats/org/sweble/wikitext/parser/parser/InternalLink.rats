@@ -69,6 +69,17 @@
  *
  *   - 'alt=' can be localized (magic word img_alt).
  *
+ * Link Option: Value
+ * ------------------
+ *
+ *   Grammar:
+ *     - LinkOptionValue ::= Ws* Name ( '=' / ' ' ) Value Ws*
+ *
+ *   - Other parameterized options (e.g. 'upright=', 'upright ', 'class=',
+ *     'lang=', 'page=', 'page ', 'thumb=' and 'thumbnail='), can be
+ *     localized (magic words img_*).
+ *   - The option is a caption if the value is not valid for the option.
+ *
  * Link Title
  * ----------
  *
@@ -383,6 +394,10 @@ private inline WtNode LinkOptionChoice =
       getLinkBuilder().addOption((WtLinkOptionKeyword) yyValue);
     }
   / LinkOptionNameValue &( '|' / "]]" )
+  / yyValue:LinkOptionValue &( '|' / "]]" )
+    {
+      getLinkBuilder().addOption((WtLinkOptionKeyword) yyValue);
+    }
   / LinkOptionUnresolved &( '|' / "]]" )
   / LinkOptionTitle &( '|' / "]]" )
 ;
@@ -523,6 +538,53 @@ private transient String LinkOptionName =
 private inline WtLinkTarget LinkTargetOverride =
     UrlNoPipe
   / LinkTarget
+;
+
+
+
+
+// -- Link Option Value --------------------------------------------------------
+
+/* Other parameterized options (magic words img_upright, img_class, img_lang,
+ * img_page, img_manualthumb, ...; e.g. "upright=$1", "upright $1" or
+ * "thumb=$1" in English). Like MediaWiki we match the trimmed option against
+ * the aliases with the value in place of $1. If the value is not valid for
+ * the option, the option is a caption. The option is kept verbatim as
+ * keyword (e.g. "upright=1.5").
+ */
+private WtLinkOptionKeyword LinkOptionValue =
+  rt0:pExtWsStar name:LinkOptionValueName value:LinkOptionValueString
+  &{ getLinkBuilder().isValueOption(name, value) } rt1:pExtWsStar
+  {
+    String keyword = name + value;
+    yyValue = setRtd(
+      nf.loKeyword(keyword),
+      '|', rt0, keyword, rt1);
+  }
+;
+
+/* The name of a parameterized option including the separator ('=' or ' ').
+ */
+private transient String LinkOptionValueName =
+    name:LinkOptionKeywordString '='
+    {
+      yyValue = name + "=";
+    }
+  / name:LinkOptionKeywordString ' '
+    {
+      yyValue = name + " ";
+    }
+;
+
+/* The value does not include trailing whitespace and, like in MediaWiki,
+ * cannot span multiple lines.
+ */
+private transient String LinkOptionValueString =
+  ( !LinkOptionValueEnd ![\n\r\uE000\uE001] _ )*
+;
+
+private inline void LinkOptionValueEnd =
+  [ \t]* ( '|' / "]]" )
 ;
 
 
