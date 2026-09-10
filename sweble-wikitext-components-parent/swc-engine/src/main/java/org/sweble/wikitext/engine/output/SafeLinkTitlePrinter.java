@@ -231,24 +231,35 @@ public class SafeLinkTitlePrinter
 
 	public void visit(WtInternalLink n)
 	{
+		String linkTarget = n.getTarget().getAsString();
+		PageTitle target;
+		try
+		{
+			target = PageTitle.make(wikiConfig, linkTarget);
+		}
+		catch (LinkTargetException e)
+		{
+			throw new VisitingException(e);
+		}
+
+		// Like the HtmlRenderer hide category links
+		if (target.getNamespace() == wikiConfig.getNamespace("Category"))
+			return;
+
+		// Print the text of the link as it is rendered: The target as written
+		// (or the title) together with the prefix and the link trail
+		p.print(esc(n.getPrefix(), true));
 		if (n.hasTitle())
 		{
 			dispatch(n.getTitle());
 		}
 		else
 		{
-			String linkTarget = n.getTarget().getAsString();
-			PageTitle target;
-			try
-			{
-				target = PageTitle.make(wikiConfig, linkTarget);
-			}
-			catch (LinkTargetException e)
-			{
-				throw new VisitingException(e);
-			}
-			p.print(esc(HtmlRenderer.makeLinkTitle(n, target), true));
+			if (target.hasInitialColon() && !linkTarget.isEmpty() && linkTarget.charAt(0) == ':')
+				linkTarget = linkTarget.substring(1);
+			p.print(esc(linkTarget, true));
 		}
+		p.print(esc(n.getPostfix(), true));
 	}
 
 	public void visit(WtItalics n)

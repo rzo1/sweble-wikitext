@@ -28,6 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.fau.cs.osr.utils.StringTools;
+import de.fau.cs.osr.utils.XmlEntityResolver;
 
 /**
  * Sanitizes HTML elements, attributes and inline CSS that originate from
@@ -119,6 +120,15 @@ public final class HtmlSanitizer
 
 	private static final Pattern CHAR_REF =
 			Pattern.compile("&(?:([A-Za-z][A-Za-z0-9]*)|#([0-9]+)|#[xX]([0-9A-Fa-f]+));");
+
+	/** Ids are truncated to this many characters (T251506). */
+	private static final int MAX_ID_LENGTH = 1024;
+
+	private static final Pattern ID_WHITESPACE =
+			Pattern.compile("[\\t\\n\\f\\r ]");
+
+	private static final Pattern PERCENT_ESCAPE =
+			Pattern.compile("%([0-9A-Fa-f]{2})");
 
 	private static final Pattern CSS_ESCAPE = Pattern.compile(
 			"\\\\(?:(\\n|\\r\\n|\\r|\\f)|([0-9A-Fa-f]{1,6})[\\x20\\t\\r\\n\\f]?|(.)|$)",
@@ -456,6 +466,17 @@ public final class HtmlSanitizer
 	 */
 	public static String decodeCharReferences(String text)
 	{
+		return decodeCharReferences(text, null);
+	}
+
+	/**
+	 * Decodes numeric and named character references like
+	 * {@link #decodeCharReferences(String)}. Named references which are not
+	 * in the small built-in set are looked up with the given resolver (if
+	 * any). Unknown named references are left untouched.
+	 */
+	public static String decodeCharReferences(String text, XmlEntityResolver resolver)
+	{
 		if (text == null || text.indexOf('&') < 0)
 			return text;
 
@@ -467,6 +488,8 @@ public final class HtmlSanitizer
 			if (m.group(1) != null)
 			{
 				replacement = NAMED_CHAR_REFS.get(m.group(1));
+				if (replacement == null && resolver != null)
+					replacement = resolver.resolveXmlEntity(m.group(1));
 				if (replacement == null)
 					replacement = m.group();
 			}
@@ -530,6 +553,34 @@ public final class HtmlSanitizer
 		if (forAttribute)
 			return StringTools.escHtml(text, true);
 		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+
+	/**
+	 * Turns a (decoded) section name or link fragment into the value of an
+	 * {@code id} attribute like MediaWiki's
+	 * {@code Sanitizer::escapeIdForAttribute()} in {@code html5} mode: the id
+	 * is truncated to {@value #MAX_ID_LENGTH} characters and whitespace that
+	 * is not allowed in HTML5 ids is replaced by underscores. The result is
+	 * not HTML escaped.
+	 */
+	public static String escapeIdForAttribute(String id)
+	{
+		if (id.codePointCount(0, id.length()) > MAX_ID_LENGTH)
+			id = id.substring(0, id.offsetByCodePoints(0, MAX_ID_LENGTH));
+		return ID_WHITESPACE.matcher(id).replaceAll("_");
+	}
+
+	/**
+	 * Turns a (decoded) section name or link fragment into the fragment of a
+	 * link (without the leading {@code #}) like MediaWiki's
+	 * {@code Sanitizer::escapeIdForLink()} in {@code html5} mode. Like
+	 * {@link #escapeIdForAttribute(String)} but percent signs that look like
+	 * percent encoded characters are escaped so that browsers find the id.
+	 * The result is not HTML escaped.
+	 */
+	public static String escapeIdForLink(String id)
+	{
+		return PERCENT_ESCAPE.matcher(escapeIdForAttribute(id)).replaceAll("%25$1");
 	}
 
 	// =========================================================================
