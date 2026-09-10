@@ -20,6 +20,7 @@ package org.sweble.wikitext.engine;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Map;
 
 import org.sweble.wikitext.engine.config.Interwiki;
@@ -438,12 +439,12 @@ public class PageTitle
 		String namespaceAlias = null;
 		if (namespace != null && parser.getNamespace() != null)
 		{
-			String lcNs = parser.getNamespace().toLowerCase();
+			String lcNs = parser.getNamespace().toLowerCase(Locale.ROOT);
 			if (!lcNs.equals(namespace.getName()))
 			{
 				for (String a : namespace.getAliases())
 				{
-					if (lcNs.equals(a.toLowerCase()))
+					if (lcNs.equals(a.toLowerCase(Locale.ROOT)))
 					{
 						namespaceAlias = a;
 						break;

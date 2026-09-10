@@ -20,6 +20,8 @@ package org.sweble.wikitext.parser;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 import org.sweble.wikitext.parser.encval.ValidatedWikitext;
 import org.sweble.wikitext.parser.nodes.WtNode;
@@ -82,7 +84,7 @@ public class WikitextPreprocessor
 		
 		Reader in = new StringReader(wikitext.getWikitext());
 
-		int inputSize = wikitext.getWikitext().getBytes().length;
+		int inputSize = wikitext.getWikitext().getBytes(StandardCharsets.UTF_8).length;
 
 		// A Rats! parser must not be shared between threads
 		RatsWikitextPreprocessor preprocessor =
@@ -125,6 +127,7 @@ public class WikitextPreprocessor
 			else
 			{
 				throw new ParseException(String.format(
+						Locale.ROOT,
 						"%s: %s",
 						preprocessor.location(err.index),
 						err.msg));

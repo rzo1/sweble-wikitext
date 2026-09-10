@@ -22,6 +22,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -498,6 +499,7 @@ final class Gui
 
 			BinaryPrefix bytesReadP = new BinaryPrefix(bytesRead);
 			textRead.setText(String.format(
+					Locale.getDefault(),
 					"%d %s",
 					bytesReadP.getValue(),
 					bytesReadP.makePaddedUnit("B")));
@@ -509,11 +511,12 @@ final class Gui
 			{
 				float eta = speedMeter.getEta();
 				this.progress.setText(String.format(
+						Locale.getDefault(),
 						"%5.1f %%, ETA %s",
 						speedMeter.getCurrentProgress(),
 						Float.isInfinite(eta) || Float.isNaN(eta) ?
 								"unknown" :
-								String.format("%.0f min", eta)));
+								String.format(Locale.getDefault(), "%.0f min", eta)));
 			}
 			else
 			{
@@ -522,6 +525,7 @@ final class Gui
 
 			BinaryPrefix p = new BinaryPrefix((long) speed);
 			this.speed.setText(String.format(
+					Locale.getDefault(),
 					"%7.2f %s",
 					speed / p.getFactor(),
 					p.makePaddedUnit("B/s")));

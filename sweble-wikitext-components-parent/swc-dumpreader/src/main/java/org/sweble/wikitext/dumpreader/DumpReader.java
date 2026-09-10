@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Locale;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -288,6 +289,7 @@ public abstract class DumpReader
 			ValidationEventLocator vel)
 	{
 		logger.warn(String.format(
+				Locale.ROOT,
 				"%s:%d:%d: %s",
 				dumpUri,
 				vel.getLineNumber(),
@@ -364,6 +366,7 @@ public abstract class DumpReader
 		}
 
 		throw new IllegalArgumentException(String.format(
+				Locale.ROOT,
 				"Unknown xmlns '%s' of root element '%s' in %s",
 				root.getNamespaceURI(),
 				root.getLocalPart(),

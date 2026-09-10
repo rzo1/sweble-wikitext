@@ -20,6 +20,7 @@ package org.sweble.wikitext.example;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -545,7 +546,7 @@ public class TextConverter
 
 	public void visit(WtXmlElement e)
 	{
-		String name = e.getName().toLowerCase();
+		String name = e.getName().toLowerCase(Locale.ROOT);
 		if (name.equals("br"))
 		{
 			newline(1);
@@ -596,7 +597,7 @@ public class TextConverter
 
 	public void visit(WtTagExtension n)
 	{
-		String name = n.getName().trim().toLowerCase();
+		String name = n.getName().trim().toLowerCase(Locale.ROOT);
 
 		// TODO: Should not get skipped!
 		if (name.equals("ref") || name.equals("references"))

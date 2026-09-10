@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TimeZone;
@@ -244,7 +245,7 @@ public class WikiConfigImpl
 
 	private String toTagExtensionLookupName(String name)
 	{
-		return tagExtensionNamesCaseSensitive ? name : name.toLowerCase();
+		return tagExtensionNamesCaseSensitive ? name : name.toLowerCase(Locale.ROOT);
 	}
 	
 	// ==[ Namespaces ]=========================================================
@@ -261,9 +262,9 @@ public class WikiConfigImpl
 
 		ArrayList<String> names = new ArrayList<String>(ns.getAliases().size() + 2);
 		for (String name : ns.getAliases())
-			names.add(name.toLowerCase());
-		names.add(ns.getName().toLowerCase());
-		names.add(ns.getCanonical().toLowerCase());
+			names.add(name.toLowerCase(Locale.ROOT));
+		names.add(ns.getName().toLowerCase(Locale.ROOT));
+		names.add(ns.getCanonical().toLowerCase(Locale.ROOT));
 
 		for (String name : names)
 		{
@@ -299,7 +300,7 @@ public class WikiConfigImpl
 	@Override
 	public NamespaceImpl getNamespace(String name)
 	{
-		return namespaceByName.get(name.toLowerCase());
+		return namespaceByName.get(name.toLowerCase(Locale.ROOT));
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -353,7 +354,7 @@ public class WikiConfigImpl
 
 	public void addInterwiki(InterwikiImpl iw)
 	{
-		String key = iw.getPrefix().toLowerCase();
+		String key = iw.getPrefix().toLowerCase(Locale.ROOT);
 
 		InterwikiImpl old = prefixToInterwikiMap.get(key);
 
@@ -374,7 +375,7 @@ public class WikiConfigImpl
 	{
 		if (prefix == null)
 			return null;
-		return prefixToInterwikiMap.get(prefix.toLowerCase());
+		return prefixToInterwikiMap.get(prefix.toLowerCase(Locale.ROOT));
 	}
 
 	@Override
@@ -417,7 +418,7 @@ public class WikiConfigImpl
 
 		for (String a : alias.getAliases())
 		{
-			String lcAlias = a.toLowerCase();
+			String lcAlias = a.toLowerCase(Locale.ROOT);
 			I18nAliasImpl old2 = nameToAliasMap.get(lcAlias);
 
 			if (old2 == alias) {
@@ -437,7 +438,7 @@ public class WikiConfigImpl
 		{
 			for (String a : alias.getAliases())
 			{
-				String lcAlias = a.toLowerCase();
+				String lcAlias = a.toLowerCase(Locale.ROOT);
 				if (!nameToImageLinkOptionAliasMap.containsKey(lcAlias))
 					nameToImageLinkOptionAliasMap.put(lcAlias, alias);
 			}
@@ -451,7 +452,7 @@ public class WikiConfigImpl
 	{
 		if (name == null)
 			throw new NullPointerException();
-		I18nAliasImpl alias = nameToAliasMap.get(name.toLowerCase());
+		I18nAliasImpl alias = nameToAliasMap.get(name.toLowerCase(Locale.ROOT));
 		if (alias != null && alias.isCaseSensitive() && !alias.getAliases().contains(name))
 			alias = null;
 		return alias;
@@ -471,7 +472,7 @@ public class WikiConfigImpl
 	{
 		if (name == null)
 			throw new NullPointerException();
-		I18nAliasImpl alias = nameToImageLinkOptionAliasMap.get(name.toLowerCase());
+		I18nAliasImpl alias = nameToImageLinkOptionAliasMap.get(name.toLowerCase(Locale.ROOT));
 		if (alias != null && alias.isCaseSensitive() && !alias.getAliases().contains(name))
 			alias = null;
 		return alias;

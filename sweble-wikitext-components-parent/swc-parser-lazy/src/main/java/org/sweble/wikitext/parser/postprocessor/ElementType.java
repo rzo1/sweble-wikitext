@@ -50,6 +50,8 @@ import static org.sweble.wikitext.parser.nodes.WtNode.NT_XML_EMPTY_TAG;
 import static org.sweble.wikitext.parser.nodes.WtNode.NT_XML_END_TAG;
 import static org.sweble.wikitext.parser.nodes.WtNode.NT_XML_START_TAG;
 
+import java.util.Locale;
+
 import org.sweble.wikitext.parser.nodes.WtImageLink;
 import org.sweble.wikitext.parser.nodes.WtNamedXmlElement;
 import org.sweble.wikitext.parser.nodes.WtNode;
@@ -481,12 +483,12 @@ public enum ElementType
 	{
 		return !name.isEmpty() &&
 				(name.charAt(0) != '#') &&
-				(xmlElementTypeMap.get(name.toLowerCase()) != null);
+				(xmlElementTypeMap.get(name.toLowerCase(Locale.ROOT)) != null);
 	}
 
 	public static ElementType getType(WtNamedXmlElement e)
 	{
-		String name = e.getName().toLowerCase();
+		String name = e.getName().toLowerCase(Locale.ROOT);
 		if (name.isEmpty())
 			throw new AssertionError();
 

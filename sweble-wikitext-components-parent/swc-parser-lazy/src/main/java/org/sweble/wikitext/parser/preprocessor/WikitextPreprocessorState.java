@@ -18,6 +18,7 @@
 package org.sweble.wikitext.parser.preprocessor;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.sweble.wikitext.parser.ParserConfig;
@@ -340,7 +341,7 @@ public class WikitextPreprocessorState
 
 	public boolean isIgnoredElement(String name)
 	{
-		String lcName = name.toLowerCase();
+		String lcName = name.toLowerCase(Locale.ROOT);
 		if (isParseForInclusion())
 		{
 			return "noinclude".compareTo(lcName) == 0;
@@ -353,7 +354,7 @@ public class WikitextPreprocessorState
 
 	public boolean isIgnoredTag(String name)
 	{
-		String lcName = name.toLowerCase();
+		String lcName = name.toLowerCase(Locale.ROOT);
 		if (isParseForInclusion())
 		{
 			return "includeonly".compareTo(lcName) == 0;

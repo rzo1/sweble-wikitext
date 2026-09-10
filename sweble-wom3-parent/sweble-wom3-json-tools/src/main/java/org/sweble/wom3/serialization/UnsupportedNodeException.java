@@ -17,6 +17,8 @@
  */
 package org.sweble.wom3.serialization;
 
+import java.util.Locale;
+
 import org.w3c.dom.Node;
 
 /**
@@ -33,7 +35,7 @@ public class UnsupportedNodeException
 
 	public UnsupportedNodeException(Node node)
 	{
-		super(String.format("Node name: %s; Node type: %d", node.getNodeName(), node.getNodeType()));
+		super(String.format(Locale.ROOT, "Node name: %s; Node type: %d", node.getNodeName(), node.getNodeType()));
 		this.node = node;
 	}
 

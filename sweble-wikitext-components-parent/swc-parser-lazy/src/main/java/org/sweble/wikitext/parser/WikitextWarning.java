@@ -17,6 +17,8 @@
 
 package org.sweble.wikitext.parser;
 
+import java.util.Locale;
+
 import de.fau.cs.osr.ptk.common.Warning;
 import de.fau.cs.osr.ptk.common.ast.Span;
 
@@ -72,7 +74,7 @@ public abstract class WikitextWarning
 	{
 		String severity = "-";
 		if (getSeverity() != null)
-			severity = getSeverity().toString().toLowerCase();
+			severity = getSeverity().toString().toLowerCase(Locale.ROOT);
 		return severity;
 	}
 

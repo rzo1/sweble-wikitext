@@ -17,6 +17,7 @@
 
 package org.sweble.wikitext.articlecruncher.utils;
 
+import java.util.Locale;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +45,7 @@ public class DaemonThreadFactory
 
 		this.group = group;
 
-		this.threadNameTemplate = String.format("%s-%%02d", poolName);
+		this.threadNameTemplate = String.format(Locale.ROOT, "%s-%%02d", poolName);
 	}
 
 	// =========================================================================
@@ -59,7 +60,7 @@ public class DaemonThreadFactory
 	@Override
 	public Thread newThread(Runnable runnable)
 	{
-		String name = String.format(threadNameTemplate, threadNumber.getAndIncrement());
+		String name = String.format(Locale.ROOT, threadNameTemplate, threadNumber.getAndIncrement());
 
 		Thread thread = new Thread(group, runnable, name);
 

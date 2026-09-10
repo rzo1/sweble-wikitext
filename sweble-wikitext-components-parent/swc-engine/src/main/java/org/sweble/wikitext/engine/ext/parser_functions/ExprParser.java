@@ -929,8 +929,8 @@ public class ExprParser
 		{
 			String format = MESSAGES.get(message);
 			if (format == null)
-				return String.format(MESSAGES.get("unknown_error"), message);
-			return String.format(format, (param != null) ? param : "");
+				return String.format(Locale.ROOT, MESSAGES.get("unknown_error"), message);
+			return String.format(Locale.ROOT, format, (param != null) ? param : "");
 		}
 
 		public String getParam()

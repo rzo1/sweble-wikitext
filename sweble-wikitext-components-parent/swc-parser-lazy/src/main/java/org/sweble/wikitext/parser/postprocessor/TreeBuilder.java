@@ -50,6 +50,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -208,7 +209,7 @@ public class TreeBuilder
 	void dbgIn(String format, Object... args)
 	{
 		System.out.println(StringTools.indent(
-				String.format(format, args),
+				String.format(Locale.ROOT, format, args),
 				StringTools.strrep(' ', dbgIndent * 4)));
 		++dbgIndent;
 	}
@@ -216,7 +217,7 @@ public class TreeBuilder
 	void dbg(String format, Object... args)
 	{
 		System.out.println(StringTools.indent(
-				String.format(format, args),
+				String.format(Locale.ROOT, format, args),
 				StringTools.strrep(' ', dbgIndent * 4)));
 	}
 
@@ -224,7 +225,7 @@ public class TreeBuilder
 	{
 		--dbgIndent;
 		System.out.println(StringTools.indent(
-				String.format(format, args),
+				String.format(Locale.ROOT, format, args),
 				StringTools.strrep(' ', dbgIndent * 4)));
 	}
 
@@ -1680,7 +1681,7 @@ public class TreeBuilder
 		{
 			ElementType type = getNodeType(e);
 			if (type == UNKNOWN && (e instanceof WtNamedXmlElement))
-				this.tag = "<" + ((WtNamedXmlElement) e).getName().toLowerCase();
+				this.tag = "<" + ((WtNamedXmlElement) e).getName().toLowerCase(Locale.ROOT);
 			else
 				this.tag = String.valueOf(type);
 

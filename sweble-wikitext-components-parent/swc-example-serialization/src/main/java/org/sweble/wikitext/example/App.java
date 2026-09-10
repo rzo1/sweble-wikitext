@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Locale;
 
 import de.fau.cs.osr.utils.ComparisonException;
 import de.fau.cs.osr.utils.getopt.Options;
@@ -128,15 +129,15 @@ public class App
 		String methodName = opt.value("format");
 
 		SerializationMethod method;
-		if (methodName.toLowerCase().equals("java"))
+		if (methodName.toLowerCase(Locale.ROOT).equals("java"))
 		{
 			method = SerializationMethod.JAVA;
 		}
-		else if (methodName.toLowerCase().equals("xml"))
+		else if (methodName.toLowerCase(Locale.ROOT).equals("xml"))
 		{
 			method = SerializationMethod.XML;
 		}
-		else if (methodName.toLowerCase().equals("json"))
+		else if (methodName.toLowerCase(Locale.ROOT).equals("json"))
 		{
 			method = SerializationMethod.JSON;
 		}

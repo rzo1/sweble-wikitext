@@ -20,6 +20,7 @@ package org.sweble.wikitext.engine.ext.convert;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -695,7 +696,7 @@ public enum Units
 	 */
 	final String getTypeName()
 	{
-		return type.name().toLowerCase().replace('_', ' ');
+		return type.name().toLowerCase(Locale.ROOT).replace('_', ' ');
 	}
 
 	/**

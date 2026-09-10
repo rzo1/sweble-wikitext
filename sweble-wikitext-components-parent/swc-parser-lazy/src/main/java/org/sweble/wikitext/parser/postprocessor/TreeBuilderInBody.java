@@ -23,6 +23,7 @@ import org.sweble.wikitext.parser.nodes.*;
 import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
 
 import java.util.ListIterator;
+import java.util.Locale;
 
 import static org.sweble.wikitext.parser.nodes.WtNode.*;
 import static org.sweble.wikitext.parser.postprocessor.ElementType.*;
@@ -259,7 +260,7 @@ public final class TreeBuilderInBody
 	{
 		if (n instanceof WtNamedXmlElement)
 		{
-			String name = ((WtNamedXmlElement) n).getName().toLowerCase();
+			String name = ((WtNamedXmlElement) n).getName().toLowerCase(Locale.ROOT);
 			switch (getNonStandardElementBehavior(name))
 			{
 				case LIKE_BR:
@@ -386,7 +387,7 @@ public final class TreeBuilderInBody
 	{
 		if (n instanceof WtNamedXmlElement)
 		{
-			String name = ((WtNamedXmlElement) n).getName().toLowerCase();
+			String name = ((WtNamedXmlElement) n).getName().toLowerCase(Locale.ROOT);
 			switch (getNonStandardElementBehavior(name))
 			{
 				case LIKE_BR:

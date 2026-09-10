@@ -23,6 +23,7 @@ import static org.sweble.wikitext.parser.postprocessor.IntermediateTags.ITALICS;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Locale;
 
 import org.sweble.wikitext.parser.ParserConfig;
 import org.sweble.wikitext.parser.nodes.WikitextNodeFactory;
@@ -619,6 +620,7 @@ public class TicksAnalyzer
 		public String toString()
 		{
 			return String.format(
+					Locale.ROOT,
 					"Line(#i = %d, #b = %d): %s",
 					numItalics,
 					numBold,
@@ -667,6 +669,7 @@ public class TicksAnalyzer
 				pf = '"' + prefix.getContent() + '"';
 
 			return String.format(
+					Locale.ROOT,
 					"LineEntry(%s, %s, %d)",
 					pv,
 					pf,

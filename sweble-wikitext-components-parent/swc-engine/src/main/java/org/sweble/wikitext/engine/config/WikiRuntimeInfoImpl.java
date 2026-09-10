@@ -38,7 +38,7 @@ public class WikiRuntimeInfoImpl
 	@Override
 	public Calendar getDateAndTime()
 	{
-		Calendar timestamp = new GregorianCalendar(wikiConfigImpl.getTimezone());
+		Calendar timestamp = new GregorianCalendar(wikiConfigImpl.getTimezone(), Locale.ROOT);
 		timestamp.setLenient(true);
 		return timestamp;
 	}

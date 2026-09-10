@@ -18,6 +18,7 @@
 package org.sweble.wom3.impl;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.sweble.wom3.Wom3Color;
@@ -64,7 +65,7 @@ public class ColorImpl
 	@Override
 	public String toString()
 	{
-		return String.format("#%02X%02X%02X", (int) r, (int) g, (int) b);
+		return String.format(Locale.ROOT, "#%02X%02X%02X", (int) r, (int) g, (int) b);
 	}
 
 	@Override
@@ -257,7 +258,7 @@ public class ColorImpl
 	public static ColorImpl valueOf(String color)
 	{
 		color = color.trim();
-		String c = color.toLowerCase();
+		String c = color.toLowerCase(Locale.ROOT);
 
 		try
 		{

@@ -17,6 +17,8 @@
 
 package org.sweble.wikitext.parser.utils;
 
+import java.util.Locale;
+
 import de.fau.cs.osr.ptk.common.ast.AstLocation;
 import de.fau.cs.osr.utils.StringTools;
 
@@ -87,12 +89,14 @@ public class ParserShouldNotBeHereException
 		if (before.isEmpty() && after.isEmpty())
 		{
 			return String.format(
+					Locale.ROOT,
 					"ParserShouldNotBeHereException: %s: No context available",
 					location.toString());
 		}
 		else if (before.isEmpty())
 		{
 			return String.format(
+					Locale.ROOT,
 					"ParserShouldNotBeHereException: %s: <!> \"%s\"",
 					location.toString(),
 					after);
@@ -100,6 +104,7 @@ public class ParserShouldNotBeHereException
 		else if (after.isEmpty())
 		{
 			return String.format(
+					Locale.ROOT,
 					"ParserShouldNotBeHereException: %s: \"%s\" <!>",
 					location.toString(),
 					before);
@@ -107,6 +112,7 @@ public class ParserShouldNotBeHereException
 		else
 		{
 			return String.format(
+					Locale.ROOT,
 					"ParserShouldNotBeHereException: %s: \"%s\" <!> \"%s\"",
 					location.toString(),
 					before,

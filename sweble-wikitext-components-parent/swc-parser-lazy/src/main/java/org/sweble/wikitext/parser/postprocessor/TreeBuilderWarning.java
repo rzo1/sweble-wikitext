@@ -18,6 +18,7 @@
 package org.sweble.wikitext.parser.postprocessor;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 import org.sweble.wikitext.parser.nodes.WtNode;
 
@@ -47,7 +48,7 @@ public final class TreeBuilderWarning
 
 	private static String makeMessage(WtNode trigger, String message)
 	{
-		return String.format("%s @ %s", message, trigger.getNodeName());
+		return String.format(Locale.ROOT, "%s @ %s", message, trigger.getNodeName());
 	}
 
 	// =========================================================================
