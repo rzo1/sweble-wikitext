@@ -75,12 +75,46 @@ public class ExpansionFrame
 			boolean timingEnabled,
 			boolean catchAll)
 	{
+		this(
+				engine,
+				callback,
+				hooks,
+				title,
+				entityMap,
+				false,
+				noRedirect,
+				warnings,
+				frameLog,
+				timingEnabled,
+				catchAll);
+	}
+
+	/**
+	 * Creates the root frame of an expansion process.
+	 *
+	 * @param forInclusion
+	 *            Whether the page is expanded for inclusion. This is passed on
+	 *            to the target page of a redirect.
+	 */
+	public ExpansionFrame(
+			WtEngineImpl engine,
+			ExpansionCallback callback,
+			ExpansionDebugHooks hooks,
+			PageTitle title,
+			WtEntityMap entityMap,
+			boolean forInclusion,
+			boolean noRedirect,
+			List<Warning> warnings,
+			EngLogContainer frameLog,
+			boolean timingEnabled,
+			boolean catchAll)
+	{
 		this.engine = engine;
 		this.callback = callback;
 		this.title = title;
 		this.entityMap = entityMap;
 		this.arguments = new HashMap<String, WtNodeList>();
-		this.forInclusion = false;
+		this.forInclusion = forInclusion;
 		this.noRedirect = noRedirect;
 		this.warnings = warnings;
 		this.frameLog = frameLog;

@@ -30,6 +30,8 @@ import org.junit.Test;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
 import org.sweble.wikitext.engine.nodes.EngProcessedPage;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
+import org.sweble.wikitext.parser.nodes.WtNode;
+import org.sweble.wikitext.parser.nodes.WtText;
 import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
 
 import de.fau.cs.osr.ptk.common.Warning;
@@ -77,6 +79,29 @@ public class ExpansionVisitorTest
 	}
 
 	// =========================================================================
+	// == forInclusion
+
+	@Test
+	public void testRedirectTargetOfPageExpandedForInclusionIsIncluded() throws Exception
+	{
+		callback.add("Target", "a<noinclude>b</noinclude><includeonly>c</includeonly>");
+
+		EngProcessedPage page = expand("#REDIRECT [[Target]]", true);
+
+		assertEquals("ac", textOf(page.getPage()));
+	}
+
+	@Test
+	public void testRedirectTargetOfPageExpandedForViewingIsViewed() throws Exception
+	{
+		callback.add("Target", "a<noinclude>b</noinclude><includeonly>c</includeonly>");
+
+		EngProcessedPage page = expand("#REDIRECT [[Target]]", false);
+
+		assertEquals("ab", textOf(page.getPage()));
+	}
+
+	// =========================================================================
 
 	/**
 	 * Adds the templates {@code prefix1} to {@code prefixN}, each transcluding
@@ -115,6 +140,25 @@ public class ExpansionVisitorTest
 	private static void assertOutput(String expected, EngProcessedPage page)
 	{
 		assertEquals(expected, WtRtDataPrinter.print(page.getPage()));
+	}
+
+	/**
+	 * Returns the content of all text nodes, leaving out ignored content like
+	 * &lt;noinclude> sections which the printer would reproduce.
+	 */
+	private static String textOf(WtNode node)
+	{
+		StringBuilder b = new StringBuilder();
+		appendText(node, b);
+		return b.toString();
+	}
+
+	private static void appendText(WtNode node, StringBuilder b)
+	{
+		if (node instanceof WtText)
+			b.append(((WtText) node).getContent());
+		for (WtNode child : node)
+			appendText(child, b);
 	}
 
 	private static void assertNoWarnings(EngProcessedPage page)

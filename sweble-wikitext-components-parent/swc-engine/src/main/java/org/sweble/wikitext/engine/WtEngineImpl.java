@@ -179,7 +179,7 @@ public class WtEngineImpl
 
 			pprAst = ppAst;
 			if (callback != null)
-				pprAst = expand(callback, title, ppAst, null, false, log);
+				pprAst = expand(callback, title, ppAst, null, forInclusion, log);
 		}
 		catch (EngineException e)
 		{
@@ -801,6 +801,7 @@ public class WtEngineImpl
 						hooks,
 						title,
 						ppAst.getEntityMap(),
+						forInclusion,
 						noRedirect,
 						warnings,
 						log,
