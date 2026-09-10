@@ -24,7 +24,7 @@
 	<parent>
 		<groupId>io.github.rzo1.org.sweble</groupId>
 		<artifactId>sweble-parent</artifactId>
-		<version>4.1.0-SNAPSHOT</version>
+		<version>4.1.0</version>
 	</parent>
 
 	<groupId>io.github.rzo1.org.sweble.wom3</groupId>
