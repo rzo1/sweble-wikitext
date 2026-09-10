@@ -55,6 +55,22 @@ public class ExpansionFrame
 
 	private final boolean noRedirect;
 
+	private final int depth;
+
+	private final int redirects;
+
+	/**
+	 * The post-expand include size of the whole expansion process. Only the
+	 * field of the root frame is used.
+	 */
+	private long postExpandIncludeSize;
+
+	/**
+	 * Set in the root frame once a transclusion exceeded the maximum
+	 * post-expand include size.
+	 */
+	private boolean postExpandIncludeSizeExceeded;
+
 	private ExpansionVisitor expansionVisitor;
 
 	// FIXME: That should have been initialized from a request!
@@ -75,17 +91,53 @@ public class ExpansionFrame
 			boolean timingEnabled,
 			boolean catchAll)
 	{
+		this(
+				engine,
+				callback,
+				hooks,
+				title,
+				entityMap,
+				false,
+				noRedirect,
+				warnings,
+				frameLog,
+				timingEnabled,
+				catchAll);
+	}
+
+	/**
+	 * Creates the root frame of an expansion process.
+	 *
+	 * @param forInclusion
+	 *            Whether the page is expanded for inclusion. This is passed on
+	 *            to the target page of a redirect.
+	 */
+	public ExpansionFrame(
+			WtEngineImpl engine,
+			ExpansionCallback callback,
+			ExpansionDebugHooks hooks,
+			PageTitle title,
+			WtEntityMap entityMap,
+			boolean forInclusion,
+			boolean noRedirect,
+			List<Warning> warnings,
+			EngLogContainer frameLog,
+			boolean timingEnabled,
+			boolean catchAll)
+	{
 		this.engine = engine;
 		this.callback = callback;
 		this.title = title;
 		this.entityMap = entityMap;
 		this.arguments = new HashMap<String, WtNodeList>();
-		this.forInclusion = false;
+		this.forInclusion = forInclusion;
 		this.noRedirect = noRedirect;
 		this.warnings = warnings;
 		this.frameLog = frameLog;
 		this.rootFrame = this;
 		this.parentFrame = null;
+		this.depth = 0;
+		this.redirects = 0;
 
 		expansionVisitor = new ExpansionVisitor(
 				this,
@@ -111,6 +163,50 @@ public class ExpansionFrame
 			boolean timingEnabled,
 			boolean catchAll)
 	{
+		this(
+				engine,
+				callback,
+				hooks,
+				title,
+				entityMap,
+				arguments,
+				forInclusion,
+				noRedirect,
+				rootFrame,
+				parentFrame,
+				false,
+				warnings,
+				frameLog,
+				timingEnabled,
+				catchAll);
+	}
+
+	/**
+	 * Creates the frame of a transcluded page or of the target page of a
+	 * redirect.
+	 *
+	 * @param redirect
+	 *            Whether the page is the target of a redirect of the parent
+	 *            frame. The target page replaces the redirecting page and is
+	 *            expanded at the same depth.
+	 */
+	public ExpansionFrame(
+			WtEngineImpl engine,
+			ExpansionCallback callback,
+			ExpansionDebugHooks hooks,
+			PageTitle title,
+			WtEntityMap entityMap,
+			Map<String, WtNodeList> arguments,
+			boolean forInclusion,
+			boolean noRedirect,
+			ExpansionFrame rootFrame,
+			ExpansionFrame parentFrame,
+			boolean redirect,
+			List<Warning> warnings,
+			EngLogContainer frameLog,
+			boolean timingEnabled,
+			boolean catchAll)
+	{
 		this.engine = engine;
 		this.callback = callback;
 		this.title = title;
@@ -122,6 +218,21 @@ public class ExpansionFrame
 		this.frameLog = frameLog;
 		this.rootFrame = rootFrame;
 		this.parentFrame = parentFrame;
+		if (parentFrame == null)
+		{
+			this.depth = 0;
+			this.redirects = redirect ? 1 : 0;
+		}
+		else if (redirect)
+		{
+			this.depth = parentFrame.getDepth();
+			this.redirects = parentFrame.getRedirectCount() + 1;
+		}
+		else
+		{
+			this.depth = parentFrame.getDepth() + 1;
+			this.redirects = 0;
+		}
 
 		expansionVisitor = new ExpansionVisitor(
 				this,
@@ -206,6 +317,69 @@ public class ExpansionFrame
 	public UrlService getUrlService()
 	{
 		return urlService;
+	}
+
+	/**
+	 * Returns the number of nested transclusions that lead from the root frame
+	 * to this frame. The root frame has depth 0. Following a redirect does not
+	 * increase the depth.
+	 */
+	public int getDepth()
+	{
+		return depth;
+	}
+
+	/**
+	 * Returns the number of consecutive redirects that were followed to reach
+	 * this frame. The frame of a page that is not the target of a redirect has
+	 * a redirect count of 0.
+	 */
+	public int getRedirectCount()
+	{
+		return redirects;
+	}
+
+	/**
+	 * Returns the post-expand include size of the whole expansion process so
+	 * far.
+	 *
+	 * @see org.sweble.wikitext.engine.config.EngineConfig#getMaxPostExpandIncludeSize()
+	 */
+	public long getPostExpandIncludeSize()
+	{
+		return rootFrame.postExpandIncludeSize;
+	}
+
+	/**
+	 * Returns whether a transclusion of the expansion process exceeded the
+	 * maximum post-expand include size. All further transclusions are omitted.
+	 */
+	public boolean isPostExpandIncludeSizeExceeded()
+	{
+		return rootFrame.postExpandIncludeSizeExceeded;
+	}
+
+	/**
+	 * Adds the size of an expanded transclusion to the post-expand include
+	 * size of the whole expansion process.
+	 *
+	 * @return False if the size would exceed the given limit. The size is not
+	 *         added then and all further calls fail as well.
+	 */
+	boolean incrementPostExpandIncludeSize(long size, long limit)
+	{
+		ExpansionFrame root = rootFrame;
+		if (root.postExpandIncludeSizeExceeded)
+			return false;
+
+		if (size > limit - root.postExpandIncludeSize)
+		{
+			root.postExpandIncludeSizeExceeded = true;
+			return false;
+		}
+
+		root.postExpandIncludeSize += size;
+		return true;
 	}
 
 	// =========================================================================

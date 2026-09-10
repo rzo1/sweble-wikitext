@@ -19,14 +19,19 @@ package org.sweble.wikitext.engine;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.AbstractMap;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.sweble.wikitext.engine.config.EngineConfig;
 import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.EngLogContainer;
@@ -47,6 +52,7 @@ import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtNodeList;
 import org.sweble.wikitext.parser.nodes.WtPageSwitch;
 import org.sweble.wikitext.parser.nodes.WtRedirect;
+import org.sweble.wikitext.parser.nodes.WtStringNode;
 import org.sweble.wikitext.parser.nodes.WtTagExtension;
 import org.sweble.wikitext.parser.nodes.WtTagExtensionBody;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
@@ -294,8 +300,9 @@ public final class ExpansionVisitor
 	 * 
 	 * @return Returns null if the redirect target page cannot be found. Returns
 	 *         the redirect node n itself, if an error occurred in the expansion
-	 *         process. Otherwise the expanded form of the redirect target page
-	 *         will be returned.
+	 *         process or if the redirect is not followed because of a loop or
+	 *         the redirect limit. Otherwise the expanded form of the redirect
+	 *         target page will be returned.
 	 */
 	private WtNode expandRedirectionTargetPage(
 			WtRedirect n,
@@ -320,6 +327,21 @@ public final class ExpansionVisitor
 		if (log != null)
 			log.setCanonical(title.getDenormalizedFullTitle());
 
+		if (isRedirectLoop(title))
+		{
+			fileRedirectLoopWarning(n, title);
+
+			return n;
+		}
+
+		int maxRedirects = getEngineConfig().getMaxRedirects();
+		if (expFrame.getRedirectCount() >= maxRedirects)
+		{
+			fileRedirectLimitWarning(n, title, maxRedirects);
+
+			return n;
+		}
+
 		FullPage page = getWikitext(title);
 		if (page != null)
 		{
@@ -332,6 +354,9 @@ public final class ExpansionVisitor
 			 * 
 			 * - The arguments that were passed to the page we are redirecting
 			 *   from will also be passed to the replacement page.
+			 *
+			 * - The replacement page is expanded at the same depth as the page
+			 *   we are redirecting from.
 			 */
 			EngProcessedPage processedPage = getEngine().preprocessAndExpand(
 					expFrame.getCallback(),
@@ -341,7 +366,8 @@ public final class ExpansionVisitor
 					expFrame.getEntityMap(),
 					expFrame.getArguments(),
 					expFrame.getRootFrame(),
-					expFrame);
+					expFrame,
+					true);
 
 			log.setSuccess(true);
 
@@ -844,6 +870,16 @@ public final class ExpansionVisitor
 			return n;
 		}
 
+		int maxDepth = getEngineConfig().getMaxTemplateDepth();
+		if (expFrame.getDepth() >= maxDepth)
+		{
+			fileTemplateRecursionDepthWarning(n, title, maxDepth);
+
+			// Same error message as MediaWiki
+			return nf.text("<span class=\"error\">Template recursion depth limit exceeded (" +
+					maxDepth + ")</span>");
+		}
+
 		if (isTemplateLoop(title))
 		{
 			fileTemplateLoopWarning(n, title);
@@ -853,12 +889,17 @@ public final class ExpansionVisitor
 					title.getDenormalizedFullTitle() + "]]</span>");
 		}
 
+		// Once the budget is used up, don't even expand further transclusions
+		long maxSize = getEngineConfig().getMaxPostExpandIncludeSize();
+		if (expFrame.isPostExpandIncludeSizeExceeded())
+			return omitOversizedTransclusion(n, title, maxSize);
+
 		log.setCanonical(title.getDenormalizedFullTitle());
 
 		FullPage page = getWikitext(title);
 		if (page != null)
 		{
-			// EXPANDS ARGUMENTS!
+			// EXPANDS ARGUMENT NAMES! Values are expanded when looked up.
 			Map<String, WtNodeList> tmplArgs = prepareTransclusionArguments(args, log);
 
 			EngProcessedPage processedPage = getEngine().preprocessAndExpand(
@@ -874,6 +915,10 @@ public final class ExpansionVisitor
 			log.setSuccess(true);
 
 			WtNode tResult = mergeLogsAndWarnings(log, processedPage);
+
+			long size = measurePostExpandIncludeSize(tResult, maxSize);
+			if (!expFrame.incrementPostExpandIncludeSize(size, maxSize))
+				return omitOversizedTransclusion(n, title, maxSize);
 
 			return treatBlockElements(n, tResult);
 		}
@@ -894,7 +939,7 @@ public final class ExpansionVisitor
 	{
 		for (ExpansionFrame f = expFrame; f.getParentFrame() != null; f = f.getParentFrame())
 		{
-			if (f.getTitle().equals(title))
+			if (isSamePage(f.getTitle(), title))
 				return true;
 		}
 
@@ -902,32 +947,110 @@ public final class ExpansionVisitor
 	}
 
 	/**
+	 * Check if a page is part of the chain of redirects that led to the current
+	 * frame, including the page whose redirect started the chain.
+	 */
+	private boolean isRedirectLoop(PageTitle title)
+	{
+		for (ExpansionFrame f = expFrame; f != null; f = f.getParentFrame())
+		{
+			if (isSamePage(f.getTitle(), title))
+				return true;
+
+			if (f.getRedirectCount() == 0)
+				break;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Two titles refer to the same page if namespace and title are equal. The
+	 * fragment and an initial colon do not change the page.
+	 */
+	private static boolean isSamePage(PageTitle a, PageTitle b)
+	{
+		Namespace ns = a.getNamespace();
+		return (ns == null ? b.getNamespace() == null : ns.equals(b.getNamespace())) &&
+				a.getTitle().equals(b.getTitle());
+	}
+
+	/**
+	 * Returns the post-expand include size of an expanded transclusion: The
+	 * length of the text it contains plus one for every other node, but at
+	 * least 1. Counting every node bounds the time needed to measure, since
+	 * the AST can share expanded arguments in many places (which are counted
+	 * at every place).
+	 *
+	 * Stops counting as soon as the size exceeds the given limit.
+	 */
+	private static long measurePostExpandIncludeSize(WtNode result, long limit)
+	{
+		long size = 0;
+
+		ArrayDeque<WtNode> pending = new ArrayDeque<WtNode>();
+		pending.push(result);
+		while (!pending.isEmpty() && size <= limit)
+		{
+			WtNode n = pending.pop();
+			if (n instanceof WtStringNode)
+				size += ((WtStringNode) n).getContent().length();
+			else
+				size += 1;
+
+			for (WtNode child : n)
+			{
+				if (child != null)
+					pending.push(child);
+			}
+		}
+
+		return Math.max(1, size);
+	}
+
+	/**
+	 * Replaces a transclusion that would exceed the post-expand include size
+	 * with a link to the transcluded page.
+	 */
+	private WtNode omitOversizedTransclusion(
+			WtTemplate n,
+			PageTitle title,
+			long limit)
+	{
+		filePostExpandIncludeSizeWarning(n, title, limit);
+
+		// Same replacement as MediaWiki
+		return nf.text("[[:" + title.getPrefixedText() + "]]" +
+				"<!-- WARNING: template omitted, post-expand include size too large -->");
+	}
+
+	/**
 	 * Prepares the template argument list for transclusion. This encompasses
-	 * the expansion of name and value of each argument.
+	 * the expansion of the name of each argument. Like in MediaWiki, the value
+	 * of an argument is only expanded (by this visitor) when the transcluded
+	 * page looks it up for the first time, so that unused arguments are never
+	 * expanded.
 	 * 
 	 * Each argument is added to the mapping with its one-based index as key.
 	 * 
 	 * If an argument has a name which can be resolved to a string, the argument
-	 * will additionally be put into the mapping with the resolved name as key.
+	 * will instead be put into the mapping with the resolved name as key.
 	 */
 	private Map<String, WtNodeList> prepareTransclusionArguments(
 			List<WtTemplateArgument> args,
 			EngLogTransclusionResolution log)
 	{
-		HashMap<String, WtNodeList> transclArgs = new HashMap<String, WtNodeList>();
+		TransclusionArguments transclArgs = new TransclusionArguments();
 
 		int index = 1;
 		for (WtTemplateArgument arg : args)
 		{
-			// EXPAND VALUE!
-			WtValue value = (WtValue) dispatch(arg.getValue());
+			// ONLY TRIM NAMED VALUES!
+			LazyArgument value = new LazyArgument(arg.getValue(), arg.hasName());
 
 			boolean named = false;
 			if (arg.hasName())
 			{
-				// ONLY TRIM NAMED VALUES!
-				value = (WtValue) tu.trim(value);
-
 				// EXPAND NAME!
 				WtName name = (WtName) dispatch(arg.getName());
 
@@ -937,7 +1060,7 @@ public final class ExpansionVisitor
 
 					if (!nameStr.isEmpty())
 					{
-						transclArgs.put(nameStr, nf.toList(value));
+						transclArgs.put(nameStr, value);
 						named = true;
 					}
 				}
@@ -954,7 +1077,7 @@ public final class ExpansionVisitor
 			{
 				// Like in MediaWiki, a later argument overrides an earlier
 				// one, even if the earlier one was explicitly numbered.
-				transclArgs.put(String.valueOf(index), nf.toList(value));
+				transclArgs.put(String.valueOf(index), value);
 
 				// Only unnamed arguments increase the index
 				index++;
@@ -1334,6 +1457,11 @@ public final class ExpansionVisitor
 		return expFrame.getWikiConfig();
 	}
 
+	private EngineConfig getEngineConfig()
+	{
+		return expFrame.getWikiConfig().getEngineConfig();
+	}
+
 	private WtEngineImpl getEngine()
 	{
 		return expFrame.getEngine();
@@ -1411,6 +1539,54 @@ public final class ExpansionVisitor
 				getClass(),
 				n,
 				title));
+	}
+
+	private void fileRedirectLoopWarning(WtNode n, PageTitle title)
+	{
+		expFrame.fileWarning(new RedirectLoopWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title));
+	}
+
+	private void fileRedirectLimitWarning(
+			WtNode n,
+			PageTitle title,
+			int limit)
+	{
+		expFrame.fileWarning(new RedirectLimitWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title,
+				limit));
+	}
+
+	private void fileTemplateRecursionDepthWarning(
+			WtNode n,
+			PageTitle title,
+			int limit)
+	{
+		expFrame.fileWarning(new TemplateRecursionDepthWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title,
+				limit));
+	}
+
+	private void filePostExpandIncludeSizeWarning(
+			WtNode n,
+			PageTitle title,
+			long limit)
+	{
+		expFrame.fileWarning(new PostExpandIncludeSizeWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title,
+				limit));
 	}
 
 	private WtNodeList mergeLogsAndWarnings(
@@ -1499,5 +1675,93 @@ public final class ExpansionVisitor
 		//return new SoftErrorNode(n, e);
 		n.setAttribute(SKIP_ATTR_NAME, e);
 		return n;
+	}
+
+	// =========================================================================
+
+	/**
+	 * The value of a template argument, which is expanded by this visitor (the
+	 * visitor of the calling frame) when it is needed for the first time.
+	 */
+	private final class LazyArgument
+	{
+		private final WtValue value;
+
+		private final boolean trim;
+
+		private WtNodeList expanded;
+
+		public LazyArgument(WtValue value, boolean trim)
+		{
+			this.value = value;
+			this.trim = trim;
+		}
+
+		public WtNodeList getValue()
+		{
+			if (expanded == null)
+			{
+				// EXPAND VALUE!
+				WtValue v = (WtValue) dispatch(value);
+
+				if (trim)
+					v = (WtValue) tu.trim(v);
+
+				expanded = nf.toList(v);
+			}
+
+			return expanded;
+		}
+	}
+
+	/**
+	 * The arguments passed to a transcluded page. Looking up an argument
+	 * expands its value, iterating over the entries expands all values.
+	 */
+	private final class TransclusionArguments
+			extends
+				AbstractMap<String, WtNodeList>
+	{
+		private final Map<String, LazyArgument> args =
+				new LinkedHashMap<String, LazyArgument>();
+
+		public void put(String name, LazyArgument value)
+		{
+			args.put(name, value);
+		}
+
+		@Override
+		public WtNodeList get(Object name)
+		{
+			LazyArgument value = args.get(name);
+			return (value != null) ? value.getValue() : null;
+		}
+
+		@Override
+		public boolean containsKey(Object name)
+		{
+			return args.containsKey(name);
+		}
+
+		@Override
+		public int size()
+		{
+			return args.size();
+		}
+
+		@Override
+		public Set<String> keySet()
+		{
+			return Collections.unmodifiableSet(args.keySet());
+		}
+
+		@Override
+		public Set<Map.Entry<String, WtNodeList>> entrySet()
+		{
+			Map<String, WtNodeList> expanded = new LinkedHashMap<String, WtNodeList>();
+			for (Map.Entry<String, LazyArgument> e : args.entrySet())
+				expanded.put(e.getKey(), e.getValue().getValue());
+			return Collections.unmodifiableMap(expanded).entrySet();
+		}
 	}
 }

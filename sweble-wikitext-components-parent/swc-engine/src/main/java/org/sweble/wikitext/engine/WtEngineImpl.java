@@ -179,7 +179,7 @@ public class WtEngineImpl
 
 			pprAst = ppAst;
 			if (callback != null)
-				pprAst = expand(callback, title, ppAst, null, false, log);
+				pprAst = expand(callback, title, ppAst, null, forInclusion, log);
 		}
 		catch (EngineException e)
 		{
@@ -508,6 +508,39 @@ public class WtEngineImpl
 			ExpansionFrame parentFrame)
 			throws EngineException
 	{
+		return preprocessAndExpand(
+				callback,
+				pageId,
+				wikitext,
+				forInclusion,
+				entityMap,
+				arguments,
+				rootFrame,
+				parentFrame,
+				false);
+	}
+
+	/**
+	 * Like
+	 * {@link #preprocessAndExpand(ExpansionCallback, PageId, String, boolean, WtEntityMap, Map, ExpansionFrame, ExpansionFrame)}
+	 * but can expand the target page of a redirect.
+	 *
+	 * @param redirect
+	 *            Whether the page is the target of a redirect of the parent
+	 *            frame.
+	 */
+	protected EngProcessedPage preprocessAndExpand(
+			ExpansionCallback callback,
+			PageId pageId,
+			String wikitext,
+			boolean forInclusion,
+			WtEntityMap entityMap,
+			Map<String, WtNodeList> arguments,
+			ExpansionFrame rootFrame,
+			ExpansionFrame parentFrame,
+			boolean redirect)
+			throws EngineException
+	{
 		if (pageId == null)
 			throw new NullPointerException();
 
@@ -537,6 +570,7 @@ public class WtEngineImpl
 					forInclusion,
 					rootFrame,
 					parentFrame,
+					redirect,
 					log);
 		}
 		catch (EngineException e)
@@ -544,8 +578,12 @@ public class WtEngineImpl
 			e.attachLog(log);
 			throw e;
 		}
-		catch (Throwable e)
+		catch (Exception e)
 		{
+			/* Only exceptions are expansion failures. Errors like a
+			 * StackOverflowError must not be turned into an EngineException,
+			 * which the expansion visitor of the calling frame would swallow.
+			 */
 			throw new EngineException(title, "Compilation failed!", e, log);
 		}
 
@@ -589,6 +627,7 @@ public class WtEngineImpl
 					forInclusion,
 					rootFrame,
 					parentFrame,
+					false,
 					log);
 		}
 		catch (EngineException e)
@@ -596,8 +635,12 @@ public class WtEngineImpl
 			e.attachLog(log);
 			throw e;
 		}
-		catch (Throwable e)
+		catch (Exception e)
 		{
+			/* Only exceptions are expansion failures. Errors like a
+			 * StackOverflowError must not be turned into an EngineException,
+			 * which the expansion visitor of the calling frame would swallow.
+			 */
 			throw new EngineException(title, "Compilation failed!", e, log);
 		}
 
@@ -742,6 +785,7 @@ public class WtEngineImpl
 				forInclusion,
 				null,
 				null,
+				false,
 				parentLog);
 	}
 
@@ -756,6 +800,7 @@ public class WtEngineImpl
 			boolean forInclusion,
 			ExpansionFrame rootFrame,
 			ExpansionFrame parentFrame,
+			boolean redirect,
 			EngLogContainer parentLog)
 			throws EngineException
 	{
@@ -788,6 +833,7 @@ public class WtEngineImpl
 						noRedirect,
 						rootFrame,
 						parentFrame,
+						redirect,
 						warnings,
 						log,
 						timingEnabled,
@@ -801,6 +847,7 @@ public class WtEngineImpl
 						hooks,
 						title,
 						ppAst.getEntityMap(),
+						forInclusion,
 						noRedirect,
 						warnings,
 						log,

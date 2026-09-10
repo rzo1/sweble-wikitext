@@ -27,14 +27,43 @@ import jakarta.xml.bind.annotation.XmlType;
 		name = "EngineConfig",
 		namespace = "org.sweble.wikitext.engine")
 @XmlType(propOrder = {
-		"trimTransparentBeforeParsing" })
+		"trimTransparentBeforeParsing",
+		"maxTemplateDepth",
+		"maxPostExpandIncludeSize",
+		"maxRedirects" })
 @XmlAccessorType(XmlAccessType.NONE)
 public class EngineConfigImpl
 		implements
 			EngineConfig
 {
+	/**
+	 * MediaWiki's default for {@code $wgMaxTemplateDepth}.
+	 */
+	public static final int DEFAULT_MAX_TEMPLATE_DEPTH = 40;
+
+	/**
+	 * MediaWiki's default for {@code $wgMaxArticleSize} (2048 KiB).
+	 */
+	public static final long DEFAULT_MAX_POST_EXPAND_INCLUDE_SIZE = 2048L * 1024L;
+
+	/**
+	 * MediaWiki's default for {@code $wgMaxRedirects}.
+	 */
+	public static final int DEFAULT_MAX_REDIRECTS = 1;
+
+	// =========================================================================
+
 	@XmlElement()
 	private boolean trimTransparentBeforeParsing;
+
+	@XmlElement()
+	private int maxTemplateDepth = DEFAULT_MAX_TEMPLATE_DEPTH;
+
+	@XmlElement()
+	private long maxPostExpandIncludeSize = DEFAULT_MAX_POST_EXPAND_INCLUDE_SIZE;
+
+	@XmlElement()
+	private int maxRedirects = DEFAULT_MAX_REDIRECTS;
 
 	// =========================================================================
 
@@ -50,6 +79,45 @@ public class EngineConfigImpl
 		this.trimTransparentBeforeParsing = trimTransparentBeforeParsing;
 	}
 
+	@Override
+	public int getMaxTemplateDepth()
+	{
+		return maxTemplateDepth;
+	}
+
+	public void setMaxTemplateDepth(int maxTemplateDepth)
+	{
+		if (maxTemplateDepth < 0)
+			throw new IllegalArgumentException("maxTemplateDepth must not be negative: " + maxTemplateDepth);
+		this.maxTemplateDepth = maxTemplateDepth;
+	}
+
+	@Override
+	public long getMaxPostExpandIncludeSize()
+	{
+		return maxPostExpandIncludeSize;
+	}
+
+	public void setMaxPostExpandIncludeSize(long maxPostExpandIncludeSize)
+	{
+		if (maxPostExpandIncludeSize < 0)
+			throw new IllegalArgumentException("maxPostExpandIncludeSize must not be negative: " + maxPostExpandIncludeSize);
+		this.maxPostExpandIncludeSize = maxPostExpandIncludeSize;
+	}
+
+	@Override
+	public int getMaxRedirects()
+	{
+		return maxRedirects;
+	}
+
+	public void setMaxRedirects(int maxRedirects)
+	{
+		if (maxRedirects < 0)
+			throw new IllegalArgumentException("maxRedirects must not be negative: " + maxRedirects);
+		this.maxRedirects = maxRedirects;
+	}
+
 	// =========================================================================
 
 	@Override
@@ -58,6 +126,9 @@ public class EngineConfigImpl
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (trimTransparentBeforeParsing ? 1231 : 1237);
+		result = prime * result + maxTemplateDepth;
+		result = prime * result + (int) (maxPostExpandIncludeSize ^ (maxPostExpandIncludeSize >>> 32));
+		result = prime * result + maxRedirects;
 		return result;
 	}
 
@@ -72,6 +143,12 @@ public class EngineConfigImpl
 			return false;
 		EngineConfigImpl other = (EngineConfigImpl) obj;
 		if (trimTransparentBeforeParsing != other.trimTransparentBeforeParsing)
+			return false;
+		if (maxTemplateDepth != other.maxTemplateDepth)
+			return false;
+		if (maxPostExpandIncludeSize != other.maxPostExpandIncludeSize)
+			return false;
+		if (maxRedirects != other.maxRedirects)
 			return false;
 		return true;
 	}
