@@ -600,6 +600,22 @@ public final class HtmlSanitizer
 		return new String(Character.toChars((int) cp));
 	}
 
+	/**
+	 * Whether a character reference to the given code point may be written
+	 * to the output (like {@code Sanitizer::validateCodepoint} in MediaWiki).
+	 * Unlike {@link #decodeCharReferences(String)} this also rejects the
+	 * carriage return, DEL and the C1 control characters.
+	 */
+	public static boolean isValidCharReference(long cp)
+	{
+		return cp == 0x09
+				|| cp == 0x0A
+				|| (cp >= 0x20 && cp <= 0x7E)
+				|| (cp >= 0xA0 && cp <= 0xD7FF)
+				|| (cp >= 0xE000 && cp <= 0xFFFD)
+				|| (cp >= 0x10000 && cp <= 0x10FFFF);
+	}
+
 	private static boolean isValidCodePoint(long cp)
 	{
 		return cp == 0x09

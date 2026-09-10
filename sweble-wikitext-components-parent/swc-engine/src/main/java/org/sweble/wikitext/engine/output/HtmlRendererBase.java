@@ -21,6 +21,8 @@ import java.util.ArrayList;
 
 import org.apache.commons.lang3.StringUtils;
 import org.sweble.wikitext.parser.nodes.WtNode;
+import org.sweble.wikitext.parser.nodes.WtXmlCharRef;
+import org.sweble.wikitext.parser.nodes.WtXmlEntityRef;
 
 import de.fau.cs.osr.ptk.common.AstVisitor;
 import de.fau.cs.osr.utils.PrinterBase;
@@ -69,6 +71,26 @@ public class HtmlRendererBase
 	protected static String escTextKeepCharRefs(String content)
 	{
 		return HtmlSanitizer.escapeTextKeepingCharRefs(content);
+	}
+
+	/**
+	 * Like MediaWiki print valid character references as they are and
+	 * invalid ones as text.
+	 */
+	protected static String charRef(WtXmlCharRef n)
+	{
+		String ref = String.format("&#%d;", n.getCodePoint());
+		return HtmlSanitizer.isValidCharReference(n.getCodePoint()) ? ref : esc(ref);
+	}
+
+	/**
+	 * Like MediaWiki print known entity references as they are and unknown
+	 * ones as text.
+	 */
+	protected static String entityRef(WtXmlEntityRef n)
+	{
+		String ref = "&" + n.getName() + ";";
+		return (n.getResolved() != null) ? ref : esc(ref);
 	}
 
 	protected static String capitalize(String text)
