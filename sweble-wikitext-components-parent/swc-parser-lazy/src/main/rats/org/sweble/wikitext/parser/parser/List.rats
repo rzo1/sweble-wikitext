@@ -20,7 +20,11 @@
  * -----
  *
  *   Grammar:
- *     - ( [*#:]+ ';'? | ';' ) ListItemContentStar
+ *     - [*#:;]+ ListItemContentStar
+ *
+ *   Like MediaWiki a term (";") can be followed by its definition on the same
+ *   line: "; term : definition". The first colon which is not part of other
+ *   markup ends the term (see splitTermAndDefinition() below).
  *
  */
 
@@ -38,6 +42,10 @@ import org.sweble.wikitext.parser.parser.Whitespace;
 
 header
 {
+  import java.util.ArrayList;
+  import java.util.Arrays;
+  import java.util.HashSet;
+  import java.util.Set;
   import java.util.Vector;
 }
 
@@ -120,7 +128,20 @@ body
     return n;
   }
 
-  private ListNode pushNewList(Vector<ListNode> listStack, char ch, boolean createItem)
+  private boolean isLastItemTerm(Vector<ListNode> listStack)
+  {
+    WtNodeList items = getCurrentListContent(listStack);
+    return !items.isEmpty() &&
+        items.get(items.size() - 1).isNodeType(WtNode.NT_DEFINITION_LIST_TERM);
+  }
+
+  private void setItemRtd(WtNode item, Object... glue)
+  {
+    if (isGatherRtData())
+      item.setRtd(glue);
+  }
+
+  private ListNode pushNewList(Vector<ListNode> listStack, char ch)
   {
     ListNode node = null;
     switch (ch)
@@ -142,12 +163,6 @@ body
 
     listStack.add(node);
 
-    if (createItem)
-    {
-      // TODO: Issue warning!
-      pushNewListItem(listStack, ch, null);
-    }
-    
     return node;
   }
 
@@ -160,6 +175,8 @@ body
         break;
     }
 
+    boolean closesLevels = (j < listStack.size());
+
     // pop closed list levels
     listStack.setSize(j);
 
@@ -167,30 +184,80 @@ body
 
     int last = p.prefix.length() - 1;
 
+    /* Like MediaWiki we close an open term if a definition continues its
+     * level and further levels are opened: in ";a\n:*b" the itemization
+     * belongs to a definition, not to the term.
+     */
+    if (!closesLevels && j > 0 && j <= last &&
+        p.prefix.charAt(j - 1) == ':' && isLastItemTerm(listStack))
+      pushNewListItem(listStack, ':', null);
+
+    if (p.rt0 != null && j > last && lastItemRtd != null)
+      lastItemRtd.setField(1, p.rt0);
+
+    /* Like MediaWiki each term that is opened on this line (including the
+     * actual list item) ends at the first colon which is not part of other
+     * markup. The rest of the line goes into a definition which follows the
+     * term and which receives all further list levels. The first item of
+     * the line carries the prefix, definitions carry the colon.
+     */
+    boolean prefixAssigned = false;
+
+    WtNodeList content = p.content;
+
     // open new list levels
-    if (p.rt0 != null) {
-      if (j < p.prefix.length()) {
-        ListNode node = pushNewList(listStack, p.prefix.charAt(j), j < last);
+    for (int k = j; k <= last; ++k)
+    {
+      ListNode node = pushNewList(listStack, p.prefix.charAt(k));
+      if (k == j && p.rt0 != null)
         node.node.setRtd(p.rt0, SEP);
-        ++j;
-      }
-      else
+
+      if (k < last)
       {
-        if (lastItemRtd != null)
-          lastItemRtd.setField(1, p.rt0);    	
+        WtNodeList[] split = (p.prefix.charAt(k) == ';') ?
+            splitTermAndDefinition(content) : null;
+
+        if (split != null)
+        {
+          WtNode term = pushNewListItem(listStack, ';', split[0]);
+          if (prefixAssigned)
+            setItemRtd(term, SEP);
+          else
+            setItemRtd(term, p.rt1, p.prefix, SEP);
+          prefixAssigned = true;
+
+          setItemRtd(pushNewListItem(listStack, ':', null), ":", SEP);
+
+          content = split[1];
+        }
+        else
+        {
+          // TODO: Issue warning!
+          pushNewListItem(listStack, p.prefix.charAt(k), null);
+        }
       }
     }
-    for (; j < p.prefix.length(); ++j)
-      pushNewList(listStack, p.prefix.charAt(j), j < last);
 
     // push the actual list item
+    char ch = p.prefix.charAt(last);
+
+    WtNodeList[] split = (ch == ';') ? splitTermAndDefinition(content) : null;
+
     WtNode item = pushNewListItem(
         listStack,
-        p.prefix.charAt(last),
-        p.content);
+        ch,
+        (split != null) ? split[0] : content);
 
-    if (isGatherRtData())
-      item.setRtd(p.rt1, p.prefix, SEP);
+    if (prefixAssigned)
+      setItemRtd(item, SEP);
+    else
+      setItemRtd(item, p.rt1, p.prefix, SEP);
+
+    if (split != null)
+    {
+      item = pushNewListItem(listStack, ':', split[1]);
+      setItemRtd(item, ":", SEP);
+    }
 
     if (addRoot)
       items.add(listStack.firstElement().node);
@@ -217,6 +284,106 @@ body
     }
 
     return items;
+  }
+
+  /* The void elements known to MediaWiki, they are never closed.
+   */
+  private static final Set<String> VOID_ELEMENTS = new HashSet<String>(Arrays.asList(
+      "area", "base", "basefont", "bgsound", "br", "col", "command", "embed",
+      "frame", "hr", "image", "img", "input", "keygen", "link", "meta",
+      "param", "source", "track", "wbr"));
+
+  /**
+   * Splits the content of a term at the first colon which is not part of
+   * other markup, like MediaWiki's BlockLevelPass::findColonNoLinks().
+   *
+   * Colons in links, templates, URLs, tag attributes, comments, etc. are
+   * part of their own nodes and never seen here. MediaWiki looks for the
+   * colon after it has turned formatting into HTML tags. Therefore a colon
+   * inside an unclosed XML element or inside bold or italic formatting does
+   * not end the term either.
+   *
+   * @return The content of the term and of the definition or null if there
+   *         is no such colon.
+   */
+  private WtNodeList[] splitTermAndDefinition(WtNodeList content)
+  {
+    if (content == null)
+      return null;
+
+    ArrayList<WtNode> nodes = new ArrayList<WtNode>();
+    flatten(content, nodes);
+
+    int openElements = 0;
+    boolean italics = false;
+    boolean bold = false;
+    for (int i = 0; i < nodes.size(); ++i)
+    {
+      WtNode n = nodes.get(i);
+      switch (n.getNodeType())
+      {
+        case WtNode.NT_TEXT:
+        {
+          String text = ((WtText) n).getContent();
+          int colon = text.indexOf(':');
+          if (colon == -1 || openElements > 0 || italics || bold)
+            break;
+
+          WtNodeList term = nf.list(nodes.subList(0, i));
+          if (colon > 0)
+            term.add(nf.text(text.substring(0, colon)));
+
+          WtNodeList definition = nf.list();
+          if (colon + 1 < text.length())
+            definition.add(nf.text(text.substring(colon + 1)));
+          definition.addAll(nodes.subList(i + 1, nodes.size()));
+
+          return new WtNodeList[] { term, definition };
+        }
+        case WtNode.NT_XML_START_TAG:
+          if (!VOID_ELEMENTS.contains(((WtXmlStartTag) n).getName().toLowerCase()))
+            ++openElements;
+          break;
+        case WtNode.NT_XML_END_TAG:
+          // MediaWiki ignores excess end tags
+          if (openElements > 0)
+            --openElements;
+          break;
+        case WtNode.NT_TICKS:
+          switch (((WtTicks) n).getTickCount())
+          {
+            case 2:
+              italics = !italics;
+              break;
+            case 3:
+            case 4:
+              // Four ticks are an apostrophe followed by bold ticks
+              bold = !bold;
+              break;
+            default:
+              // Excess ticks in front of five ticks are text
+              italics = !italics;
+              bold = !bold;
+              break;
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    return null;
+  }
+
+  private static void flatten(WtNodeList list, ArrayList<WtNode> nodes)
+  {
+    for (WtNode n : list)
+    {
+      if (n.isNodeType(WtNode.NT_NODE_LIST))
+        flatten((WtNodeList) n, nodes);
+      else
+        nodes.add(n);
+    }
   }
 
 }
@@ -282,9 +449,8 @@ private transient TempListItem ListItemPrefixAndContent =
       yyValue.content = nf.list(table, content);
       yyValue.prefix = prefix;
     }
-  / prefix:ListPrefix content:ListItemContentStar
+  / prefix:ListPrefixStr content:ListItemContentStar
     {
-      // TODO: Support "; term : def" on a single line
       yyValue = new TempListItem();
       yyValue.content = content;
       yyValue.prefix = prefix;
@@ -295,19 +461,11 @@ private transient String ListIndentPrefixStr =
   [:]+
 ;
 
-private inline String ListPrefix =
-    prefix:ListPrefixStr semicolon:';'?
-    {
-      yyValue = (semicolon != null) ? prefix + ';' : prefix;
-    }
-  / ';'
-    {
-      yyValue = ";";
-    }
-;
-
+/* Like MediaWiki any combination of prefix characters is allowed, terms
+ * included: ";;a" is a term nested in a term.
+ */
 private transient String ListPrefixStr =
-  [*#:]+
+  [*#:;]+
 ;
 
 private inline stateful WtNodeList ListItemContentStar =
