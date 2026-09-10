@@ -22,14 +22,9 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-import javax.xml.datatype.XMLGregorianCalendar;
-
 import org.sweble.wikitext.articlecruncher.Job;
-import org.sweble.wikitext.dumpreader.export_0_10.CommentType;
-import org.sweble.wikitext.dumpreader.export_0_10.ContributorType;
-import org.sweble.wikitext.dumpreader.export_0_10.PageType;
-import org.sweble.wikitext.dumpreader.export_0_10.RevisionType;
-import org.sweble.wikitext.dumpreader.export_0_10.TextType;
+import org.sweble.wikitext.dumpreader.model.Page;
+import org.sweble.wikitext.dumpreader.model.Revision;
 
 public class RevisionJob
 		extends
@@ -61,82 +56,41 @@ public class RevisionJob
 
 	// =========================================================================
 
-	public RevisionJob(PageType page, RevisionType rev)
+	/**
+	 * @param page
+	 *            The page as converted by
+	 *            {@link org.sweble.wikitext.dumpreader.model.DumpConverter},
+	 *            which makes the job independent of the export version of the
+	 *            dump.
+	 * @param rev
+	 *            A revision of the page.
+	 */
+	public RevisionJob(Page page, Revision rev)
 	{
-		page.getDiscussionthreadinginfo();
-
 		this.pageId = page.getId();
 
-		this.pageNamespace = page.getNs();
-
-		if (page.getRedirect() != null)
-		{
-			this.pageRedirect = page.getRedirect().getTitle();
-		}
-		else
-		{
-			this.pageRedirect = null;
-		}
-
-		page.getRestrictions();
-		rev.getSha1();
+		this.pageNamespace = page.getNamespace();
 
 		this.pageTitle = page.getTitle();
 
-		if (rev.getComment() != null)
-		{
-			CommentType comment = rev.getComment();
-			comment.getDeleted();
-			comment.getValue();
-		}
-
-		if (rev.getContributor() != null)
-		{
-			ContributorType contributor = rev.getContributor();
-			contributor.getDeleted();
-			contributor.getId();
-			contributor.getIp();
-			contributor.getUsername();
-		}
+		this.pageRedirect = page.getRedirectTitle();
 
 		this.id = rev.getId();
 
-		this.minor = (rev.getMinor() != null);
+		this.minor = rev.isMinor();
 
-		rev.getSha1();
+		this.isTextDeleted = rev.isTextDeleted();
 
-		if (rev.getText() != null)
-		{
-			TextType text = rev.getText();
-			text.getBytes();
-			this.isTextDeleted = text.getDeleted() != null;
-			text.getSpace();
-			this.textText = text.getValue();
-		}
-		else
-		{
-			this.isTextDeleted = false;
-			this.textText = null;
-		}
+		this.textText = rev.getText();
 
 		if (rev.getTimestamp() != null)
 		{
-			XMLGregorianCalendar ts = rev.getTimestamp();
-
-			this.timestamp = new GregorianCalendar();
-			this.timestamp.setTimeZone(ts.getTimeZone(0));
-			this.timestamp.set(
-					ts.getYear(),
-					ts.getMonth(),
-					ts.getDay(),
-					ts.getHour(),
-					ts.getMinute(),
-					ts.getSecond());
+			this.timestamp = rev.getTimestamp().toGregorianCalendar();
 		}
 		else
 		{
 			this.timestamp = new GregorianCalendar();
-			this.timestamp.setTimeZone(TimeZone.getTimeZone("UST"));
+			this.timestamp.setTimeZone(TimeZone.getTimeZone("UTC"));
 			this.timestamp.setTimeInMillis(0);
 		}
 	}

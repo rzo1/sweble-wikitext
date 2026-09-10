@@ -30,8 +30,9 @@ import org.sweble.wikitext.articlecruncher.JobTraceSet;
 import org.sweble.wikitext.articlecruncher.utils.AbortHandler;
 import org.sweble.wikitext.articlecruncher.utils.WorkerBase;
 import org.sweble.wikitext.dumpreader.DumpReader;
-import org.sweble.wikitext.dumpreader.export_0_10.PageType;
-import org.sweble.wikitext.dumpreader.export_0_10.RevisionType;
+import org.sweble.wikitext.dumpreader.model.DumpConverter;
+import org.sweble.wikitext.dumpreader.model.Page;
+import org.sweble.wikitext.dumpreader.model.Revision;
 
 import de.fau.cs.osr.utils.WrappedException;
 
@@ -39,6 +40,8 @@ public class DumpReaderJobGenerator
 		extends
 			WorkerBase
 {
+	private final DumpConverter converter = new DumpConverter();
+
 	private final BlockingQueue<Job> inTray;
 
 	private final JobTraceSet jobTraces;
@@ -51,6 +54,11 @@ public class DumpReaderJobGenerator
 
 	// =========================================================================
 
+	/**
+	 * @param dumpCruncher
+	 *            The dump cruncher whose GUI shows the progress or
+	 *            <code>null</code> to show no progress.
+	 */
 	public DumpReaderJobGenerator(
 			DumpCruncher dumpCruncher,
 			File dumpFile,
@@ -150,22 +158,24 @@ public class DumpReaderJobGenerator
 
 	protected void processPage(Object mediaWiki, Object page_) throws InterruptedException, IOException
 	{
-		PageType page = (PageType) page_;
+		// Convert the page of any export version into the version-independent
+		// model
+		Page page = converter.convertPage(page_);
 
-		for (Object o : page.getRevisionOrUpload())
+		for (Revision revision : page.getRevisions())
 		{
-			if (o instanceof RevisionType)
+			RevisionJob job = new RevisionJob(page, revision);
+
+			JobTrace trace = job.getTrace();
+			trace.signOff(getClass(), null);
+
+			jobTraces.add(trace);
+
+			inTray.put(job);
+
+			Gui gui = (dumpCruncher != null) ? dumpCruncher.getGui() : null;
+			if (gui != null)
 			{
-				RevisionJob job = new RevisionJob(page, (RevisionType) o);
-
-				JobTrace trace = job.getTrace();
-				trace.signOff(getClass(), null);
-
-				jobTraces.add(trace);
-
-				inTray.put(job);
-
-				Gui gui = dumpCruncher.getGui();
 				gui.setPageCount((int) getParsedCount());
 				gui.setBytesRead(getCompressedBytesRead());
 				gui.redrawLater();
