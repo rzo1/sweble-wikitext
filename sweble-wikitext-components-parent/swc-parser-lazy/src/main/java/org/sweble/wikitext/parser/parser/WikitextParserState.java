@@ -88,11 +88,20 @@ public class WikitextParserState
 
 		this.langConvTagsEnabled = config.isLangConvTagsEnabled();
 
-		this.prefixPattern = Pattern.compile(
-				"(" + config.getInternalLinkPrefixPattern() + ")$");
+		String prefix = config.getInternalLinkPrefixPattern();
+		this.prefixPattern = isNullOrEmpty(prefix) ?
+				null :
+				Pattern.compile("(" + prefix + ")$");
 
-		this.postfixPattern = Pattern.compile(
-				config.getInternalLinkPostfixPattern());
+		String postfix = config.getInternalLinkPostfixPattern();
+		this.postfixPattern = isNullOrEmpty(postfix) ?
+				null :
+				Pattern.compile(postfix);
+	}
+
+	private static boolean isNullOrEmpty(String pattern)
+	{
+		return pattern == null || pattern.isEmpty();
 	}
 
 	// =========================================================================
@@ -114,11 +123,21 @@ public class WikitextParserState
 
 	// =========================================================================
 
+	/**
+	 * @return The pattern matching the prefix of an internal link at the end
+	 *         of the text in front of the link or {@code null} if internal
+	 *         links have no prefix.
+	 */
 	public Pattern getInternalLinkPrefixPattern()
 	{
 		return prefixPattern;
 	}
 
+	/**
+	 * @return The pattern matching the postfix of an internal link at the
+	 *         beginning of the text following the link or {@code null} if
+	 *         internal links have no postfix.
+	 */
 	public Pattern getInternalLinkPostfixPattern()
 	{
 		return postfixPattern;

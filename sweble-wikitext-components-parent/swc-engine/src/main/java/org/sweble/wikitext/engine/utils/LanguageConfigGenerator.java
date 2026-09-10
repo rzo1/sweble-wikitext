@@ -94,6 +94,22 @@ public class LanguageConfigGenerator
 	private static final Pattern LINK_TRAIL_BODY =
 			Pattern.compile("\\^\\((.*)\\)\\(\\.\\*\\)\\$", Pattern.DOTALL);
 
+	/**
+	 * Matches the body of the link prefix regex MediaWiki builds from the link
+	 * prefix character set, "^((?&gt;.*[^charset]|))(.+)$". Older
+	 * configurations use "^((?&gt;.*[^charset])|)(.+)$". The first group
+	 * matches the character set.
+	 */
+	private static final Pattern LINK_PREFIX_CHARSET_BODY =
+			Pattern.compile("\\^\\(\\(\\?>\\.\\*\\[\\^(.+)\\](?:\\|\\)|\\)\\|)\\)\\(\\.\\+\\)\\$", Pattern.DOTALL);
+
+	/**
+	 * Matches the body of a link prefix regex like "^(.*?)([a-z]+)$" as used
+	 * by old MediaWiki versions. The first group matches the prefix itself.
+	 */
+	private static final Pattern LINK_PREFIX_BODY =
+			Pattern.compile("\\^\\(\\.\\*\\?\\)\\((.+)\\)\\$", Pattern.DOTALL);
+
     private static final String DEFAULT_FALLBACK_USER_AGENT =
             "Sweble Wikitext/unknown (+https://github.com/rzo1/sweble-wikitext/";
 
@@ -208,7 +224,7 @@ public class LanguageConfigGenerator
 		DefaultConfigEnWp config = new DefaultConfigEnWp();
 		config.configureEngine(wikiConfig);
 
-		// Overrides the link trail set up by configureEngine()
+		// Overrides the link trail and prefix set up by configureEngine()
 		if (apiUrlGeneral != null)
 			addGeneralSiteInfo(wikiConfig, apiUrlGeneral, siteUrl);
 
@@ -281,9 +297,9 @@ public class LanguageConfigGenerator
 	/**
 	 * Configures the site name, wiki URL (MediaWiki's $wgServer followed by
 	 * $wgScript), article path ($wgServer followed by $wgArticlePath), link
-	 * trail and time zone from the general site information (siprop=general).
-	 * Has to be called after the parser was configured since it overrides
-	 * the link trail.
+	 * trail, link prefix and time zone from the general site information
+	 * (siprop=general). Has to be called after the parser was configured
+	 * since it overrides the link trail and the link prefix.
 	 *
 	 * @param siteUrl
 	 *            The URL of the wiki. Its scheme completes the
@@ -342,6 +358,20 @@ public class LanguageConfigGenerator
 			}
 		}
 
+		String linkPrefixCharset = getAttributeValue(attributes, "linkprefixcharset");
+		String linkPrefix = getAttributeValue(attributes, "linkprefix");
+		if (linkPrefixCharset != null || linkPrefix != null)
+		{
+			String pattern = convertLinkPrefix(linkPrefixCharset, linkPrefix);
+			if (pattern == null)
+			{
+				logger.warn("Cannot convert the link prefix `{}' (character set `{}'), internal links get no prefix",
+						linkPrefix, linkPrefixCharset);
+			}
+			wikiConfig.getParserConfig().setInternalLinkPrefixPattern(
+					(pattern == null || pattern.isEmpty()) ? null : pattern);
+		}
+
 		String timezone = getAttributeValue(attributes, "timezone");
 		if (timezone != null)
 		{
@@ -386,8 +416,111 @@ public class LanguageConfigGenerator
 			return null;
 		String trail = m.group(1);
 
+		String flags = convertModifiers(linkTrail.substring(end + 1));
+		if (flags == null)
+			return null;
+
+		String pattern = (trail.isEmpty() || flags.isEmpty()) ?
+				trail :
+				"(?" + flags + ":" + trail + ")";
+		try
+		{
+			Pattern.compile(pattern);
+		}
+		catch (PatternSyntaxException e)
+		{
+			return null;
+		}
+		return pattern;
+	}
+
+	/**
+	 * Converts the link prefix as reported by the siteinfo API into the format
+	 * expected by
+	 * {@link org.sweble.wikitext.engine.config.ParserConfigImpl#setInternalLinkPrefixPattern(String)}.
+	 *
+	 * Wikis whose language uses link prefixes (MediaWiki's
+	 * Language::linkPrefixExtension(), e.g. Arabic) report the characters a
+	 * prefix may consist of as "linkprefixcharset", a PCRE character class
+	 * body like "a-zA-Z\x{0610}-\x{061A}". Parser::handleInternalLinks2()
+	 * attaches the longest run of these characters directly in front of a
+	 * link to the link. Additionally the wiki reports this as PCRE regex
+	 * "/^((?&gt;.*[^charset]|))(.+)$/sDu" in "linkprefix", its second group
+	 * being the prefix. Old MediaWiki versions only report "linkprefix",
+	 * possibly as "/^(.*?)(prefix)$/sDu".
+	 *
+	 * The parser instead takes everything its prefix pattern matches at the
+	 * end of the text in front of a link. Therefore the character set becomes
+	 * the pattern "[charset]+" and the modifiers become embedded flags like
+	 * in {@link #convertLinkTrail(String)}. The character set takes
+	 * precedence over the regex.
+	 *
+	 * @param linkPrefixCharset
+	 *            The "linkprefixcharset" of the wiki or null.
+	 * @param linkPrefix
+	 *            The "linkprefix" of the wiki or null.
+	 * @return The prefix pattern, an empty pattern if the wiki does not use
+	 *         link prefixes (both values empty or null) or null if the link
+	 *         prefix cannot be converted.
+	 */
+	public static String convertLinkPrefix(String linkPrefixCharset, String linkPrefix)
+	{
+		if (linkPrefixCharset != null && !linkPrefixCharset.isEmpty())
+			linkPrefix = "/^((?>.*[^" + linkPrefixCharset + "]|))(.+)$/sDu";
+
+		if (linkPrefix == null || linkPrefix.isEmpty())
+			return "";
+
+		char delimiter = linkPrefix.charAt(0);
+		int end = linkPrefix.lastIndexOf(delimiter);
+		if (Character.isLetterOrDigit(delimiter) || delimiter == '\\' || end <= 0)
+			return null;
+
+		String body = linkPrefix.substring(1, end);
+		String prefix;
+		Matcher m = LINK_PREFIX_CHARSET_BODY.matcher(body);
+		if (m.matches())
+		{
+			String charset = convertCharacterClassBody(m.group(1));
+			if (charset == null)
+				return null;
+			prefix = "[" + charset + "]+";
+		}
+		else
+		{
+			m = LINK_PREFIX_BODY.matcher(body);
+			if (!m.matches())
+				return null;
+			prefix = m.group(1);
+		}
+
+		String flags = convertModifiers(linkPrefix.substring(end + 1));
+		if (flags == null)
+			return null;
+
+		String pattern = flags.isEmpty() ? prefix : "(?" + flags + ":" + prefix + ")";
+		try
+		{
+			// The parser appends the anchor
+			Pattern.compile("(" + pattern + ")$");
+		}
+		catch (PatternSyntaxException e)
+		{
+			return null;
+		}
+		return pattern;
+	}
+
+	/**
+	 * Turns PHP PCRE modifiers into the flags of a Java embedded flag
+	 * expression, e.g. "sDu" into "sU".
+	 *
+	 * @return The flags or null if a modifier is not supported.
+	 */
+	private static String convertModifiers(String modifiers)
+	{
 		StringBuilder flags = new StringBuilder();
-		for (char modifier : linkTrail.substring(end + 1).toCharArray())
+		for (char modifier : modifiers.toCharArray())
 		{
 			switch (modifier)
 			{
@@ -403,25 +536,54 @@ public class LanguageConfigGenerator
 				case 'A':
 				case 'D':
 				case 'S':
-					// No effect on a pattern that only matches the trail
+					// No effect on a pattern that only matches the trail or prefix
 					break;
 				default:
 					return null;
 			}
 		}
+		return flags.toString();
+	}
 
-		String pattern = (trail.isEmpty() || flags.length() == 0) ?
-				trail :
-				"(?" + flags + ":" + trail + ")";
-		try
+	/**
+	 * Converts the body of a PCRE character class into the body of a Java
+	 * character class. Unlike in PCRE, '[' and "&amp;&amp;" are special
+	 * inside a Java character class and a leading '^' would negate the class
+	 * built from the body.
+	 *
+	 * @return The converted body or null if it uses POSIX classes like
+	 *         "[:alpha:]" or ends in an incomplete escape sequence.
+	 */
+	private static String convertCharacterClassBody(String body)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < body.length(); i++)
 		{
-			Pattern.compile(pattern);
+			char c = body.charAt(i);
+			switch (c)
+			{
+				case '\\':
+					if (i + 1 >= body.length())
+						return null;
+					sb.append(c).append(body.charAt(++i));
+					break;
+				case '[':
+					if (i + 1 < body.length() && body.charAt(i + 1) == ':')
+						return null;
+					sb.append("\\[");
+					break;
+				case '&':
+					sb.append("\\&");
+					break;
+				case '^':
+					sb.append((i == 0) ? "\\^" : "^");
+					break;
+				default:
+					sb.append(c);
+					break;
+			}
 		}
-		catch (PatternSyntaxException e)
-		{
-			return null;
-		}
-		return pattern;
+		return sb.toString();
 	}
 
 	private static String getScheme(String siteUrl)

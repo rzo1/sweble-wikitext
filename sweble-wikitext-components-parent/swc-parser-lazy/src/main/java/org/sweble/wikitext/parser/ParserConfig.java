@@ -54,8 +54,19 @@ public interface ParserConfig
 
 	boolean isUrlProtocol(String proto);
 
+	/**
+	 * @return The regular expression matching the prefix of an internal link
+	 *         at the end of the text in front of the link. {@code null} or an
+	 *         empty string if internal links have no prefix.
+	 */
 	String getInternalLinkPrefixPattern();
 
+	/**
+	 * @return The regular expression matching the postfix (link trail) of an
+	 *         internal link at the beginning of the text following the link.
+	 *         {@code null} or an empty string if internal links have no
+	 *         postfix.
+	 */
 	String getInternalLinkPostfixPattern();
 
 	LinkType classifyTarget(String target);

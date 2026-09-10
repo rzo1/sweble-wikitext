@@ -157,6 +157,90 @@ public class LanguageConfigGeneratorSiteInfoTest
 	}
 
 	// =========================================================================
+	// == Link prefix
+
+	@Test
+	public void testLinkPrefixConversion()
+	{
+		// The character set takes precedence over the regex
+		assertEquals(
+				"(?sU:[\\x{0600}-\\x{06FF}]+)",
+				LanguageConfigGenerator.convertLinkPrefix("\\x{0600}-\\x{06FF}", "/^(.*?)([a-z]+)$/sDu"));
+
+		// Regex as built by MediaWiki from the character set
+		assertEquals(
+				"(?sU:[a-zäöüß\\-]+)",
+				LanguageConfigGenerator.convertLinkPrefix(null, "/^((?>.*[^a-zäöüß\\-]|))(.+)$/sDu"));
+		// Older configurations
+		assertEquals(
+				"(?sU:[a-zäöüß\\-]+)",
+				LanguageConfigGenerator.convertLinkPrefix("", "/^((?>.*[^a-zäöüß\\-])|)(.+)$/sDu"));
+		assertEquals(
+				"(?sU:[a-zäöüß]+)",
+				LanguageConfigGenerator.convertLinkPrefix(null, "/^(.*?)([a-zäöüß]+)$/sDu"));
+
+		// Characters special in Java character classes are taken literally
+		assertEquals("(?sU:[\\^a\\[\\&\\&]+)", LanguageConfigGenerator.convertLinkPrefix("^a[&&", null));
+
+		// Most wikis do not use link prefixes
+		assertEquals("", LanguageConfigGenerator.convertLinkPrefix("", ""));
+		assertEquals("", LanguageConfigGenerator.convertLinkPrefix(null, null));
+
+		// Unexpected form, unsupported (ungreedy) modifier or POSIX class
+		assertNull(LanguageConfigGenerator.convertLinkPrefix(null, "/[a-z]+/"));
+		assertNull(LanguageConfigGenerator.convertLinkPrefix(null, "/^(.*?)([a-z]+)$/U"));
+		assertNull(LanguageConfigGenerator.convertLinkPrefix("[:alpha:]", null));
+	}
+
+	@Test
+	public void testArabicLinkPrefixBecomesPartOfTheLink() throws Exception
+	{
+		WikiConfigImpl config = configFromGeneral("/siteinfo/arwiki-general.xml", "https://ar.wikipedia.org");
+
+		String pattern = config.getParserConfig().getInternalLinkPrefixPattern();
+		assertTrue(pattern, pattern.startsWith("(?sU:[a-zA-Zء-ي\\x{0610}-\\x{061A}"));
+		assertTrue(pattern, pattern.endsWith("\\x{06EA}-\\x{06ED}]+)"));
+
+		List<WtInternalLink> links = new ArrayList<WtInternalLink>();
+		List<String> texts = new ArrayList<String>();
+		collect(parse(config, "في بال[[كتاب]]"), links, texts);
+
+		assertEquals(1, links.size());
+		assertEquals("بال", links.get(0).getPrefix());
+		assertEquals("بال[[كتاب]]", WtRtDataPrinter.print(links.get(0)));
+		assertTrue(texts.toString(), texts.contains("في "));
+	}
+
+	@Test
+	public void testArabicLinkPrefixOnlyTakesCharactersOfTheCharset() throws Exception
+	{
+		WikiConfigImpl config = configFromGeneral("/siteinfo/arwiki-general.xml", "https://ar.wikipedia.org");
+
+		List<WtInternalLink> links = new ArrayList<WtInternalLink>();
+		List<String> texts = new ArrayList<String>();
+		collect(parse(config, "12[[كتاب]]"), links, texts);
+
+		assertEquals(1, links.size());
+		assertEquals("", links.get(0).getPrefix());
+		assertTrue(texts.toString(), texts.contains("12"));
+	}
+
+	@Test
+	public void testGermanWikiHasNoLinkPrefix() throws Exception
+	{
+		WikiConfigImpl config = configFromGeneral("/siteinfo/dewiki-general.xml", "https://de.wikipedia.org");
+		assertNull(config.getParserConfig().getInternalLinkPrefixPattern());
+
+		List<WtInternalLink> links = new ArrayList<WtInternalLink>();
+		List<String> texts = new ArrayList<String>();
+		collect(parse(config, "xnull[[Haus]]"), links, texts);
+
+		assertEquals(1, links.size());
+		assertEquals("", links.get(0).getPrefix());
+		assertTrue(texts.toString(), texts.contains("xnull"));
+	}
+
+	// =========================================================================
 	// == Site name, URLs, time zone
 
 	@Test
