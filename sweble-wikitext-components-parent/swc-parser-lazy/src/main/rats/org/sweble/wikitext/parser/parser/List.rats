@@ -28,6 +28,7 @@ module org.sweble.wikitext.parser.parser.List;
 
 import org.sweble.wikitext.parser.parser.Content;
 import org.sweble.wikitext.parser.parser.State;
+import org.sweble.wikitext.parser.parser.Table;
 import org.sweble.wikitext.parser.parser.Whitespace;
 
 
@@ -258,15 +259,40 @@ noinline transient WtNode ListTransient =
 ;
 
 private noinline transient TempListItem ListItem =
-  rt0:pEol? rt1:pTpStar prefix:ListPrefix content:ListItemContentStar
+  rt0:pEol? rt1:pTpStar item:ListItemPrefixAndContent
   {
-    // TODO: Support "; term : def" on a single line
-    yyValue = new TempListItem();
-    yyValue.content = content;
+    yyValue = item;
     yyValue.rt0 = rt0;
     yyValue.rt1 = rt1;
-    yyValue.prefix = prefix;
   }
+;
+
+/* A table can be indented by prefixing its opening line with one or more
+ * colons (":{|"). Like MediaWiki we treat this as a table inside a definition
+ * list definition. Only prefixes consisting solely of colons are recognized,
+ * MediaWiki does not support "*{|" or "#{|" either. The table is parsed in the
+ * scope surrounding the list since the list item scope only accepts inline
+ * content. Whatever follows the table's closing "|}" on the same line is
+ * regular list item content.
+ */
+private transient TempListItem ListItemPrefixAndContent =
+    prefix:ListIndentPrefixStr &( pExtSpaceStar "{|" ) table:Table content:ListItemContentStar
+    {
+      yyValue = new TempListItem();
+      yyValue.content = nf.list(table, content);
+      yyValue.prefix = prefix;
+    }
+  / prefix:ListPrefix content:ListItemContentStar
+    {
+      // TODO: Support "; term : def" on a single line
+      yyValue = new TempListItem();
+      yyValue.content = content;
+      yyValue.prefix = prefix;
+    }
+;
+
+private transient String ListIndentPrefixStr =
+  [:]+
 ;
 
 private inline String ListPrefix =
