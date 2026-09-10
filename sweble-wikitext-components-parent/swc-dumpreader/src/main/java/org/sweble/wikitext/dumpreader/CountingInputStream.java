@@ -20,6 +20,10 @@ package org.sweble.wikitext.dumpreader;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Counts the bytes read or skipped. After a {@link #reset()} the count is the
+ * one of the last {@link #mark(int)} again.
+ */
 public final class CountingInputStream
 		extends
 			InputStream
@@ -28,12 +32,15 @@ public final class CountingInputStream
 
 	private long count;
 
+	private long markCount;
+
 	// =========================================================================
 
 	public CountingInputStream(InputStream inputStream)
 	{
 		this.in = inputStream;
 		this.count = 0;
+		this.markCount = 0;
 	}
 
 	// =========================================================================
@@ -76,8 +83,8 @@ public final class CountingInputStream
 	public long skip(long n) throws IOException
 	{
 		long skipped = in.skip(n);
-		if (skipped != -1)
-			++count;
+		if (skipped > 0)
+			count += skipped;
 		return skipped;
 	}
 
@@ -97,12 +104,14 @@ public final class CountingInputStream
 	public void mark(int readlimit)
 	{
 		in.mark(readlimit);
+		markCount = count;
 	}
 
 	@Override
 	public void reset() throws IOException
 	{
 		in.reset();
+		count = markCount;
 	}
 
 	@Override

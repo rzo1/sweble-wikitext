@@ -157,6 +157,6 @@ public class Revision
 	@Override
 	public String toString()
 	{
-		return "Revision [id=" + id + ", parentId=" + parentId + ", timestamp=" + timestamp + ", minor=" + minor + ", contributor=" + contributor + ", contributorIp=" + contributorIp + ", commentText=" + commentText + ", commentDeleted=" + commentDeleted + ", text=" + text + ", textSha1=" + textSha1 + ", textDeleted=" + textDeleted + "]";
+		return "Revision [id=" + id + ", parentId=" + parentId + ", timestamp=" + timestamp + ", minor=" + minor + ", contributor=" + contributor + ", contributorIp=" + contributorIp + ", commentText=" + commentText + ", commentDeleted=" + commentDeleted + ", text=" + text + ", textSha1=" + textSha1 + ", textDeleted=" + textDeleted + ", format=" + format + ", model=" + model + "]";
 	}
 }

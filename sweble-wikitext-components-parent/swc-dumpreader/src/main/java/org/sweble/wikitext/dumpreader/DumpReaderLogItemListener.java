@@ -18,16 +18,16 @@
 package org.sweble.wikitext.dumpreader;
 
 /**
- * Implement {@link DumpReaderLogItemListener} to also receive the log items
- * of export version 0.7 and later dumps.
+ * A {@link DumpReaderListener} that also receives the {@code <logitem>}
+ * elements of export version 0.7 and later dumps. Log items are never added
+ * to the MediaWiki object's list, whether or not a listener handles them.
+ *
+ * In export versions 0.5 and 0.6 log items are part of a page and are passed
+ * to {@link #handleRevisionOrUploadOrLogitem(Object, Object)} instead.
  */
-public interface DumpReaderListener
+public interface DumpReaderLogItemListener
+		extends
+			DumpReaderListener
 {
-	void handlePage(Object mediaWiki, Object page);
-
-	/**
-	 * @return Return true to add the item to the page's list or false if you
-	 *         handled it yourself.
-	 */
-	boolean handleRevisionOrUploadOrLogitem(Object page, Object revision);
+	void handleLogItem(Object mediaWiki, Object logItem);
 }

@@ -115,9 +115,14 @@ String html = HtmlRenderer.print(callback, config, pageTitle, cp.getPage());
 `swc-dumpreader` streams a dump and hands every `<page>` to `processPage`. Pages arrive as
 JAXB objects of the dump's schema version; `DumpConverter` turns them into the version-independent
 `Page` / `Revision` model. Supported export formats are **0.5 to 0.11**
-(`http://www.mediawiki.org/xml/export-0.X/`); other formats are rejected with an
-`IllegalArgumentException("Unknown xmlns")`. The file name passed as `url` decides decompression:
-names ending in `.bz2` or `.gz` are decompressed on the fly.
+(`http://www.mediawiki.org/xml/export-0.X/`), detected from the namespace of the root element;
+other formats and empty input are rejected with an `IllegalArgumentException`. The file name passed
+as `url` decides decompression: names ending in `.bz2` or `.gz` are decompressed on the fly
+(multi-stream files included). The `<logitem>` elements of 0.7+ dumps are passed to
+`processLogItem`, which does nothing unless overridden (`DumpReaderWithHandler` hands them to a
+`DumpReaderLogItemListener`). Document type declarations and external
+entities are not processed. Construct the reader from a `File` to have `getFileSize()` report
+its size.
 
 ```java
 import java.io.File;
