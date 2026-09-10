@@ -816,7 +816,7 @@ public class WtPrettyPrinter
 					// Only link options and garbage know that it has to leave a 
 					// pipe in front. We have to fix this for all other 
 					// elements (e.g. templates).
-					p.print('|');
+					printSeparator("|", a);
 					break;
 			}
 			dispatch(a);
@@ -1004,7 +1004,7 @@ public class WtPrettyPrinter
 					// Only attributes and garbage know that it has to leave a 
 					// space in front. We have to fix this for all other 
 					// elements (e.g. templates).
-					p.print(' ');
+					printSeparator(" ", a);
 					break;
 			}
 			dispatch(a);
@@ -1017,9 +1017,18 @@ public class WtPrettyPrinter
 		for (WtNode rule : n)
 		{
 			if (i++ > 0)
-				p.print(";");
+				printSeparator(";", rule);
 			dispatch(rule);
 		}
+	}
+
+	/**
+	 * Prints a separator which has to precede the given node but which the
+	 * node does not print itself.
+	 */
+	protected void printSeparator(String separator, WtNode node)
+	{
+		p.print(separator);
 	}
 
 	// --[ WtStringNode ]-------------------------------------------------------
@@ -1111,7 +1120,8 @@ public class WtPrettyPrinter
 
 	private final OutputTracker out;
 
-	private final LinkedList<WtNode> scope = new LinkedList<WtNode>();
+	/** The enclosing nodes which are relevant for printing, innermost first. */
+	protected final LinkedList<WtNode> scope = new LinkedList<WtNode>();
 
 	private boolean newlineAtEof = false;
 
