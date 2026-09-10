@@ -28,5 +28,6 @@ WtParsedWikitextPage(
 			)
 		]
 	),
-	[2] = "\nText"
+	[2] = "\n",
+	[3] = WtParagraph[ [0] = "Text" ]
 )
