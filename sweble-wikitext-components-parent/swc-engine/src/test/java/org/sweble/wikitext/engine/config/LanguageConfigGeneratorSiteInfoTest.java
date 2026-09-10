@@ -39,15 +39,18 @@ import org.sweble.wikitext.engine.WtEngineImpl;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
 import org.sweble.wikitext.engine.utils.LanguageConfigGenerator;
 import org.sweble.wikitext.parser.nodes.WtInternalLink;
+import org.sweble.wikitext.parser.nodes.WtLctRule;
+import org.sweble.wikitext.parser.nodes.WtLctRuleConv;
+import org.sweble.wikitext.parser.nodes.WtLctVarConv;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtText;
 import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
 
 /**
  * Configuration from the general site information (siprop=general): link
- * trail, API endpoint, site name, URLs and time zone. Uses trimmed siteinfo
- * responses of de.wikipedia, zh.wikipedia and de.wiktionary so no network
- * access is required.
+ * trail, API endpoint, site name, URLs, time zone and language variants. Uses
+ * trimmed siteinfo responses of de.wikipedia, zh.wikipedia and de.wiktionary
+ * so no network access is required.
  */
 public class LanguageConfigGeneratorSiteInfoTest
 {
@@ -301,6 +304,111 @@ public class LanguageConfigGeneratorSiteInfoTest
 	}
 
 	// =========================================================================
+	// == Language variants
+
+	private static final String[] ZH_VARIANTS = {
+			"zh", "zh-hans", "zh-hant", "zh-cn", "zh-hk", "zh-mo", "zh-my", "zh-sg", "zh-tw" };
+
+	@Test
+	public void testChineseVariantsAreRegistered() throws Exception
+	{
+		ParserConfigImpl pc = generateChineseConfig().getParserConfig();
+
+		assertTrue(pc.isLangConvTagsEnabled());
+		for (String variant : ZH_VARIANTS)
+		{
+			assertTrue(variant, pc.isLctVariant(variant));
+			assertEquals(variant, pc.normalizeLctVariant(variant.toUpperCase()));
+		}
+
+		// Only listed as fallback language
+		assertFalse(pc.isLctVariant("en"));
+	}
+
+	@Test
+	public void testChineseConfigConvertsLanguageConversionRules() throws Exception
+	{
+		WtNode page = parse(generateChineseConfig(), "a -{zh-hans:X;zh-hant:Y}- b");
+
+		assertEquals(1, find(page, WtLctRuleConv.class).size());
+		assertTrue(find(page, WtLctVarConv.class).isEmpty());
+		List<String> variants = new ArrayList<String>();
+		for (WtLctRule rule : find(page, WtLctRule.class))
+			variants.add(rule.getVariant());
+		assertEquals("[zh-hans, zh-hant]", variants.toString());
+		assertFalse(getText(page), getText(page).contains("-{"));
+	}
+
+	@Test
+	public void testChineseConfigProtectsTextInLanguageConversionMarkup() throws Exception
+	{
+		WtNode page = parse(generateChineseConfig(), "a -{foo}- b");
+
+		List<WtLctVarConv> conversions = find(page, WtLctVarConv.class);
+		assertEquals(1, conversions.size());
+		assertTrue(find(page, WtLctRuleConv.class).isEmpty());
+		assertTrue(find(page, WtLctRule.class).isEmpty());
+		assertEquals("foo", getText(conversions.get(0)));
+		assertFalse(getText(page), getText(page).contains("-{"));
+	}
+
+	@Test
+	public void testWikiWithoutVariantsShowsLanguageConversionMarkup() throws Exception
+	{
+		List<WikiConfig> configs = new ArrayList<WikiConfig>();
+		configs.add(generateWiktionaryConfig());
+		configs.add(configFromGeneral("/siteinfo/dewiki-general.xml", "https://de.wikipedia.org"));
+		configs.add(DefaultConfigEnWp.generate());
+
+		for (WikiConfig config : configs)
+		{
+			assertFalse(config.getParserConfig().isLangConvTagsEnabled());
+
+			WtNode page = parse(config, "a -{foo}- b -{zh-hans:X;zh-hant:Y}- c");
+			assertTrue(find(page, WtLctVarConv.class).isEmpty());
+			assertTrue(find(page, WtLctRuleConv.class).isEmpty());
+			assertEquals("a -{foo}- b -{zh-hans:X;zh-hant:Y}- c", getText(page));
+		}
+	}
+
+	@Test
+	public void testRegisteredVariantsAreKept() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+		config.getParserConfig().addLctVariantMapping("zh-hans", "zh-hans");
+
+		LanguageConfigGenerator.addGeneralSiteInfo(
+				config,
+				resource("/siteinfo/zhwiki-general-variants.xml"),
+				"https://zh.wikipedia.org");
+
+		for (String variant : ZH_VARIANTS)
+			assertTrue(variant, config.getParserConfig().isLctVariant(variant));
+	}
+
+	@Test
+	public void testLanguageVariantsAreSavedAndLoaded() throws Exception
+	{
+		WikiConfigImpl config = generateChineseConfig();
+
+		StringWriter writer = new StringWriter();
+		config.save(writer);
+		WikiConfigImpl loaded = WikiConfigImpl.load(new StringReader(writer.toString()));
+
+		assertEquals(config, loaded);
+		ParserConfigImpl pc = loaded.getParserConfig();
+		assertTrue(pc.isLangConvTagsEnabled());
+		for (String variant : ZH_VARIANTS)
+			assertTrue(variant, pc.isLctVariant(variant));
+		assertFalse(pc.isLctVariant("en"));
+
+		WtNode page = parse(loaded, "a -{zh-hans:X;zh-hant:Y}- b -{foo}- c");
+		assertEquals(1, find(page, WtLctRuleConv.class).size());
+		assertEquals(2, find(page, WtLctRule.class).size());
+		assertEquals(1, find(page, WtLctVarConv.class).size());
+	}
+
+	// =========================================================================
 	// == Complete configuration
 
 	@Test
@@ -488,6 +596,25 @@ public class LanguageConfigGeneratorSiteInfoTest
 				null);
 	}
 
+	/**
+	 * Only the general site information of zh.wikipedia matters for the
+	 * language variants, the rest is taken from de.wiktionary.
+	 */
+	private static WikiConfigImpl generateChineseConfig() throws Exception
+	{
+		String siteInfo = resource("/siteinfo/dewiktionary-siteinfo.xml");
+		return (WikiConfigImpl) LanguageConfigGenerator.generateWikiConfig(
+				"zh wiki",
+				"https://zh.wikipedia.org",
+				"zh",
+				resource("/siteinfo/dewiktionary-namespacealiases.xml"),
+				siteInfo,
+				siteInfo,
+				siteInfo,
+				resource("/siteinfo/zhwiki-general-variants.xml"),
+				null);
+	}
+
 	private static WikiConfigImpl configFromGeneral(String name, String siteUrl) throws Exception
 	{
 		WikiConfigImpl config = DefaultConfigEnWp.generate();
@@ -522,6 +649,29 @@ public class LanguageConfigGeneratorSiteInfoTest
 			texts.add(((WtText) node).getContent());
 		for (WtNode child : node)
 			collect(child, links, texts);
+	}
+
+	private static <T extends WtNode> List<T> find(WtNode node, Class<T> type)
+	{
+		List<T> result = new ArrayList<T>();
+		find(node, type, result);
+		return result;
+	}
+
+	private static <T extends WtNode> void find(WtNode node, Class<T> type, List<T> result)
+	{
+		if (type.isInstance(node))
+			result.add(type.cast(node));
+		for (WtNode child : node)
+			find(child, type, result);
+	}
+
+	private static String getText(WtNode node)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (WtText text : find(node, WtText.class))
+			sb.append(text.getContent());
+		return sb.toString();
 	}
 
 	private static final class RecordingCallback
