@@ -544,8 +544,12 @@ public class WtEngineImpl
 			e.attachLog(log);
 			throw e;
 		}
-		catch (Throwable e)
+		catch (Exception e)
 		{
+			/* Only exceptions are expansion failures. Errors like a
+			 * StackOverflowError must not be turned into an EngineException,
+			 * which the expansion visitor of the calling frame would swallow.
+			 */
 			throw new EngineException(title, "Compilation failed!", e, log);
 		}
 
@@ -596,8 +600,12 @@ public class WtEngineImpl
 			e.attachLog(log);
 			throw e;
 		}
-		catch (Throwable e)
+		catch (Exception e)
 		{
+			/* Only exceptions are expansion failures. Errors like a
+			 * StackOverflowError must not be turned into an EngineException,
+			 * which the expansion visitor of the calling frame would swallow.
+			 */
 			throw new EngineException(title, "Compilation failed!", e, log);
 		}
 

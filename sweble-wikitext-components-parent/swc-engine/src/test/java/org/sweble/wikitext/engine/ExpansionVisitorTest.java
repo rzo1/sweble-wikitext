@@ -102,6 +102,27 @@ public class ExpansionVisitorTest
 	}
 
 	// =========================================================================
+	// == Errors
+
+	@Test
+	public void testErrorsAreNotSwallowed() throws Exception
+	{
+		StackOverflowError error = new StackOverflowError();
+		callback.add("Template:T", "{{Boom}}");
+		callback.fail("Template:Boom", error);
+
+		try
+		{
+			expand("{{T}}");
+			fail("The error was swallowed");
+		}
+		catch (EngineException e)
+		{
+			assertSame(error, e.getCause());
+		}
+	}
+
+	// =========================================================================
 
 	/**
 	 * Adds the templates {@code prefix1} to {@code prefixN}, each transcluding
