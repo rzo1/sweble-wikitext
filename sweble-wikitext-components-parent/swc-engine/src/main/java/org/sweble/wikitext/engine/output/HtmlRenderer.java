@@ -25,6 +25,7 @@ import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.*;
 import org.sweble.wikitext.engine.utils.EngineAstTextUtils;
 import org.sweble.wikitext.engine.utils.UrlEncoding;
+import org.sweble.wikitext.parser.WtRtData;
 import org.sweble.wikitext.parser.nodes.*;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageHorizAlign;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageViewFormat;
@@ -34,7 +35,6 @@ import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -144,7 +144,7 @@ public class HtmlRenderer
 		{
 			// Fix #62: Use sequential number if the title is missing
 			long seqNumber = untitledLinkCounter++;
-			pt("<a rel=\"nofollow\" class=\"external text\" href=\"%s\">[" + seqNumber + "]</a>",
+			pt("<a rel=\"nofollow\" class=\"external autonumber\" href=\"%s\">[" + seqNumber + "]</a>",
 					escAttrKeepCharRefs(callback.makeUrl(n.getTarget())));
 		}
 	}
@@ -206,11 +206,16 @@ public class HtmlRenderer
 				if (imgWidth <= 0)
 					imgWidth = 180;
 				break;
+			case FRAME:
+				// Like MediaWiki: framed images are never scaled
+				imgWidth = -1;
+				imgHeight = -1;
+				break;
 			default:
 				break;
 		}
 
-		if (n.getUpright())
+		if (n.getUpright() && n.getFormat() != ImageViewFormat.FRAME)
 		{
 			imgWidth = 140;
 			imgHeight = -1;
@@ -233,10 +238,17 @@ public class HtmlRenderer
 
 		boolean isImage = !target.getTitle().endsWith(".ogg");
 
-		if (exists && imgHeight > 0)
+		if (exists && imgHeight > 0 && info.getImgWidth() > 0 && info.getImgHeight() > 0)
 		{
-			int altWidth = imgHeight * info.getImgWidth() / info.getImgHeight();
-			if (altWidth < imgWidth)
+			// Like MediaWiki: Without a width the width of the file is used.
+			// The width is then reduced to fit the requested height.
+			int srcWidth = info.getImgWidth();
+			int srcHeight = info.getImgHeight();
+			int altWidth = (imgWidth > 0) ? imgWidth : srcWidth;
+			if ((long) altWidth * srcHeight > (long) imgHeight * srcWidth)
+				altWidth = fitBoxWidth(srcWidth, srcHeight, imgHeight);
+
+			if (altWidth != imgWidth)
 			{
 				imgWidth = altWidth;
 				try
@@ -250,6 +262,7 @@ public class HtmlRenderer
 				{
 					throw new VisitingException(e);
 				}
+				exists = (info != null && info.getImgUrl() != null);
 			}
 		}
 
@@ -268,7 +281,8 @@ public class HtmlRenderer
 
 		switch (n.getFormat())
 		{
-			case THUMBNAIL:
+			case THUMBNAIL: // FALL THROUGH
+			case FRAME:
 				imgClasses += " thumbimage";
 				break;
 			default:
@@ -372,44 +386,44 @@ public class HtmlRenderer
 
 		// -- generate html --
 
-		boolean hasThumbFrame = isImage &&
-				n.getFormat() == ImageViewFormat.THUMBNAIL ||
-				n.getHAlign() != ImageHorizAlign.UNSPECIFIED;
+		boolean framed = n.getFormat() == ImageViewFormat.THUMBNAIL ||
+				n.getFormat() == ImageViewFormat.FRAME;
+
+		boolean hasThumbFrame = isImage && framed;
+
+		// Like MediaWiki: Centered images are wrapped in a "center" div and
+		// otherwise treated like images with the alignment "none".
+		ImageHorizAlign hAlign = n.getHAlign();
+		boolean centered = (hAlign == ImageHorizAlign.CENTER);
+		if (centered)
+		{
+			hAlign = ImageHorizAlign.NONE;
+			p.indentln("<div class=\"center\">");
+			p.incIndent();
+		}
+
+		boolean hasFloat = !hasThumbFrame && hAlign != ImageHorizAlign.UNSPECIFIED;
 
 		if (hasThumbFrame)
 		{
-			String align = "";
-			switch (n.getHAlign())
+			String align;
+			switch (hAlign)
 			{
-				case CENTER:
-					align = " center";
-					break;
 				case LEFT:
-					align = " tleft";
+					align = "tleft";
+					break;
+				case NONE:
+					align = "tnone";
 					break;
 				case RIGHT: // FALL THROUGH
-				case NONE: // FALL THROUGH
 				default:
-					align = " tright";
+					align = "tright";
 					break;
 			}
 
-			String thumb = "";
-			String inner = "floatnone";
-			String style = "";
-			if (n.getFormat() == ImageViewFormat.THUMBNAIL)
-			{
-				thumb = "thumb";
-				inner = "thumbinner";
-				style = String.format(" style=\"width:%dpx;\"", width + 2);
-			}
-
-			p.indent();
-			pf("<div class=\"%s\">", (thumb + align).trim());
+			p.indentln(String.format("<div class=\"thumb %s\">", align));
 			p.incIndent();
-			p.indent();
-			pf("<div class=\"%s\"%s>", inner, style);
-			p.println();
+			p.indentln(String.format("<div class=\"thumbinner\" style=\"width:%dpx;\">", width + 2));
 			p.incIndent();
 
 			aTitle = "";
@@ -418,6 +432,27 @@ public class HtmlRenderer
 		}
 		else
 		{
+			if (hasFloat)
+			{
+				String align;
+				switch (hAlign)
+				{
+					case LEFT:
+						align = "floatleft";
+						break;
+					case RIGHT:
+						align = "floatright";
+						break;
+					case NONE: // FALL THROUGH
+					default:
+						align = "floatnone";
+						break;
+				}
+
+				p.indentln(String.format("<div class=\"%s\">", align));
+				p.incIndent();
+			}
+
 			if (alt == null)
 				alt = strCaption;
 		}
@@ -461,9 +496,10 @@ public class HtmlRenderer
 		if (linkTarget != null || linkUrl != null)
 			p.print("</a>");
 
-		if (n.getFormat() == ImageViewFormat.THUMBNAIL)
+		if (framed)
 		{
-			if (exists)
+			// Like MediaWiki: Framed images have no magnify icon
+			if (exists && n.getFormat() == ImageViewFormat.THUMBNAIL)
 			{
 				p.indentln("<div class=\"thumbcaption\">");
 				p.incIndent();
@@ -493,6 +529,30 @@ public class HtmlRenderer
 			p.decIndent();
 			p.indentln("</div>");
 		}
+		else if (hasFloat)
+		{
+			p.decIndent();
+			p.indentln("</div>");
+		}
+
+		if (centered)
+		{
+			p.decIndent();
+			p.indentln("</div>");
+		}
+	}
+
+	/**
+	 * The width of an image of the given size scaled down to the given height
+	 * (like MediaWiki's File::scaleHeight() and File::fitBoxWidth()).
+	 */
+	private static int fitBoxWidth(int srcWidth, int srcHeight, int maxHeight)
+	{
+		double idealWidth = (double) srcWidth * maxHeight / srcHeight;
+		int roundedUp = (int) Math.ceil(idealWidth);
+		if (Math.round((double) roundedUp * srcHeight / srcWidth) > maxHeight)
+			return (int) Math.floor(idealWidth);
+		return roundedUp;
 	}
 
 	@Override
@@ -530,7 +590,9 @@ public class HtmlRenderer
 		}
 
 		// FIXME: I think these should be removed in the parser already?!
-		if (target.getNamespace() == wikiConfig.getNamespace("Category"))
+		// A leading colon turns a category link into a normal link.
+		if (target.getNamespace() == wikiConfig.getNamespace("Category")
+				&& !target.hasInitialColon())
 			return;
 
 		// Fix #89: Links to a section of the current page ([[#Foo]] or
@@ -557,6 +619,12 @@ public class HtmlRenderer
 						makeTitleFromTarget(n, target),
 						n.getPostfix());
 			}
+			return;
+		}
+
+		if (target.getNamespace().isMediaNs())
+		{
+			printMediaLink(n, target);
 			return;
 		}
 
@@ -627,6 +695,60 @@ public class HtmlRenderer
 							n.getPostfix());
 				}
 			}
+		}
+	}
+
+	/**
+	 * Renders a link into the Media namespace as a direct link to the file
+	 * (like MediaWiki's Linker::makeMediaLinkFile()).
+	 */
+	private void printMediaLink(WtInternalLink n, PageTitle target)
+	{
+		PageTitle file = target.newWithNamespace(wikiConfig.getFileNamespace());
+
+		MediaInfo info;
+		try
+		{
+			info = callback.getMediaInfo(file.getNormalizedFullTitle(), -1, -1);
+		}
+		catch (Exception e)
+		{
+			throw new VisitingException(e);
+		}
+
+		String href;
+		String cssClass;
+		if (info != null && info.getImgUrl() != null)
+		{
+			href = info.getImgUrl();
+			cssClass = "internal";
+		}
+		else
+		{
+			href = callback.makeUrlMissingTarget(
+					UrlEncoding.WIKI.encode(file.getNormalizedFullTitle()));
+			cssClass = "new";
+		}
+
+		if (n.hasTitle())
+		{
+			pt("<a href=\"%s\" class=\"%s\" title=\"%~\">%=%!%=</a>",
+					escAttrKeepCharRefs(href),
+					cssClass,
+					target.getDenormalizedTitle(),
+					n.getPrefix(),
+					n.getTitle(),
+					n.getPostfix());
+		}
+		else
+		{
+			pt("<a href=\"%s\" class=\"%s\" title=\"%~\">%=%=%=</a>",
+					escAttrKeepCharRefs(href),
+					cssClass,
+					target.getDenormalizedTitle(),
+					n.getPrefix(),
+					makeTitleFromTarget(n, target),
+					n.getPostfix());
 		}
 	}
 
@@ -920,7 +1042,7 @@ public class HtmlRenderer
 		pt("<caption%!>", sanitizeAttribs("caption", n.getXmlAttributes()));
 		p.println();
 		p.incIndent();
-		dispatch(getCellContent(n.getBody()));
+		iterate(getCellContent(n.getBody()));
 		p.decIndent();
 		p.indentln("</caption>");
 	}
@@ -931,7 +1053,7 @@ public class HtmlRenderer
 		pt("<td%!>", sanitizeAttribs("td", n.getXmlAttributes()));
 		p.println();
 		p.incIndent();
-		dispatch(getCellContent(n.getBody()));
+		iterate(getCellContent(n.getBody()));
 		p.decIndent();
 		p.indentln("</td>");
 	}
@@ -942,7 +1064,7 @@ public class HtmlRenderer
 		pt("<th%!>", sanitizeAttribs("th", n.getXmlAttributes()));
 		p.println();
 		p.incIndent();
-		dispatch(getCellContent(n.getBody()));
+		iterate(getCellContent(n.getBody()));
 		p.decIndent();
 		p.indentln("</th>");
 	}
@@ -967,7 +1089,7 @@ public class HtmlRenderer
 			pt("<tr%!>", sanitizeAttribs("tr", n.getXmlAttributes()));
 			p.println();
 			p.incIndent();
-			dispatch(getCellContent(n.getBody()));
+			iterate(getCellContent(n.getBody()));
 			p.decIndent();
 			p.indentln("</tr>");
 		}
@@ -1177,7 +1299,7 @@ public class HtmlRenderer
 		p.indentAtBol();
 
 		String url = escAttrKeepCharRefs(callback.makeUrl(n));
-		pf("<a href=\"%s\">%s</a>", url, url);
+		pf("<a rel=\"nofollow\" class=\"external free\" href=\"%s\">%s</a>", url, url);
 	}
 
 	@Override
@@ -1238,7 +1360,7 @@ public class HtmlRenderer
 	public void visit(WtXmlCharRef n)
 	{
 		p.indentAtBol();
-		pf("&#%d;", n.getCodePoint());
+		p.print(charRef(n));
 	}
 
 	@Override
@@ -1271,7 +1393,29 @@ public class HtmlRenderer
 			return;
 		}
 
-		if (n.hasBody())
+		if (!VOID_ELEMENTS.contains(name.toLowerCase())
+				&& (!n.hasBody() || isSelfClosing(n)))
+		{
+			// Like MediaWiki: A self-closing tag of a non-void element becomes
+			// an empty element. Browsers would treat it as a start tag. If the
+			// tree builder already moved the following content into the
+			// element, that content is rendered after the element.
+			if (blockElements.contains(name.toLowerCase()))
+			{
+				p.indent();
+				pt("<%s%!></%s>", name, attribs, name);
+				p.println();
+			}
+			else
+			{
+				p.indentAtBol();
+				pt("<%s%!></%s>", name, attribs, name);
+			}
+
+			if (n.hasBody())
+				dispatch(n.getBody());
+		}
+		else if (n.hasBody())
 		{
 			if (blockElements.contains(name.toLowerCase()))
 			{
@@ -1301,6 +1445,20 @@ public class HtmlRenderer
 			p.indentAtBol();
 			pt("<%s%! />", name, attribs);
 		}
+	}
+
+	/**
+	 * Whether the element was written as self-closing tag (e.g.
+	 * {@code <div/>}) in the wikitext. Only known if round-trip data was
+	 * gathered.
+	 */
+	private static boolean isSelfClosing(WtXmlElement n)
+	{
+		WtRtData rtd = n.getRtd();
+		return rtd != null
+				&& !rtd.isSuppress()
+				&& rtd.size() >= 2
+				&& rtd.toString(1).trim().equals("/>");
 	}
 
 	/**
@@ -1347,7 +1505,7 @@ public class HtmlRenderer
 	public void visit(WtXmlEntityRef n)
 	{
 		p.indentAtBol();
-		pf("&%s;", n.getName());
+		p.print(entityRef(n));
 	}
 
 	public void visit(WtXmlStartTag n)
@@ -1703,9 +1861,10 @@ public class HtmlRenderer
 	}
 
 	/**
-	 * If the cell content is only one paragraph, the content of the paragraph
-	 * is returned. Otherwise the whole cell content is returned. This is done
-	 * to render cells with a single paragraph without the paragraph tags.
+	 * If the cell content is only one paragraph (optionally followed by
+	 * whitespace), the content of the paragraph is returned. Otherwise the
+	 * whole cell content is returned. This is done to render cells with a
+	 * single paragraph without the paragraph tags.
 	 */
 	protected static WtNode getCellContent(WtNodeList body)
 	{
@@ -1714,7 +1873,11 @@ public class HtmlRenderer
 			boolean ok = true;
 			for (int i = 1; i < body.size(); ++i)
 			{
-				if (!(body.get(i) instanceof WtNewline))
+				WtNode c = body.get(i);
+				boolean whitespace = (c instanceof WtNewline)
+						|| (c instanceof WtWhitespace)
+						|| (c instanceof WtText && ((WtText) c).getContent().trim().isEmpty());
+				if (!whitespace)
 				{
 					ok = false;
 					break;
@@ -1742,99 +1905,10 @@ public class HtmlRenderer
 		}
 	}
 
-	protected WtNodeList cleanAttribs(WtNodeList xmlAttributes)
-	{
-		ArrayList<WtXmlAttribute> clean = null;
-
-		WtXmlAttribute style = null;
-		for (WtNode a : xmlAttributes)
-		{
-			if (a instanceof WtXmlAttribute)
-			{
-				WtXmlAttribute attr = (WtXmlAttribute) a;
-				if (!attr.getName().isResolved())
-					continue;
-
-				String name = attr.getName().getAsString().toLowerCase();
-				if (name.equals("style"))
-				{
-					style = attr;
-				}
-				else if (name.equals("width"))
-				{
-					if (clean == null)
-						clean = new ArrayList<WtXmlAttribute>();
-					clean.add(attr);
-				}
-				else if (name.equals("align"))
-				{
-					if (clean == null)
-						clean = new ArrayList<WtXmlAttribute>();
-					clean.add(attr);
-				}
-			}
-		}
-
-		if (clean == null || clean.isEmpty())
-			return xmlAttributes;
-
-		String newStyle = "";
-		if (style != null)
-			newStyle = cleanAttribValue(style.getValue());
-
-		for (WtXmlAttribute a : clean)
-		{
-			if (!a.getName().isResolved())
-				continue;
-
-			String name = a.getName().getAsString().toLowerCase();
-			if (name.equals("align"))
-			{
-				newStyle = String.format(
-						"text-align: %s; ",
-						cleanAttribValue(a.getValue())) + newStyle;
-			}
-			else
-			{
-				newStyle = String.format(
-						"%s: %s; ",
-						name,
-						cleanAttribValue(a.getValue())) + newStyle;
-			}
-		}
-
-		WtXmlAttribute newStyleAttrib = nf.attr(
-				nf.name(nf.list(nf.text("style"))),
-				nf.value(nf.list(nf.text(newStyle))));
-
-		WtNodeList newAttribs = nf.attrs(nf.list());
-		for (WtNode a : xmlAttributes)
-		{
-			if (a == style)
-			{
-				newAttribs.add(newStyleAttrib);
-			}
-			else if (clean.contains(a))
-			{
-				// Remove
-			}
-			else
-			{
-				// Copy the rest
-				newAttribs.add(a);
-			}
-		}
-
-		if (style == null)
-			newAttribs.add(newStyleAttrib);
-
-		return newAttribs;
-	}
-
 	/**
-	 * Cleans the attributes (see {@link #cleanAttribs(WtNodeList)}) and
-	 * removes or neutralizes everything that is not allowed on the given
-	 * element (see {@link HtmlSanitizer}).
+	 * Removes or neutralizes all attributes that are not allowed on the given
+	 * element (see {@link HtmlSanitizer}). Like MediaWiki, presentational
+	 * attributes like {@code align} or {@code width} are kept as they are.
 	 */
 	protected WtNodeList sanitizeAttribs(String element, WtNodeList xmlAttributes)
 	{
@@ -1845,7 +1919,7 @@ public class HtmlRenderer
 	{
 		return HtmlSanitizer.sanitizeAttributes(
 				element,
-				toAttribMap(cleanAttribs(xmlAttributes)));
+				toAttribMap(xmlAttributes));
 	}
 
 	private Map<String, String> toAttribMap(WtNodeList xmlAttributes)
@@ -1916,6 +1990,17 @@ public class HtmlRenderer
 
 	private static final Pattern BIDI_CHARS = Pattern.compile(
 			"[\\u200E\\u200F\\u202A-\\u202E]");
+
+	/**
+	 * Elements which keep a self-closing tag ($htmlsingleonly in MediaWiki's
+	 * Sanitizer).
+	 */
+	private static final Set<String> VOID_ELEMENTS = setOf(
+			"br",
+			"wbr",
+			"hr",
+			"meta",
+			"link");
 
 	protected final WikiConfig wikiConfig;
 

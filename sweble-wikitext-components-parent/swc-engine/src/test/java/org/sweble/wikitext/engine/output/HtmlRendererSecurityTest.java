@@ -313,7 +313,7 @@ public class HtmlRendererSecurityTest
 
 		assertContains(html, "<table class=\"wikitable\" border=\"2\" style=\"width:100%\">");
 		assertContains(html, "<tr style=\"color:red\">");
-		assertContains(html, "<td rowspan=\"2\" style=\"text-align: center;\">");
+		assertContains(html, "<td align=\"center\" rowspan=\"2\">");
 	}
 
 	@Test

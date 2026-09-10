@@ -544,7 +544,7 @@ public class SafeLinkTitlePrinter
 
 	public void visit(WtXmlCharRef n)
 	{
-		pf("&#%d;", n.getCodePoint());
+		p.print(charRef(n));
 	}
 
 	@Override
@@ -572,7 +572,7 @@ public class SafeLinkTitlePrinter
 
 	public void visit(WtXmlEntityRef n)
 	{
-		pf("&%s;", n.getName());
+		p.print(entityRef(n));
 	}
 
 	@Override
