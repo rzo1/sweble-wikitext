@@ -151,8 +151,11 @@ public class WikiConfigImpl
 
 	// -- Switches --
 
+	/**
+	 * MediaWiki matches the names of extension tags case-insensitively.
+	 */
 	@XmlAttribute(required = false)
-	private boolean tagExtensionNamesCaseSensitive = true;
+	private boolean tagExtensionNamesCaseSensitive = false;
 
 	private final Map<String, TagExtensionBase> tagExtensionLookup = new HashMap<String, TagExtensionBase>();
 
@@ -207,15 +210,25 @@ public class WikiConfigImpl
 		if (this.tagExtensionNamesCaseSensitive == tagExtensionNamesCaseSensitive)
 			return;
 		this.tagExtensionNamesCaseSensitive = tagExtensionNamesCaseSensitive;
+		rebuildTagExtensionLookup();
+	}
+
+	private void rebuildTagExtensionLookup()
+	{
+		tagExtensionLookup.clear();
 		for (Entry<String, TagExtensionBase> tagExt : tagExtensions.entrySet())
 		{
-			String key = tagExtensionNamesCaseSensitive ?
-					tagExt.getKey() :
-					tagExt.getKey().toLowerCase();
-			tagExtensionLookup.put(
-					key,
-					tagExt.getValue());
+			String key = toTagExtensionLookupName(tagExt.getKey());
+			TagExtensionBase old = tagExtensionLookup.put(key, tagExt.getValue());
+			if (old != null)
+				logger.warn("The tag extensions `{}' and `{}' have the same name `{}'",
+						old.getId(), tagExt.getKey(), key);
 		}
+	}
+
+	private String toTagExtensionLookupName(String name)
+	{
+		return tagExtensionNamesCaseSensitive ? name : name.toLowerCase();
 	}
 	
 	// ==[ Namespaces ]=========================================================
@@ -546,11 +559,12 @@ public class WikiConfigImpl
 			throw new IllegalArgumentException(
 					"A tag extension with the same id `" + tagExt.getId() + "' is already registered.");
 
-		tagExtensions.put(tagExt.getId(), tagExt);
+		String lookupName = toTagExtensionLookupName(tagExt.getId());
+		if (tagExtensionLookup.containsKey(lookupName))
+			throw new IllegalArgumentException(
+					"A tag extension with the same name `" + lookupName + "' is already registered.");
 
-		String lookupName = tagExtensionNamesCaseSensitive ?
-				tagExt.getId() :
-				tagExt.getId().toLowerCase();
+		tagExtensions.put(tagExt.getId(), tagExt);
 		tagExtensionLookup.put(lookupName, tagExt);
 	}
 
@@ -563,10 +577,7 @@ public class WikiConfigImpl
 	@Override
 	public TagExtensionBase getTagExtension(String name)
 	{
-		String lookupName = tagExtensionNamesCaseSensitive ?
-				name :
-				name.toLowerCase();
-		return tagExtensionLookup.get(lookupName);
+		return tagExtensionLookup.get(toTagExtensionLookupName(name));
 	}
 
 	// ==[ Properties of the wiki instance ]====================================
@@ -850,7 +861,7 @@ public class WikiConfigImpl
 
 		config.nodeFactory = new EngineNodeFactoryImpl(config.parserConfig);
 
-		config.setTagExtensionNamesCaseSensitive(config.tagExtensionNamesCaseSensitive);
+		config.rebuildTagExtensionLookup();
 
 		return config;
 	}

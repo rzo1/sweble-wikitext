@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!--
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<!--
+  Small excerpt of a siteinfo response
+  (siprop=namespaces|interwikimap|magicwords|extensiontags) modelled after
+  de.wikipedia.org. The namespace aliases are kept in a separate file since
+  they use the same element name as the namespaces.
+-->
+<api batchcomplete="">
+	<query>
+		<namespaces>
+			<ns id="-2" case="first-letter" canonical="Media" xml:space="preserve">Medium</ns>
+			<ns id="-1" case="first-letter" canonical="Special" xml:space="preserve">Spezial</ns>
+			<ns id="0" case="first-letter" content="" xml:space="preserve"/>
+			<ns id="1" case="first-letter" subpages="" canonical="Talk" xml:space="preserve">Diskussion</ns>
+			<ns id="2" case="first-letter" subpages="" canonical="User" xml:space="preserve">Benutzer</ns>
+			<ns id="6" case="first-letter" canonical="File" xml:space="preserve">Datei</ns>
+			<ns id="10" case="first-letter" subpages="" canonical="Template" xml:space="preserve">Vorlage</ns>
+			<ns id="14" case="first-letter" canonical="Category" xml:space="preserve">Kategorie</ns>
+		</namespaces>
+		<interwikimap>
+			<iw prefix="en" local="" language="English" url="https://en.wikipedia.org/wiki/$1"/>
+			<iw prefix="wikt" local="" url="https://de.wiktionary.org/wiki/$1"/>
+		</interwikimap>
+		<magicwords>
+			<magicword name="redirect"><aliases><alias>#WEITERLEITUNG</alias><alias>#REDIRECT</alias></aliases></magicword>
+			<magicword name="lc"><aliases><alias>LC:</alias></aliases></magicword>
+		</magicwords>
+		<extensiontags>
+			<t xml:space="preserve">&lt;pre&gt;</t>
+			<t xml:space="preserve">&lt;nowiki&gt;</t>
+			<t xml:space="preserve">&lt;gallery&gt;</t>
+			<t xml:space="preserve">&lt;indicator&gt;</t>
+			<t xml:space="preserve">&lt;langconvert&gt;</t>
+			<t xml:space="preserve">&lt;graph&gt;</t>
+			<t xml:space="preserve">&lt;timeline&gt;</t>
+			<t xml:space="preserve">&lt;hiero&gt;</t>
+			<t xml:space="preserve">&lt;ref&gt;</t>
+			<t xml:space="preserve">&lt;references&gt;</t>
+			<t xml:space="preserve">&lt;inputbox&gt;</t>
+			<t xml:space="preserve">&lt;imagemap&gt;</t>
+			<t xml:space="preserve">&lt;source&gt;</t>
+			<t xml:space="preserve">&lt;syntaxhighlight&gt;</t>
+			<t xml:space="preserve">&lt;poem&gt;</t>
+			<t xml:space="preserve">&lt;categorytree&gt;</t>
+			<t xml:space="preserve">&lt;section&gt;</t>
+			<t xml:space="preserve">&lt;score&gt;</t>
+			<t xml:space="preserve">&lt;templatestyles&gt;</t>
+			<t xml:space="preserve">&lt;templatedata&gt;</t>
+			<t xml:space="preserve">&lt;math&gt;</t>
+			<t xml:space="preserve">&lt;ce&gt;</t>
+			<t xml:space="preserve">&lt;chem&gt;</t>
+			<t xml:space="preserve">&lt;mapframe&gt;</t>
+		</extensiontags>
+	</query>
+</api>

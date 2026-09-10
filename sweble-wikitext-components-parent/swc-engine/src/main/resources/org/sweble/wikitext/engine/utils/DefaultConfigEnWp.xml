@@ -918,14 +918,38 @@
     </pfnGroups>
     <tagExtGroups>
         <tagExtGroup name="Built-in Tag Extensions">
-            <tagExt class="org.sweble.wikitext.engine.ext.builtin.BuiltInTagExtensions$TagExtensionNowiki"/>
-            <tagExt class="org.sweble.wikitext.engine.ext.builtin.BuiltInTagExtensions$TagExtensionPre"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.builtin.BuiltInTagExtensions$TagExtensionNowiki" id="nowiki"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.builtin.BuiltInTagExtensions$TagExtensionPre" id="pre"/>
         </tagExtGroup>
         <tagExtGroup name="Extension - Math">
-            <tagExt class="org.sweble.wikitext.engine.ext.math.MathTagExt$MathTagExtImpl"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.math.MathTagExt$MathTagExtImpl" id="math"/>
         </tagExtGroup>
         <tagExtGroup name="Extension - Ref">
-            <tagExt class="org.sweble.wikitext.engine.ext.ref.RefTagExt$RefTagExtImpl"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.ref.RefTagExt$RefTagExtImpl" id="ref"/>
+        </tagExtGroup>
+        <tagExtGroup name="Extension - Wikipedia (generic)">
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="categorytree"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="ce"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="charinsert"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="chem"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="gallery"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="graph"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="hiero"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="imagemap"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="indicator"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="inputbox"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="langconvert"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="mapframe"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="maplink"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="poem"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="references"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="score"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="section"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="source"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="syntaxhighlight"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="templatedata"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="templatestyles"/>
+            <tagExt class="org.sweble.wikitext.engine.ext.generic.GenericTagExtension" id="timeline"/>
         </tagExtGroup>
     </tagExtGroups>
     <parserConfig>
