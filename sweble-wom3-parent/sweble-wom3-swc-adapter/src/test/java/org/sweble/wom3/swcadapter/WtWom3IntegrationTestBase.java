@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.commons.io.FilenameUtils;
+import org.junit.Assert;
 import org.sweble.wikitext.engine.EngineException;
 import org.sweble.wikitext.engine.ExpansionCallback;
 import org.sweble.wikitext.engine.PageId;
@@ -30,6 +31,7 @@ import org.sweble.wikitext.parser.parser.LinkTargetException;
 import org.sweble.wom3.swcadapter.utils.WtWom3Toolbox;
 import org.sweble.wom3.util.SaxonWomTransformations;
 import org.sweble.wom3.util.SaxonWomXPath;
+import org.sweble.wom3.util.Wom3Toolbox;
 
 import de.fau.cs.osr.utils.FileCompare;
 import de.fau.cs.osr.utils.TestResourcesFixture;
@@ -201,5 +203,28 @@ public class WtWom3IntegrationTestBase
 
 		FileCompare cmp = new FileCompare(getResources());
 		cmp.compareWithExpectedOrGenerateExpectedFromActual(inputFile, actual);
+	}
+
+	/**
+	 * Parse Wikitext to an AST and convert this AST to a WOM tree. Fix the
+	 * round-trip data of the WOM tree using {@link FixWomRtd} and restore the
+	 * Wikitext from the fixed WOM tree. Compare the resulting Wikitext with the
+	 * original Wikitext.
+	 */
+	public void parseFixRtdExtractRtdAndCompare(
+			File inputFile,
+			ExpansionCallback callback) throws LinkTargetException, IOException, EngineException
+	{
+		String fileTitle = FilenameUtils.getBaseName(inputFile.getName());
+
+		PageId pageId = makePageId(fileTitle);
+
+		Artifacts afs = wmToWom(inputFile, pageId, callback, "UTF8");
+
+		FixWomRtd.process(getWikiConfig(), afs.womDoc);
+
+		String actual = Wom3Toolbox.womToWmFast(afs.womDoc);
+
+		Assert.assertEquals(afs.wm, actual);
 	}
 }

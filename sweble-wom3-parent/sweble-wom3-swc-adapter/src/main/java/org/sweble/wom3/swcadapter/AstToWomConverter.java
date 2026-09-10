@@ -48,6 +48,13 @@ import org.sweble.wikitext.parser.nodes.WtImageLink.ImageVertAlign;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageViewFormat;
 import org.sweble.wikitext.parser.nodes.WtInternalLink;
 import org.sweble.wikitext.parser.nodes.WtItalics;
+import org.sweble.wikitext.parser.nodes.WtLctFlags;
+import org.sweble.wikitext.parser.nodes.WtLctRule;
+import org.sweble.wikitext.parser.nodes.WtLctRuleConv;
+import org.sweble.wikitext.parser.nodes.WtLctRuleGarbage;
+import org.sweble.wikitext.parser.nodes.WtLctRuleText;
+import org.sweble.wikitext.parser.nodes.WtLctRules;
+import org.sweble.wikitext.parser.nodes.WtLctVarConv;
 import org.sweble.wikitext.parser.nodes.WtLinkOptionAltText;
 import org.sweble.wikitext.parser.nodes.WtLinkOptionGarbage;
 import org.sweble.wikitext.parser.nodes.WtLinkOptionKeyword;
@@ -1749,6 +1756,56 @@ public class AstToWomConverter
 		// Until then page switches only survive as round-trip data. They
 		// don't produce any output anyway.
 		appendRtd(convertToText(n));
+		return null;
+	}
+
+	// == [ Language Conversion Tags ] =========================================
+
+	/*
+	 * Language conversion tags have no WOM representation yet. They are
+	 * degraded to text (or RTD in no-text scopes) which reproduces the
+	 * original markup.
+	 */
+
+	public Wom3ElementNode visit(WtLctVarConv n)
+	{
+		appendInconvertible(n, false);
+		return null;
+	}
+
+	public Wom3ElementNode visit(WtLctRuleConv n)
+	{
+		appendInconvertible(n, false);
+		return null;
+	}
+
+	public Wom3ElementNode visit(WtLctFlags n)
+	{
+		appendInconvertible(n, false);
+		return null;
+	}
+
+	public Wom3ElementNode visit(WtLctRules n)
+	{
+		appendInconvertible(n, false);
+		return null;
+	}
+
+	public Wom3ElementNode visit(WtLctRule n)
+	{
+		appendInconvertible(n, false);
+		return null;
+	}
+
+	public Wom3ElementNode visit(WtLctRuleText n)
+	{
+		appendInconvertible(n, false);
+		return null;
+	}
+
+	public Wom3ElementNode visit(WtLctRuleGarbage n)
+	{
+		appendInconvertible(n, false);
 		return null;
 	}
 

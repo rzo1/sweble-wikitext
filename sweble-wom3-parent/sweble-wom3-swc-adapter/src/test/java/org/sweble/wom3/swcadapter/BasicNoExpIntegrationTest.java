@@ -96,4 +96,17 @@ public class BasicNoExpIntegrationTest
 				INPUT_SUB_DIR,
 				null);
 	}
+
+	/**
+	 * Wikitext -( no expansion )-> AST -> WOM -> FixWomRtd -> Wikitext ==
+	 * original Wikitext?
+	 */
+	@Test
+	@TestNameAnnotation(annotation = "Expected in dir: " + INPUT_SUB_DIR)
+	public void testFixRtdAndRecoverWikitextFromUnexpandedWomAndCompareWithInputWikitext() throws Exception
+	{
+		parseFixRtdExtractRtdAndCompare(
+				inputFile,
+				null);
+	}
 }
