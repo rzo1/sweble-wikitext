@@ -67,6 +67,11 @@
 			<artifactId>xalan</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>xalan</groupId>
+			<artifactId>serializer</artifactId>
+			<optional>true</optional>
+		</dependency>
 
 		<!-- Utils -->
 		<dependency>
@@ -108,6 +113,10 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-dependency-plugin</artifactId>
 					<configuration>
+						<usedDependencies>
+							<!-- Runtime dependency of xalan, no longer declared by xalan 2.7.3 -->
+							<usedDependency>xalan:serializer</usedDependency>
+						</usedDependencies>
 						<ignoredUsedUndeclaredDependencies>
 							<ignoredUsedUndeclaredDependency>xml-apis:xml-apis</ignoredUsedUndeclaredDependency>
 						</ignoredUsedUndeclaredDependencies>
