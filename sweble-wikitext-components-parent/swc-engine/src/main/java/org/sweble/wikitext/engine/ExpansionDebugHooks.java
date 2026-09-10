@@ -143,6 +143,15 @@ public abstract class ExpansionDebugHooks
 		return result;
 	}
 
+	/**
+	 * Never called: Page switches are recognized by the parser and handled
+	 * after parsing (see
+	 * {@link org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches}),
+	 * the expansion does not encounter them.
+	 *
+	 * @deprecated Kept for compatibility with existing subclasses only.
+	 */
+	@Deprecated
 	public WtNode beforeResolvePageSwitch(
 			ExpansionVisitor expansionVisitor,
 			WtPageSwitch n,
@@ -151,6 +160,15 @@ public abstract class ExpansionDebugHooks
 		return PROCEED;
 	}
 
+	/**
+	 * Never called: Page switches are recognized by the parser and handled
+	 * after parsing (see
+	 * {@link org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches}),
+	 * the expansion does not encounter them.
+	 *
+	 * @deprecated Kept for compatibility with existing subclasses only.
+	 */
+	@Deprecated
 	public WtNode afterResolvePageSwitch(
 			ExpansionVisitor expansionVisitor,
 			WtPageSwitch n,

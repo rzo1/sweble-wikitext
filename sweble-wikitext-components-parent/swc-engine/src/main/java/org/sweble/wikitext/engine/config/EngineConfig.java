@@ -27,8 +27,14 @@ public interface EngineConfig
 	 * {@code $wgMaxTemplateDepth}. A page that is expanded at this depth
 	 * cannot transclude further pages; the transclusion is replaced by an
 	 * error message instead.
+	 *
+	 * The default implementation returns
+	 * {@link EngineConfigImpl#DEFAULT_MAX_TEMPLATE_DEPTH}.
 	 */
-	public abstract int getMaxTemplateDepth();
+	public default int getMaxTemplateDepth()
+	{
+		return EngineConfigImpl.DEFAULT_MAX_TEMPLATE_DEPTH;
+	}
 
 	/**
 	 * Returns the maximum post-expand include size, like MediaWiki's
@@ -41,19 +47,31 @@ public interface EngineConfig
 	 * contains plus one for every other node of its AST, but at least 1. This
 	 * way the number of transclusions and the time needed to measure the size
 	 * are limited as well.
+	 *
+	 * The default implementation returns
+	 * {@link EngineConfigImpl#DEFAULT_MAX_POST_EXPAND_INCLUDE_SIZE}.
 	 */
-	public abstract long getMaxPostExpandIncludeSize();
+	public default long getMaxPostExpandIncludeSize()
+	{
+		return EngineConfigImpl.DEFAULT_MAX_POST_EXPAND_INCLUDE_SIZE;
+	}
 
 	/**
-	 * Returns the maximum number of consecutive redirects that are followed,
-	 * like MediaWiki's {@code $wgMaxRedirects}. This applies to redirects of
-	 * transcluded pages as well as to the redirect of the page that is
-	 * expanded. A redirect that is not followed is left unresolved.
+	 * Returns the maximum number of consecutive redirects that are followed.
+	 * This applies to redirects of transcluded pages as well as to the
+	 * redirect of the page that is expanded. A redirect that is not followed
+	 * is left unresolved.
 	 *
-	 * MediaWiki follows a single redirect when viewing a page and, up to
-	 * version 1.35, also when transcluding a page (later versions follow up
-	 * to two redirects when transcluding).
+	 * MediaWiki follows up to two redirects when transcluding a page (see
+	 * Parser::statelessFetchTemplate(), up to version 1.35 only one) and a
+	 * single redirect ({@code $wgMaxRedirects}) when viewing a page.
+	 *
+	 * The default implementation returns
+	 * {@link EngineConfigImpl#DEFAULT_MAX_REDIRECTS}.
 	 */
-	public abstract int getMaxRedirects();
+	public default int getMaxRedirects()
+	{
+		return EngineConfigImpl.DEFAULT_MAX_REDIRECTS;
+	}
 
 }

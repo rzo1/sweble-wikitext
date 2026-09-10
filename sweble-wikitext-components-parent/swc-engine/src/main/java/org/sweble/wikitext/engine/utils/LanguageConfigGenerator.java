@@ -17,6 +17,7 @@ package org.sweble.wikitext.engine.utils;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -106,6 +107,12 @@ public class LanguageConfigGenerator
 	 * The maximum size of a response of the API in bytes.
 	 */
 	public static final long MAX_RESPONSE_BYTES = 16L * 1024 * 1024;
+
+	/**
+	 * The maximum number of HTTP redirects that are followed. Only redirects
+	 * to the same scheme, host and port are followed.
+	 */
+	public static final int MAX_REDIRECTS = 3;
 
 	/**
 	 * Matches the body of a MediaWiki link trail regex like
@@ -1098,10 +1105,15 @@ public class LanguageConfigGenerator
 	 * external DTDs nor entities are processed. Requests time out after
 	 * {@value #CONNECT_TIMEOUT_MILLIS} ms (connect) and
 	 * {@value #READ_TIMEOUT_MILLIS} ms (read), responses of more than
-	 * {@value #MAX_RESPONSE_BYTES} bytes are rejected.
+	 * {@value #MAX_RESPONSE_BYTES} bytes are rejected. At most
+	 * {@value #MAX_REDIRECTS} HTTP redirects are followed and only to the same
+	 * scheme, host and port.
 	 *
 	 * @throws MalformedURLException
 	 *             If the URL is malformed or uses another scheme.
+	 * @throws IOException
+	 *             Also if a redirect leads to another scheme, host or port or
+	 *             if there are too many redirects.
 	 */
 	public static Document getXMLFromUrl(String urlString)
 		throws IOException,
@@ -1130,17 +1142,96 @@ public class LanguageConfigGenerator
 
 		DocumentBuilder docBuilder = newDocumentBuilder();
 
-		URLConnection connection = url.openConnection();
-		connection.setConnectTimeout(connectTimeoutMillis);
-		connection.setReadTimeout(readTimeoutMillis);
-		connection.setRequestProperty("User-Agent", loadDefaultUserAgent());
-		try (InputStream in = connection.getInputStream())
+		for (int redirects = 0;; ++redirects)
 		{
-			if (connection.getContentLengthLong() > maxResponseBytes)
-				throw new IOException(getResponseTooLargeMessage(urlString, maxResponseBytes));
+			URLConnection connection = url.openConnection();
+			connection.setConnectTimeout(connectTimeoutMillis);
+			connection.setReadTimeout(readTimeoutMillis);
+			connection.setRequestProperty("User-Agent", loadDefaultUserAgent());
 
-			return docBuilder.parse(new SizeLimitedInputStream(in, urlString, maxResponseBytes));
+			if (connection instanceof HttpURLConnection)
+			{
+				HttpURLConnection http = (HttpURLConnection) connection;
+
+				// The target of a redirect has to be checked first
+				http.setInstanceFollowRedirects(false);
+				if (isRedirect(http.getResponseCode()))
+				{
+					String location = http.getHeaderField("Location");
+					http.disconnect();
+
+					if (redirects >= MAX_REDIRECTS)
+					{
+						throw new IOException("Too many redirects (more than " + MAX_REDIRECTS
+								+ ") while fetching `" + urlString + "'.");
+					}
+
+					url = getRedirectTarget(url, location);
+					continue;
+				}
+			}
+
+			try (InputStream in = connection.getInputStream())
+			{
+				if (connection.getContentLengthLong() > maxResponseBytes)
+					throw new IOException(getResponseTooLargeMessage(urlString, maxResponseBytes));
+
+				return docBuilder.parse(new SizeLimitedInputStream(in, urlString, maxResponseBytes));
+			}
 		}
+	}
+
+	private static boolean isRedirect(int status)
+	{
+		switch (status)
+		{
+			case HttpURLConnection.HTTP_MOVED_PERM:
+			case HttpURLConnection.HTTP_MOVED_TEMP:
+			case HttpURLConnection.HTTP_SEE_OTHER:
+			case 307: // Temporary Redirect
+			case 308: // Permanent Redirect
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Resolves the target of a redirect.
+	 *
+	 * @throws IOException
+	 *             If the redirect has no valid target or if the target has
+	 *             another scheme, host or port than the redirecting URL.
+	 */
+	private static URL getRedirectTarget(URL url, String location) throws IOException
+	{
+		if (location == null)
+			throw new IOException("Got a redirect without target from `" + url + "'.");
+
+		URL target;
+		try
+		{
+			target = new URL(url, location);
+		}
+		catch (MalformedURLException e)
+		{
+			throw new IOException("Got a redirect to the invalid URL `" + location + "' from `" + url + "'.", e);
+		}
+
+		if (!url.getProtocol().equalsIgnoreCase(target.getProtocol())
+				|| !url.getHost().equalsIgnoreCase(target.getHost())
+				|| getPort(url) != getPort(target))
+		{
+			throw new IOException("Refusing to follow the redirect from `" + url + "' to `" + target
+					+ "', only redirects to the same scheme, host and port are followed.");
+		}
+
+		return target;
+	}
+
+	private static int getPort(URL url)
+	{
+		return (url.getPort() != -1) ? url.getPort() : url.getDefaultPort();
 	}
 
 	/**

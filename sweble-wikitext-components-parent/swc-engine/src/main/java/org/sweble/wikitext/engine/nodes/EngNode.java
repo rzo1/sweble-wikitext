@@ -37,4 +37,8 @@ public interface EngNode
 	public static final int NT_NOWIKI /* ............... */= NT_ENGINE_BITS + 3;
 
 	public static final int NT_SOFT_ERROR /* ........... */= NT_ENGINE_BITS + 4;
+
+	// -- Log nodes ------------------------------------------------------------
+
+	public static final int NT_LOG_CONTAINER /* ........ */= NT_ENGINE_BITS + 5;
 }

@@ -140,10 +140,17 @@ public abstract class TagExtensionBase
 
 	// =========================================================================
 
+	/**
+	 * Orders by id and then by class name, which makes the order consistent
+	 * with {@link #equals(Object)}.
+	 */
 	@Override
 	public int compareTo(TagExtensionBase o)
 	{
-		return this.id.compareTo(o.getId());
+		int result = this.id.compareTo(o.getId());
+		if (result != 0)
+			return result;
+		return getClass().getName().compareTo(o.getClass().getName());
 	}
 
 	// =========================================================================

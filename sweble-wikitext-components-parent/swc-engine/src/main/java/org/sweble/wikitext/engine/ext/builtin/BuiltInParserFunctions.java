@@ -115,6 +115,12 @@ public class BuiltInParserFunctions
 	 * Returns the source of a template (without expanding it) as nowiki
 	 * text, like MediaWiki does for the prefix MSGNW:. Like MediaWiki a page
 	 * that does not exist yields the (escaped) link to it.
+	 *
+	 * Like a transclusion, the inclusion of the source is subject to the
+	 * template depth, the detection of template loops and the post-expand
+	 * include size (see {@link ExpansionFrame#checkInclusionLimits} and
+	 * {@link ExpansionFrame#limitPostExpandIncludeSize}). Unlike in MediaWiki,
+	 * a redirect is not followed: The source of the redirect is returned.
 	 */
 	public static final class ParserFunctionMsgnw
 			extends
@@ -170,13 +176,20 @@ public class BuiltInParserFunctions
 				return template;
 			}
 
+			WtNode limited = frame.checkInclusionLimits(template, title);
+			if (limited != null)
+				return limited;
+
 			FullPage page = frame.getCallback().retrieveWikitext(frame, title);
 
 			String source = (page != null) ?
 					page.getText() :
 					"[[:" + title.getPrefixedText() + "]]";
 
-			return EngineRtData.set(nf().nowiki(source));
+			return frame.limitPostExpandIncludeSize(
+					template,
+					title,
+					EngineRtData.set(nf().nowiki(source)));
 		}
 	}
 }

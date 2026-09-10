@@ -32,6 +32,18 @@ public abstract class EngLogContainer
 	private static final long serialVersionUID = -1365120120054529928L;
 
 	// =========================================================================
+
+	/**
+	 * Log containers have their own node type. As plain node lists they would
+	 * be flattened when added to a parent log.
+	 */
+	@Override
+	public int getNodeType()
+	{
+		return NT_LOG_CONTAINER;
+	}
+
+	// =========================================================================
 	// Properties
 
 	private Long timeNeeded;

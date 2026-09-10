@@ -38,6 +38,22 @@ public class EngineConfigTest
 	}
 
 	@Test
+	public void testImplementationWithoutLimitsUsesDefaults() throws Exception
+	{
+		// Implementations written before the limits were introduced
+		EngineConfig config = new EngineConfig()
+		{
+			@Override
+			public boolean isTrimTransparentBeforeParsing()
+			{
+				return false;
+			}
+		};
+
+		assertDefaultLimits(config);
+	}
+
+	@Test
 	public void testExpansionLimitsAreSavedAndLoaded() throws Exception
 	{
 		WikiConfigImpl config = DefaultConfigEnWp.generate();
@@ -97,6 +113,6 @@ public class EngineConfigTest
 	{
 		assertEquals(40, config.getMaxTemplateDepth());
 		assertEquals(2097152, config.getMaxPostExpandIncludeSize());
-		assertEquals(1, config.getMaxRedirects());
+		assertEquals(2, config.getMaxRedirects());
 	}
 }

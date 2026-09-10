@@ -35,7 +35,6 @@ import org.sweble.wikitext.engine.config.EngineConfig;
 import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.EngLogContainer;
-import org.sweble.wikitext.engine.nodes.EngLogMagicWordResolution;
 import org.sweble.wikitext.engine.nodes.EngLogParameterResolution;
 import org.sweble.wikitext.engine.nodes.EngLogParserFunctionResolution;
 import org.sweble.wikitext.engine.nodes.EngLogRedirectResolution;
@@ -50,7 +49,6 @@ import org.sweble.wikitext.parser.nodes.WtName;
 import org.sweble.wikitext.parser.nodes.WtNewline;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtNodeList;
-import org.sweble.wikitext.parser.nodes.WtPageSwitch;
 import org.sweble.wikitext.parser.nodes.WtRedirect;
 import org.sweble.wikitext.parser.nodes.WtStringNode;
 import org.sweble.wikitext.parser.nodes.WtTagExtension;
@@ -165,12 +163,12 @@ public final class ExpansionVisitor
 						return visit((WtTemplate) n);
 					case EngNode.NT_TAG_EXTENSION:
 						return visit((WtTagExtension) n);
-					case EngNode.NT_PAGE_SWITCH:
-						return visit((WtPageSwitch) n);
 					default:
 						return visitUnspecific(n);
 
 						// We don't care about other node types than the ones handled above.
+						// Page switches are recognized by the parser and handled after
+						// parsing (see CorePfnBehaviorSwitches).
 						//return super.resolveAndVisit(node, type);
 				}
 		}
@@ -424,7 +422,7 @@ public final class ExpansionVisitor
 		if (result == null)
 		{
 			// Then see if it is a parser function
-			result = resolveTemplateAsPfn(n, nameConv.getText(), nameConv.getTail(), args, hadNewline);
+			result = resolveTemplateAsPfn(n, name, nameConv.getText(), nameConv.getTail(), args, hadNewline);
 
 		if (result == null)
 		{
@@ -440,7 +438,7 @@ public final class ExpansionVisitor
 				}
 				else
 				{
-					result = resolveTemplateAsPfn(n, nameConv.getText(), nameConv.getTail(), args, hadNewline);
+					result = resolveTemplateAsPfn(n, name, nameConv.getText(), nameConv.getTail(), args, hadNewline);
 				}
 
 				// If not try to transclude
@@ -505,21 +503,29 @@ public final class ExpansionVisitor
 	 *         function syntax (no colon) or no matching parser function can be
 	 *         found null is returned. If a parser function was found but an
 	 *         error occurs afterwards, the template node itself is returned.
+	 *
+	 * @param name
+	 *            The expanded name of the template.
+	 * @param title
+	 *            The name converted to text, as far as possible.
+	 * @param tail
+	 *            The part of the name that could not be converted to text.
 	 */
 	private WtNode resolveTemplateAsPfn(
 			WtTemplate n,
+			WtName name,
 			String title,
 			WtNodeList tail,
 			ArrayList<WtTemplateArgument> args,
 			boolean hadNewline) throws ExpansionException
 	{
 		int i = title.indexOf(':');
-		String name;
+		String pfnName;
 		String arg0Prefix = null;
 		if ((i == -1) && tail.isEmpty())
 		{
 			// Like MediaWiki: {{ PAGENAME }} is {{PAGENAME}}
-			name = title.trim();
+			pfnName = title.trim();
 		}
 		else if (i != -1)
 		{
@@ -532,7 +538,7 @@ public final class ExpansionVisitor
 					(title.substring(0, i) + ":");
 			*/
 
-			name = title.substring(0, i).trim() + ":";
+			pfnName = title.substring(0, i).trim() + ":";
 
 			arg0Prefix = title.substring(i + 1).trim();
 		}
@@ -541,9 +547,24 @@ public final class ExpansionVisitor
 			return null;
 		}
 
-		ParserFunctionBase pfn = getWikiConfig().getParserFunction(name);
+		ParserFunctionBase pfn = getWikiConfig().getParserFunction(pfnName);
 		if (pfn == null)
 			return null;
+
+		if (arg0Prefix != null && pfn.isNowikiKeptInFirstArgument())
+		{
+			// Convert the name again, this time stopping at the first nowiki
+			PartialConversion conv = tu.astToTextPartial(
+					name,
+					EngineAstTextUtils.DO_NOT_CONVERT_NOWIKI);
+
+			String text = conv.getText();
+			if (text.length() > i && text.startsWith(title.substring(0, i + 1)))
+			{
+				arg0Prefix = text.substring(i + 1).trim();
+				tail = conv.getTail();
+			}
+		}
 
 		List<? extends WtNode> argsValues = preparePfnArguments(
 				pfn.getArgMode(),
@@ -870,29 +891,9 @@ public final class ExpansionVisitor
 			return n;
 		}
 
-		int maxDepth = getEngineConfig().getMaxTemplateDepth();
-		if (expFrame.getDepth() >= maxDepth)
-		{
-			fileTemplateRecursionDepthWarning(n, title, maxDepth);
-
-			// Same error message as MediaWiki
-			return nf.text("<span class=\"error\">Template recursion depth limit exceeded (" +
-					maxDepth + ")</span>");
-		}
-
-		if (isTemplateLoop(title))
-		{
-			fileTemplateLoopWarning(n, title);
-
-			// Same error message as MediaWiki
-			return nf.text("<span class=\"error\">Template loop detected: [[" +
-					title.getDenormalizedFullTitle() + "]]</span>");
-		}
-
-		// Once the budget is used up, don't even expand further transclusions
-		long maxSize = getEngineConfig().getMaxPostExpandIncludeSize();
-		if (expFrame.isPostExpandIncludeSizeExceeded())
-			return omitOversizedTransclusion(n, title, maxSize);
+		WtNode limited = checkInclusionLimits(n, title);
+		if (limited != null)
+			return limited;
 
 		log.setCanonical(title.getDenormalizedFullTitle());
 
@@ -916,9 +917,9 @@ public final class ExpansionVisitor
 
 			WtNode tResult = mergeLogsAndWarnings(log, processedPage);
 
-			long size = measurePostExpandIncludeSize(tResult, maxSize);
-			if (!expFrame.incrementPostExpandIncludeSize(size, maxSize))
-				return omitOversizedTransclusion(n, title, maxSize);
+			WtNode sized = limitPostExpandIncludeSize(n, title, tResult);
+			if (sized != tResult)
+				return sized;
 
 			return treatBlockElements(n, tResult);
 		}
@@ -928,6 +929,56 @@ public final class ExpansionVisitor
 
 			return null;
 		}
+	}
+
+	/**
+	 * Checks the template depth, template loops and whether the post-expand
+	 * include size is already exceeded before a page is included.
+	 *
+	 * @see ExpansionFrame#checkInclusionLimits(WtNode, PageTitle)
+	 */
+	WtNode checkInclusionLimits(WtNode n, PageTitle title)
+	{
+		int maxDepth = getEngineConfig().getMaxTemplateDepth();
+		if (expFrame.getDepth() >= maxDepth)
+		{
+			fileTemplateRecursionDepthWarning(n, title, maxDepth);
+
+			// Same error message as MediaWiki
+			return nf.text("<span class=\"error\">Template recursion depth limit exceeded (" +
+					maxDepth + ")</span>");
+		}
+
+		if (isTemplateLoop(title))
+		{
+			fileTemplateLoopWarning(n, title);
+
+			// Same error message as MediaWiki
+			return nf.text("<span class=\"error\">Template loop detected: [[" +
+					title.getDenormalizedFullTitle() + "]]</span>");
+		}
+
+		// Once the budget is used up, don't even expand further inclusions
+		if (expFrame.isPostExpandIncludeSizeExceeded())
+			return omitOversizedInclusion(n, title, getEngineConfig().getMaxPostExpandIncludeSize());
+
+		return null;
+	}
+
+	/**
+	 * Adds the size of an included page to the post-expand include size.
+	 *
+	 * @see ExpansionFrame#limitPostExpandIncludeSize(WtNode, PageTitle, WtNode)
+	 */
+	WtNode limitPostExpandIncludeSize(WtNode n, PageTitle title, WtNode result)
+	{
+		long maxSize = getEngineConfig().getMaxPostExpandIncludeSize();
+
+		long size = measurePostExpandIncludeSize(result, maxSize);
+		if (!expFrame.incrementPostExpandIncludeSize(size, maxSize))
+			return omitOversizedInclusion(n, title, maxSize);
+
+		return result;
 	}
 
 	/**
@@ -1009,11 +1060,11 @@ public final class ExpansionVisitor
 	}
 
 	/**
-	 * Replaces a transclusion that would exceed the post-expand include size
-	 * with a link to the transcluded page.
+	 * Replaces an inclusion that would exceed the post-expand include size
+	 * with a link to the included page.
 	 */
-	private WtNode omitOversizedTransclusion(
-			WtTemplate n,
+	private WtNode omitOversizedInclusion(
+			WtNode n,
 			PageTitle title,
 			long limit)
 	{
@@ -1343,101 +1394,6 @@ public final class ExpansionVisitor
 		}
 
 		return attrMap;
-	}
-
-	// =========================================================================
-	// ==
-	// ==  M A G I C   W O R D
-	// ==
-	// =========================================================================
-
-	private WtNode visit(WtPageSwitch n) throws ExpansionException
-	{
-		if (skip(n))
-			return n;
-
-		WtNode result = resolveMagicWordWrapper(n, n.getName());
-		if (result == null)
-			result = markError(n);
-
-		return result;
-	}
-
-	private WtNode resolveMagicWordWrapper(
-			WtPageSwitch n,
-			String name) throws ExpansionException
-	{
-		if (hooks != null)
-		{
-			WtNode cont = hooks.beforeResolvePageSwitch(this, n, name);
-			if (cont != ExpansionDebugHooks.PROCEED)
-				return cont;
-		}
-
-		EngLogMagicWordResolution log = null;
-		if (frameLog != null)
-		{
-			log = nf.logMagicWordResolution(name, false);
-			frameLog.add(log);
-		}
-
-		StopWatch stopWatch = null;
-		if (timingEnabled)
-		{
-			stopWatch = new StopWatch();
-			stopWatch.start();
-		}
-
-		WtNode result = null;
-		try
-		{
-			result = resolvePageSwitch(n, name, log);
-		}
-		catch (Exception e)
-		{
-			result = markError(n, e);
-
-			if (log != null)
-				logUnhandledException(log, e);
-
-			if (!catchAll)
-				throw new ExpansionException(e);
-		}
-		finally
-		{
-			if (timingEnabled && log != null)
-				log.setTimeNeeded(stopWatch.getElapsedTime());
-		}
-
-		return (hooks != null) ?
-				hooks.afterResolvePageSwitch(this, n, name, result, log) :
-				result;
-	}
-
-	private WtNode resolvePageSwitch(
-			WtPageSwitch n,
-			String name,
-			EngLogMagicWordResolution log)
-	{
-		ParserFunctionBase mw =
-				getWikiConfig().getPageSwitch("__" + name + "__");
-
-		if (mw == null)
-			/* This should not happen: If you register a magic word with the
-			 * parser (which only then will produce this magic word node)
-			 * there also has to be a magic word object.
-			 */
-			throw new AssertionError("Cannot find page switch: " + name);
-
-		WtNode result = mw.invoke(
-				n,
-				expFrame,
-				Collections.<WtNode> emptyList());
-
-		if (log != null)
-			log.setSuccess(true);
-
-		return result;
 	}
 
 	// =========================================================================

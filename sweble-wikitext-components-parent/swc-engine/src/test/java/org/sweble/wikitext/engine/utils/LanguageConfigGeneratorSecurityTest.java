@@ -153,13 +153,90 @@ public class LanguageConfigGeneratorSecurityTest
 	}
 
 	// =========================================================================
+	// == HTTP redirects
+
+	@Test
+	public void testRedirectOnSameHostIsFollowed() throws Exception
+	{
+		try (LocalHttpServer server = new LocalHttpServer((request, out) -> {
+			if (request.startsWith("GET /w/api.php?"))
+				writeRedirect(out, "/moved/api.php");
+			else
+				writeOk(out, SITE_INFO);
+		}))
+		{
+			Document document = LanguageConfigGenerator.getXMLFromUrl(server.getUrl());
+			assertEquals("de wiki", getSiteName(document));
+
+			assertEquals(2, server.getRequests().size());
+			assertTrue(server.getRequests().get(1), server.getRequests().get(1).startsWith("GET /moved/api.php "));
+		}
+	}
+
+	@Test
+	public void testRedirectToOtherHostIsRejected() throws Exception
+	{
+		try (LocalHttpServer server = new LocalHttpServer())
+		{
+			// Same address and port, but another host name
+			server.setResponse((request, out) -> writeRedirect(out,
+					"http://localhost:" + server.getPort() + "/w/api.php"));
+
+			assertRedirectRejected(server.getUrl());
+			assertEquals(1, server.getRequests().size());
+		}
+	}
+
+	@Test
+	public void testRedirectToOtherPortIsRejected() throws Exception
+	{
+		try (LocalHttpServer target = new LocalHttpServer((request, out) -> writeOk(out, SITE_INFO));
+				LocalHttpServer server = new LocalHttpServer((request, out) -> writeRedirect(out, target.getUrl())))
+		{
+			assertRedirectRejected(server.getUrl());
+			assertTrue(target.getRequests().isEmpty());
+		}
+	}
+
+	@Test
+	public void testRedirectToOtherSchemeIsRejected() throws Exception
+	{
+		File siteInfo = writeFile("siteinfo.xml", SITE_INFO);
+
+		try (LocalHttpServer server = new LocalHttpServer((request, out) -> writeRedirect(out,
+				siteInfo.toURI().toString())))
+		{
+			assertRedirectRejected(server.getUrl());
+		}
+
+		try (LocalHttpServer server = new LocalHttpServer())
+		{
+			server.setResponse((request, out) -> writeRedirect(out,
+					"https://127.0.0.1:" + server.getPort() + "/w/api.php"));
+
+			assertRedirectRejected(server.getUrl());
+			assertEquals(1, server.getRequests().size());
+		}
+	}
+
+	@Test
+	public void testEndlessRedirectsAreRejected() throws Exception
+	{
+		try (LocalHttpServer server = new LocalHttpServer((request, out) -> writeRedirect(out, "/w/api.php?again")))
+		{
+			assertRedirectRejected(server.getUrl());
+			assertTrue(server.getRequests().toString(), server.getRequests().size() <= 5);
+		}
+	}
+
+	// =========================================================================
 	// == Timeouts and size limit
 
 	@Test(timeout = 10000)
 	public void testUnansweredRequestTimesOut() throws Exception
 	{
 		// The request ends up in the backlog of the socket and is never answered
-		try (LocalHttpServer server = new LocalHttpServer(null))
+		try (LocalHttpServer server = new LocalHttpServer((ResponseBody) null))
 		{
 			try
 			{
@@ -242,6 +319,44 @@ public class LanguageConfigGeneratorSecurityTest
 		}
 	}
 
+	private static void assertRedirectRejected(String url) throws Exception
+	{
+		Document document;
+		try
+		{
+			document = LanguageConfigGenerator.getXMLFromUrl(url);
+		}
+		catch (IOException e)
+		{
+			assertTrue(e.getMessage(), String.valueOf(e.getMessage()).contains("redirect"));
+			return;
+		}
+		fail("Followed the redirect, got `" + document.getDocumentElement().getTextContent() + "'");
+	}
+
+	private static void writeOk(OutputStream out, String body) throws IOException
+	{
+		writeOk(out, o -> o.write(body.getBytes(StandardCharsets.UTF_8)));
+	}
+
+	private static void writeOk(OutputStream out, ResponseBody body) throws IOException
+	{
+		out.write(("HTTP/1.1 200 OK\r\n"
+				+ "Content-Type: text/xml; charset=utf-8\r\n"
+				+ "Connection: close\r\n"
+				+ "\r\n").getBytes(StandardCharsets.US_ASCII));
+		body.write(out);
+	}
+
+	private static void writeRedirect(OutputStream out, String location) throws IOException
+	{
+		out.write(("HTTP/1.1 302 Found\r\n"
+				+ "Location: " + location + "\r\n"
+				+ "Content-Length: 0\r\n"
+				+ "Connection: close\r\n"
+				+ "\r\n").getBytes(StandardCharsets.US_ASCII));
+	}
+
 	private static void writePaddedSiteInfo(OutputStream out, long padding) throws IOException
 	{
 		out.write("<api><query><general sitename=\"de wiki\"/></query><padding>"
@@ -263,6 +378,15 @@ public class LanguageConfigGeneratorSecurityTest
 	}
 
 	/**
+	 * Writes the complete HTTP response (status line, headers and body) to a
+	 * request.
+	 */
+	private interface Response
+	{
+		void write(String requestHead, OutputStream out) throws IOException;
+	}
+
+	/**
 	 * A minimal HTTP server on the loopback interface. Without a response body
 	 * it never accepts a connection, so requests are never answered.
 	 */
@@ -274,15 +398,43 @@ public class LanguageConfigGeneratorSecurityTest
 
 		private final List<String> requests = new CopyOnWriteArrayList<String>();
 
+		private volatile Response response;
+
+		/**
+		 * Answers with the response that is set afterwards.
+		 */
+		public LocalHttpServer() throws IOException
+		{
+			this((Response) (request, out) -> {
+				throw new IOException("No response set");
+			});
+		}
+
 		public LocalHttpServer(ResponseBody body) throws IOException
 		{
+			this((body == null) ? null : (Response) (request, out) -> writeOk(out, body));
+		}
+
+		public LocalHttpServer(Response response) throws IOException
+		{
 			serverSocket = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"));
-			if (body != null)
+			this.response = response;
+			if (response != null)
 			{
-				Thread thread = new Thread(() -> serve(body), "local-http-server");
+				Thread thread = new Thread(this::serve, "local-http-server");
 				thread.setDaemon(true);
 				thread.start();
 			}
+		}
+
+		public void setResponse(Response response)
+		{
+			this.response = response;
+		}
+
+		public int getPort()
+		{
+			return serverSocket.getLocalPort();
 		}
 
 		public String getUrl()
@@ -302,20 +454,17 @@ public class LanguageConfigGeneratorSecurityTest
 			serverSocket.close();
 		}
 
-		private void serve(ResponseBody body)
+		private void serve()
 		{
 			while (!serverSocket.isClosed())
 			{
 				try (Socket socket = serverSocket.accept())
 				{
-					requests.add(readRequestHead(socket.getInputStream()));
+					String requestHead = readRequestHead(socket.getInputStream());
+					requests.add(requestHead);
 
 					OutputStream out = socket.getOutputStream();
-					out.write(("HTTP/1.1 200 OK\r\n"
-							+ "Content-Type: text/xml; charset=utf-8\r\n"
-							+ "Connection: close\r\n"
-							+ "\r\n").getBytes(StandardCharsets.US_ASCII));
-					body.write(out);
+					response.write(requestHead, out);
 					out.flush();
 				}
 				catch (IOException e)

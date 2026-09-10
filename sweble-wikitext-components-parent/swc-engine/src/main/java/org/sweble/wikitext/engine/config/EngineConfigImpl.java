@@ -47,9 +47,10 @@ public class EngineConfigImpl
 	public static final long DEFAULT_MAX_POST_EXPAND_INCLUDE_SIZE = 2048L * 1024L;
 
 	/**
-	 * MediaWiki's default for {@code $wgMaxRedirects}.
+	 * The number of redirects MediaWiki follows when transcluding a page (see
+	 * Parser::statelessFetchTemplate()).
 	 */
-	public static final int DEFAULT_MAX_REDIRECTS = 1;
+	public static final int DEFAULT_MAX_REDIRECTS = 2;
 
 	// =========================================================================
 
