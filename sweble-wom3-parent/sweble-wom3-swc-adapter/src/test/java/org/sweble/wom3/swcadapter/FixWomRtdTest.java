@@ -21,13 +21,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.net.URL;
 
 import org.junit.Test;
 import org.sweble.wikitext.engine.ExpansionCallback;
 import org.sweble.wikitext.engine.config.ParserConfigImpl;
 import org.sweble.wom3.Wom3Document;
 import org.sweble.wom3.Wom3ElementNode;
+import org.sweble.wom3.Wom3ExtLink;
+import org.sweble.wom3.Wom3Image;
+import org.sweble.wom3.Wom3ImageCaption;
+import org.sweble.wom3.Wom3ImageFormat;
+import org.sweble.wom3.Wom3ImageHAlign;
 import org.sweble.wom3.Wom3Node;
+import org.sweble.wom3.Wom3Section;
+import org.sweble.wom3.Wom3Title;
+import org.sweble.wom3.swcadapter.nodes.SwcNode;
 import org.sweble.wom3.util.Wom3Toolbox;
 
 /**
@@ -374,6 +383,276 @@ public class FixWomRtdTest
 	}
 
 	@Test
+	public void testNewUnorderedListIsRenderedAsNativeList() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		findFirst(wom, "body").appendChild(list(wom, "ul", "li", "a", "b"));
+
+		assertEquals("Some text\n* a\n* b", fix(wom));
+	}
+
+	@Test
+	public void testNewNestedListIsRenderedAsNativeList() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		Wom3ElementNode ul = list(wom, "ul", "li", "a", "b");
+		ul.getFirstChild().appendChild(list(wom, "ol", "li", "x", "y"));
+		findFirst(wom, "body").appendChild(ul);
+
+		assertEquals("Some text\n* a\n*# x\n*# y\n* b", fix(wom));
+	}
+
+	@Test
+	public void testNewDefinitionListIsRenderedAsNativeList() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		Wom3ElementNode dl = elem(wom, "dl", null);
+		dl.appendChild(elem(wom, "dt", "Term"));
+		dl.appendChild(elem(wom, "dd", "Def"));
+		findFirst(wom, "body").appendChild(dl);
+
+		assertEquals("Some text\n; Term\n: Def", fix(wom));
+	}
+
+	@Test
+	public void testNewListWithMultiLineItemIsRenderedAsHtmlList() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		findFirst(wom, "body").appendChild(list(wom, "ul", "li", "a\nb"));
+
+		assertEquals("Some text\n<ul><li>a\nb</li></ul>", fix(wom));
+	}
+
+	@Test
+	public void testNewListInParsedListItemIsRenderedAsNativeList() throws Exception
+	{
+		Wom3Document wom = toWom("* a\n* b\n", new TestExpansionCallback());
+
+		findFirst(wom, "li").appendChild(list(wom, "ul", "li", "x"));
+
+		assertEquals("* a\n** x\n* b\n", fix(wom));
+	}
+
+	@Test
+	public void testNewItemAppendedToNativeList() throws Exception
+	{
+		Wom3Document wom = toWom("* a\n* b\n", new TestExpansionCallback());
+
+		findFirst(wom, "ul").appendChild(elem(wom, "li", "c"));
+
+		assertEquals("* a\n* b\n* c\n", fix(wom));
+	}
+
+	@Test
+	public void testNewItemInsertedIntoNativeList() throws Exception
+	{
+		Wom3Document wom = toWom("* a\n* b\n", new TestExpansionCallback());
+
+		Wom3ElementNode ul = findFirst(wom, "ul");
+		ul.insertBefore(elem(wom, "li", "x"), ul.getLastChild());
+
+		assertEquals("* a\n* x\n* b\n", fix(wom));
+	}
+
+	@Test
+	public void testNewItemAppendedToNestedNativeList() throws Exception
+	{
+		Wom3Document wom = toWom("* a\n** b\n", new TestExpansionCallback());
+
+		findFirst(findFirst(wom, "li"), "ul").appendChild(elem(wom, "li", "c"));
+
+		assertEquals("* a\n** b\n** c\n", fix(wom));
+	}
+
+	@Test
+	public void testNewItemsAppendedToNativeDefinitionList() throws Exception
+	{
+		Wom3Document wom = toWom("; Term : Def\n", new TestExpansionCallback());
+
+		Wom3ElementNode dl = findFirst(wom, "dl");
+		dl.appendChild(elem(wom, "dt", "T2"));
+		dl.appendChild(elem(wom, "dd", "D2"));
+
+		assertEquals("; Term : Def\n; T2\n: D2\n", fix(wom));
+	}
+
+	@Test
+	public void testNewItemInHtmlListIsRenderedAsHtml() throws Exception
+	{
+		Wom3Document wom = toWom("<ul>\n<li>a</li>\n</ul>\n", new TestExpansionCallback());
+
+		Wom3ElementNode ul = findFirst(wom, "ul");
+		ul.insertBefore(elem(wom, "li", "b"), ul.getLastChild());
+
+		assertEquals("<ul>\n<li>a</li>\n<li>b</li></ul>\n", fix(wom));
+	}
+
+	@Test
+	public void testNewRowInNativeTableIsRenderedNatively() throws Exception
+	{
+		Wom3Document wom = toWom("{|\n|-\n| a\n|}\n", new TestExpansionCallback());
+
+		findFirst(wom, "tbody").appendChild(row(wom, elem(wom, "td", "b")));
+
+		assertEquals("{|\n|-\n| a\n|-\n| b\n|}\n", fix(wom));
+	}
+
+	@Test
+	public void testNewRowAfterImplicitRowInNativeTableIsRenderedNatively() throws Exception
+	{
+		Wom3Document wom = toWom("{|\n| a\n|}\n", new TestExpansionCallback());
+
+		Wom3ElementNode tr = row(wom, elem(wom, "th", "h"), elem(wom, "td", "b"));
+		tr.setAttribute("class", "x");
+		findFirst(wom, "tbody").appendChild(tr);
+
+		assertEquals("{|\n| a\n|- class=\"x\"\n! h\n| b\n|}\n", fix(wom));
+	}
+
+	@Test
+	public void testNewCellsInNativeTableAreRenderedNatively() throws Exception
+	{
+		Wom3Document wom = toWom("{|\n| a\n|}\n", new TestExpansionCallback());
+
+		Wom3ElementNode tr = findFirst(wom, "tr");
+		tr.appendChild(elem(wom, "td", "b"));
+		Wom3ElementNode th = elem(wom, "th", "h");
+		th.setAttribute("style", "color:red");
+		tr.appendChild(th);
+
+		assertEquals("{|\n| a\n| b\n! style=\"color:red\" | h\n|}\n", fix(wom));
+	}
+
+	@Test
+	public void testNewRowInHtmlTableIsRenderedAsHtml() throws Exception
+	{
+		Wom3Document wom = toWom("<table>\n<tr><td>a</td></tr>\n</table>\n", new TestExpansionCallback());
+
+		findFirst(wom, "tbody").appendChild(row(wom, elem(wom, "td", "b")));
+
+		assertEquals("<table>\n<tr><td>a</td></tr>\n<tr><td>b</td></tr></table>\n", fix(wom));
+	}
+
+	@Test
+	public void testNewTransclusionIsRendered() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		Wom3ElementNode arg1 = mww(wom, "arg", null);
+		arg1.appendChild(mww(wom, "name", "a"));
+		arg1.appendChild(mww(wom, "value", "b"));
+		Wom3ElementNode arg2 = mww(wom, "arg", null);
+		arg2.appendChild(mww(wom, "value", "c"));
+		Wom3ElementNode transclusion = mww(wom, "transclusion", null);
+		transclusion.appendChild(mww(wom, "name", "T"));
+		transclusion.appendChild(arg1);
+		transclusion.appendChild(arg2);
+
+		Wom3ElementNode p = findFirst(wom, "p");
+		p.insertBefore(transclusion, findFirst(p, "text"));
+
+		assertEquals("{{T|a=b|c}}Some text\n", fix(wom));
+	}
+
+	@Test
+	public void testNewSectionIsRenderedWithNativeHeading() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		Wom3ElementNode body = elem(wom, "body", null);
+		body.appendChild(elem(wom, "p", "text"));
+		Wom3Section section = (Wom3Section) elem(wom, "section", null);
+		section.setLevel(3);
+		section.appendChild(elem(wom, "heading", "H"));
+		section.appendChild(body);
+		findFirst(wom, "body").appendChild(section);
+
+		assertEquals("Some text\n=== H ===\ntext", fix(wom));
+	}
+
+	@Test
+	public void testNewHeadingInParsedSectionIsRendered() throws Exception
+	{
+		Wom3Document wom = toWom("== A ==\ntext\n", new TestExpansionCallback());
+
+		Wom3ElementNode section = findFirst(wom, "section");
+		section.replaceChild(elem(wom, "heading", "B"), findFirst(section, "heading"));
+
+		assertEquals("== B ==\ntext\n", fix(wom));
+	}
+
+	@Test
+	public void testNewExternalLinkIsRendered() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		Wom3ExtLink link = (Wom3ExtLink) elem(wom, "extlink", null);
+		link.setTarget(new URL("http://example.org"));
+		link.setLinkTitle((Wom3Title) elem(wom, "title", "Title"));
+		Wom3ElementNode p = findFirst(wom, "p");
+		p.insertBefore(link, findFirst(p, "text"));
+
+		assertEquals("[http://example.org Title]Some text\n", fix(wom));
+	}
+
+	@Test
+	public void testNewPlainUrlIsRendered() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		Wom3ExtLink link = (Wom3ExtLink) elem(wom, "extlink", null);
+		link.setTarget(new URL("http://example.org"));
+		link.setPlainUrl(true);
+		Wom3ElementNode p = findFirst(wom, "p");
+		findFirst(p, "text").setTextContent("See ");
+		p.appendChild(link);
+
+		assertEquals("See http://example.org\n", fix(wom));
+	}
+
+	@Test
+	public void testNewImageIsRendered() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		Wom3Image image = (Wom3Image) elem(wom, "image", null);
+		image.setSource("File:X.png");
+		image.setFormat(Wom3ImageFormat.THUMBNAIL);
+		image.setHAlign(Wom3ImageHAlign.LEFT);
+		image.setWidth(100);
+		image.setAlt("Alt");
+		image.setCaption((Wom3ImageCaption) elem(wom, "imgcaption", "Caption"));
+		findFirst(wom, "body").appendChild(image);
+
+		assertEquals("Some text\n[[File:X.png|thumb|left|100px|alt=Alt|Caption]]", fix(wom));
+	}
+
+	@Test
+	public void testNewCommentIsRendered() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		Wom3ElementNode p = findFirst(wom, "p");
+		p.insertBefore(elem(wom, "comment", " c "), findFirst(p, "text"));
+
+		assertEquals("<!-- c -->Some text\n", fix(wom));
+	}
+
+	@Test
+	public void testNewPreIsRenderedAsPreTag() throws Exception
+	{
+		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
+
+		findFirst(wom, "body").appendChild(elem(wom, "pre", "x"));
+
+		assertEquals("Some text\n<pre>x</pre>", fix(wom));
+	}
+
+	@Test
 	public void testTextWithLeadingSpaceAfterNewlineIsFixed() throws Exception
 	{
 		Wom3Document wom = toWom("Some text\n", new TestExpansionCallback());
@@ -469,6 +748,36 @@ public class FixWomRtdTest
 			t.setTextContent(text);
 			e.appendChild(t);
 		}
+		return e;
+	}
+
+	private static Wom3ElementNode list(
+			Wom3Document wom,
+			String listName,
+			String itemName,
+			String... items)
+	{
+		Wom3ElementNode list = elem(wom, listName, null);
+		for (String item : items)
+			list.appendChild(elem(wom, itemName, item));
+		return list;
+	}
+
+	private static Wom3ElementNode row(Wom3Document wom, Wom3ElementNode... cells)
+	{
+		Wom3ElementNode tr = elem(wom, "tr", null);
+		for (Wom3ElementNode cell : cells)
+			tr.appendChild(cell);
+		return tr;
+	}
+
+	private static Wom3ElementNode mww(Wom3Document wom, String name, String text)
+	{
+		Wom3ElementNode e = (Wom3ElementNode) wom.createElementNS(
+				SwcNode.MWW_NS_URI,
+				SwcNode.DEFAULT_MWW_NS_PREFIX + ":" + name);
+		if (text != null)
+			e.appendChild(elem(wom, "text", text));
 		return e;
 	}
 
