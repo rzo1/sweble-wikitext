@@ -30,6 +30,7 @@ import org.sweble.wikitext.engine.ParserFunctionBase.ParserFunctionAdapter;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.EngineNodeFactory;
 import org.sweble.wikitext.engine.utils.EngineAstTextUtils;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 
 @XmlTransient
@@ -156,6 +157,54 @@ public abstract class ParserFunctionBase
 	protected EngineAstTextUtils tu()
 	{
 		return tu;
+	}
+
+	// =========================================================================
+
+	/**
+	 * Report that a node could not be converted into a plain name.
+	 */
+	protected void fileInvalidNameWarning(
+			ExpansionFrame frame,
+			WarningSeverity severity,
+			WtNode name)
+	{
+		frame.fileWarning(new InvalidNameWarning(
+				severity,
+				getClass(),
+				name));
+	}
+
+	/**
+	 * Report that a string does not constitute a valid page name.
+	 */
+	protected void fileInvalidPagenameWarning(
+			ExpansionFrame frame,
+			WarningSeverity severity,
+			WtNode titleNode,
+			String titleStr)
+	{
+		frame.fileWarning(new InvalidPagenameWarning(
+				severity,
+				getClass(),
+				titleNode,
+				titleStr));
+	}
+
+	/**
+	 * Report that a parser function was called with illegal arguments.
+	 */
+	protected void fileIllegalArgumentsWarning(
+			ExpansionFrame frame,
+			WarningSeverity severity,
+			WtNode node,
+			String message)
+	{
+		frame.fileWarning(new IllegalArgumentsWarning(
+				severity,
+				getClass(),
+				message,
+				node));
 	}
 
 	/**

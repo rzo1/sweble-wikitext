@@ -27,6 +27,7 @@ import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.EngSoftErrorNode;
 import org.sweble.wikitext.engine.nodes.EngineRtData;
 import org.sweble.wikitext.engine.utils.StringToDateTimeConverter;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.utils.StringConversionException;
@@ -139,6 +140,7 @@ public class ParserFunctionTimeLocal
 		}
 		catch (StringConversionException e1)
 		{
+			fileInvalidNameWarning(preprocessorFrame, WarningSeverity.NORMAL, arg);
 		}
 		return format;
 	}

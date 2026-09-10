@@ -25,6 +25,7 @@ import org.sweble.wikitext.engine.PfnArgumentMode;
 import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
@@ -87,18 +88,21 @@ public class CorePfnVariablesNamespaces
 			{
 				WtNode titleNode = argsValues.get(0);
 
+				String titleStr = null;
 				try
 				{
-					String titleStr = tu().astToText(titleNode);
+					titleStr = tu().astToText(titleNode);
 
 					title = PageTitle.make(frame.getWikiConfig(), titleStr);
 				}
 				catch (StringConversionException e)
 				{
+					fileInvalidNameWarning(frame, WarningSeverity.NORMAL, titleNode);
 					return var;
 				}
 				catch (LinkTargetException e)
 				{
+					fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, titleNode, titleStr);
 					return var;
 				}
 			}

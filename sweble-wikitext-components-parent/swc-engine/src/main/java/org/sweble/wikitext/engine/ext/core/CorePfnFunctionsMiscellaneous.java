@@ -25,6 +25,7 @@ import org.sweble.wikitext.engine.PfnArgumentMode;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.EngineRtData;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtNodeList;
 import org.sweble.wikitext.parser.nodes.WtTagExtension;
@@ -115,6 +116,7 @@ public class CorePfnFunctionsMiscellaneous
 			}
 			catch (StringConversionException e)
 			{
+				fileInvalidNameWarning(frame, WarningSeverity.NORMAL, nameNode);
 				return pfn;
 			}
 
@@ -143,11 +145,19 @@ public class CorePfnFunctionsMiscellaneous
 				}
 				catch (StringConversionException e)
 				{
+					fileInvalidNameWarning(frame, WarningSeverity.NORMAL, arg);
 					continue;
 				}
 
 				if (!XmlGrammar.xmlName().matcher(argName).matches())
+				{
+					fileIllegalArgumentsWarning(
+							frame,
+							WarningSeverity.NORMAL,
+							arg,
+							"Attribute name `" + argName + "' is not a valid XML name and was dropped");
 					continue;
+				}
 
 				WtNodeList argValueList = nf().list(nf().text(argValue));
 

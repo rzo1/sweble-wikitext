@@ -23,6 +23,7 @@ import org.sweble.wikitext.engine.ExpansionFrame;
 import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.utils.StringConversionException;
@@ -91,6 +92,7 @@ public class CorePfnFunctionsNamespaces
 			}
 			catch (StringConversionException e1)
 			{
+				fileInvalidNameWarning(preprocessorFrame, WarningSeverity.NORMAL, arg0);
 				return null;
 			}
 
@@ -104,6 +106,11 @@ public class CorePfnFunctionsNamespaces
 				}
 				catch (NumberFormatException e)
 				{
+					fileIllegalArgumentsWarning(
+							preprocessorFrame,
+							WarningSeverity.NORMAL,
+							wtTemplate,
+							"Unknown namespace `" + arg + "'");
 					return null;
 				}
 

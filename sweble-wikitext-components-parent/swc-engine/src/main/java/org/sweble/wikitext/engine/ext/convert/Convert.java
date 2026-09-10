@@ -26,6 +26,7 @@ import org.sweble.wikitext.engine.ParserFunctionBase;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.EngSoftErrorNode;
 import org.sweble.wikitext.engine.nodes.EngineRtData;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.utils.StringConversionException;
 
@@ -167,6 +168,7 @@ public class Convert
 			format = tu().astToText(arg).trim();
 		} catch (StringConversionException e1)
 		{
+			fileInvalidNameWarning(preprocessorFrame, WarningSeverity.NORMAL, arg);
 		}
 		return format;
 	}

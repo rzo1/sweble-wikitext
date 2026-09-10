@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.sweble.wikitext.engine.ExpansionFrame;
 import org.sweble.wikitext.engine.PageTitle;
 import org.sweble.wikitext.engine.config.WikiConfig;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
@@ -65,19 +66,26 @@ public class ParserFunctionTitleparts
 		PageTitle pageTitle;
 		Integer partCount = null;
 		Integer firstPart = null;
+		String titleStr = null;
 		try
 		{
-			String titleStr = tu().astToText(arg0).trim();
+			titleStr = tu().astToText(arg0).trim();
 			pageTitle = PageTitle.make(frame.getWikiConfig(), titleStr);
 
 			WtNode arg1 = frame.expand(args.get(1));
 			String countStr = tu().astToText(arg1).trim();
 			try
 			{
-				partCount = Integer.parseInt(countStr);
+				if (!countStr.isEmpty())
+					partCount = Integer.parseInt(countStr);
 			}
 			catch (NumberFormatException e)
 			{
+				fileIllegalArgumentsWarning(
+						frame,
+						WarningSeverity.INFORMATIVE,
+						pfn,
+						"Number of segments `" + countStr + "' is not a number and was ignored");
 			}
 
 			if (args.size() > 2)
@@ -86,21 +94,33 @@ public class ParserFunctionTitleparts
 				String firstStr = tu().astToText(arg2).trim();
 				try
 				{
-					firstPart = Integer.parseInt(firstStr);
+					if (!firstStr.isEmpty())
+						firstPart = Integer.parseInt(firstStr);
 				}
 				catch (NumberFormatException e)
 				{
+					fileIllegalArgumentsWarning(
+							frame,
+							WarningSeverity.INFORMATIVE,
+							pfn,
+							"First segment `" + firstStr + "' is not a number and was ignored");
 				}
 			}
 		}
 		catch (StringConversionException ee)
 		{
 			// We have to convert the entire argument to a string to create a page name from it.
+			fileIllegalArgumentsWarning(
+					frame,
+					WarningSeverity.NORMAL,
+					pfn,
+					"Parser function arguments cannot be converted into plain text");
 			return pfn;
 		}
 		catch (LinkTargetException e)
 		{
 			// A page with an illegal name cannot be split properly.
+			fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, arg0, titleStr);
 			return pfn;
 		}
 

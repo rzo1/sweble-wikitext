@@ -264,10 +264,13 @@ public class CorePfnFunctionsUrlData
 			if (args.size() < 1)
 				return pfn;
 
+			WtNode titleNode = args.get(0);
+
 			PageTitle title;
+			String titleStr = null;
 			try
 			{
-				String titleStr = tu().astToText(args.get(0)).trim();
+				titleStr = tu().astToText(titleNode).trim();
 
 				title = PageTitle.make(frame.getWikiConfig(), titleStr);
 
@@ -275,10 +278,12 @@ public class CorePfnFunctionsUrlData
 			}
 			catch (StringConversionException e1)
 			{
+				fileInvalidNameWarning(frame, WarningSeverity.NORMAL, titleNode);
 				return pfn;
 			}
 			catch (LinkTargetException e)
 			{
+				fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, titleNode, titleStr);
 				return pfn;
 			}
 
@@ -310,9 +315,19 @@ public class CorePfnFunctionsUrlData
 				}
 				catch (StringConversionException e)
 				{
+					fileIllegalArgumentsWarning(
+							frame,
+							WarningSeverity.INFORMATIVE,
+							pfn,
+							"Options of parser function cannot be converted into plain text and were ignored");
 				}
 				catch (NumberFormatException e)
 				{
+					fileIllegalArgumentsWarning(
+							frame,
+							WarningSeverity.INFORMATIVE,
+							pfn,
+							"Size option of parser function is not a number and was ignored");
 				}
 			}
 
@@ -323,6 +338,11 @@ public class CorePfnFunctionsUrlData
 			}
 			catch (Exception e)
 			{
+				fileIllegalArgumentsWarning(
+						frame,
+						WarningSeverity.NORMAL,
+						pfn,
+						"Retrieving the URL of file `" + titleStr + "' failed: " + e);
 				return pfn;
 			}
 
@@ -376,6 +396,7 @@ public class CorePfnFunctionsUrlData
 			}
 			catch (StringConversionException e1)
 			{
+				fileInvalidNameWarning(frame, WarningSeverity.NORMAL, args.get(0));
 				return pfn;
 			}
 
@@ -390,9 +411,15 @@ public class CorePfnFunctionsUrlData
 				}
 				catch (StringConversionException e)
 				{
+					fileInvalidNameWarning(frame, WarningSeverity.INFORMATIVE, args.get(1));
 				}
 				catch (IllegalArgumentException e)
 				{
+					fileIllegalArgumentsWarning(
+							frame,
+							WarningSeverity.INFORMATIVE,
+							args.get(1),
+							"Unknown URL encoding, falling back to QUERY");
 				}
 			}
 
