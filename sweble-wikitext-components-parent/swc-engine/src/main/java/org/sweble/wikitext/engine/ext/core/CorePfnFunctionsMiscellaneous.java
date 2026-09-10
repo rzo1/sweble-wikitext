@@ -19,6 +19,8 @@ package org.sweble.wikitext.engine.ext.core;
 
 import java.util.List;
 import java.util.ListIterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.sweble.wikitext.engine.ExpansionFrame;
 import org.sweble.wikitext.engine.PfnArgumentMode;
@@ -84,6 +86,9 @@ public class CorePfnFunctionsMiscellaneous
 	{
 		private static final long serialVersionUID = 1L;
 
+		private static final Pattern QUOTED_VALUE_RX =
+				Pattern.compile("[\"'](.+)[\"']|\"\"|''", Pattern.DOTALL);
+
 		/**
 		 * For un-marshaling only.
 		 */
@@ -140,8 +145,8 @@ public class CorePfnFunctionsMiscellaneous
 				String argValue;
 				try
 				{
-					argName = tu().astToText(argNameNode);
-					argValue = tu().astToText(argValueNode);
+					argName = tu().astToText(argNameNode).trim();
+					argValue = stripQuotes(tu().astToText(argValueNode).trim());
 				}
 				catch (StringConversionException e)
 				{
@@ -172,6 +177,19 @@ public class CorePfnFunctionsMiscellaneous
 					nf().tagExtBody(bodyStr)));
 
 			return frame.expand(tagExt);
+		}
+
+		/**
+		 * Like MediaWiki's tagObj(): One pair of quotes enclosing an attribute
+		 * value is removed.
+		 */
+		private static String stripQuotes(String value)
+		{
+			Matcher m = QUOTED_VALUE_RX.matcher(value);
+			if (!m.matches())
+				return value;
+
+			return (m.group(1) != null) ? m.group(1) : "";
 		}
 
 		private WtNode stripComments(WtNode n)

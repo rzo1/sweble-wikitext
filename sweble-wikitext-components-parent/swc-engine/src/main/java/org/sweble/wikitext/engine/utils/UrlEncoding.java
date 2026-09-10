@@ -31,7 +31,8 @@ public enum UrlEncoding
 		{
 			try
 			{
-				return URLEncoder.encode(text, "UTF-8");
+				// Unlike PHP's urlencode(), URLEncoder does not encode '*'
+				return URLEncoder.encode(text, "UTF-8").replace("*", "%2A");
 			}
 			catch (UnsupportedEncodingException e)
 			{
@@ -113,7 +114,10 @@ public enum UrlEncoding
 		{
 			try
 			{
-				return URLEncoder.encode(text, "UTF-8").replace("+", "%20");
+				// Like PHP's rawurlencode()
+				return URLEncoder.encode(text, "UTF-8")
+						.replace("+", "%20")
+						.replace("*", "%2A");
 			}
 			catch (UnsupportedEncodingException e)
 			{

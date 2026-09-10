@@ -820,7 +820,7 @@ public final class ExpansionVisitor
 			WtTemplate n,
 			String target,
 			List<WtTemplateArgument> args,
-			EngLogTransclusionResolution log) throws EngineException, RecursiveTransclusionException
+			EngLogTransclusionResolution log) throws EngineException
 	{
 		Namespace tmplNs = getWikiConfig().getTemplateNamespace();
 
@@ -839,7 +839,14 @@ public final class ExpansionVisitor
 			return n;
 		}
 
-		checkTransclusionRecursion(title);
+		if (isTemplateLoop(title))
+		{
+			fileTemplateLoopWarning(n, title);
+
+			// Same error message as MediaWiki
+			return nf.text("<span class=\"error\">Template loop detected: [[" +
+					title.getDenormalizedFullTitle() + "]]</span>");
+		}
 
 		log.setCanonical(title.getDenormalizedFullTitle());
 
@@ -874,24 +881,19 @@ public final class ExpansionVisitor
 	}
 
 	/**
-	 * Check if a page transcludes itself more than once (directly or
-	 * indirectly).
+	 * Check if a page is already being transcluded by the current frame or one
+	 * of its ancestors (directly or indirectly). Like in MediaWiki, the page
+	 * that is being expanded (the root frame) is not taken into account.
 	 */
-	private void checkTransclusionRecursion(PageTitle title) throws RecursiveTransclusionException
+	private boolean isTemplateLoop(PageTitle title)
 	{
-		int count = 0;
-
-		ExpansionFrame f = expFrame;
-		while (f != null)
+		for (ExpansionFrame f = expFrame; f.getParentFrame() != null; f = f.getParentFrame())
 		{
 			if (f.getTitle().equals(title))
-			{
-				if (++count > 2)
-					throw new RecursiveTransclusionException(title, count);
-			}
-
-			f = f.getParentFrame();
+				return true;
 		}
+
+		return false;
 	}
 
 	/**
@@ -945,12 +947,9 @@ public final class ExpansionVisitor
 
 			if (!named)
 			{
-				String id = String.valueOf(index);
-
-				WtNodeList prev = transclArgs.put(id, nf.toList(value));
-				// Automatic indices never overwrite!
-				if (prev != null)
-					transclArgs.put(id, prev);
+				// Like in MediaWiki, a later argument overrides an earlier
+				// one, even if the earlier one was explicitly numbered.
+				transclArgs.put(String.valueOf(index), nf.toList(value));
 
 				// Only unnamed arguments increase the index
 				index++;
@@ -1393,6 +1392,15 @@ public final class ExpansionVisitor
 	private void filePageNotFoundWarning(WtNode n, PageTitle title)
 	{
 		expFrame.fileWarning(new PageNotFoundWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title));
+	}
+
+	private void fileTemplateLoopWarning(WtNode n, PageTitle title)
+	{
+		expFrame.fileWarning(new TemplateLoopWarning(
 				WarningSeverity.NORMAL,
 				getClass(),
 				n,

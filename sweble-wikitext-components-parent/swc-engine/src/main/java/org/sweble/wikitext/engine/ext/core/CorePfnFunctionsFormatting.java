@@ -18,8 +18,9 @@
 package org.sweble.wikitext.engine.ext.core;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.sweble.wikitext.engine.ExpansionFrame;
 import org.sweble.wikitext.engine.PfnArgumentMode;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
@@ -270,6 +271,12 @@ public class CorePfnFunctionsFormatting
 	{
 		private static final long serialVersionUID = 1L;
 
+		private static final long MAX_PAD_LENGTH = 500;
+
+		private static final Pattern PHP_NUMBER_PREFIX_RX = Pattern.compile(
+				"[ \\t\\n\\r\\u000B\\f]*" +
+						"([+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)");
+
 		/**
 		 * For un-marshaling only.
 		 */
@@ -297,7 +304,7 @@ public class CorePfnFunctionsFormatting
 			if (args.size() < 2)
 				return arg0;
 
-			int len;
+			long len;
 			String text;
 			String padStr = "0";
 			try
@@ -306,7 +313,7 @@ public class CorePfnFunctionsFormatting
 
 				WtNode arg1 = frame.expand(args.get(1));
 				String lenStr = tu().astToText(arg1).trim();
-				len = Integer.parseInt(lenStr);
+				len = Math.min(phpIntCast(lenStr), MAX_PAD_LENGTH);
 				if (len <= 0)
 					return arg0;
 
@@ -350,15 +357,57 @@ public class CorePfnFunctionsFormatting
 				return arg0;
 			}
 
-			int padLen = len - text.length();
+			// Lengths are counted in code points, like PHP's mb_strlen()
+			int padLen = (int) len - text.codePointCount(0, text.length());
 			if (padLen <= 0)
 				return arg0;
 
-			int repeat = 1 + ((padLen - 1) / padStr.length());
-			String padding = StringUtils.repeat(padStr, repeat);
-			padding = padding.substring(0, padLen);
+			int padStrLen = padStr.codePointCount(0, padStr.length());
+
+			StringBuilder padding = new StringBuilder();
+			for (; padLen > 0; padLen -= padStrLen)
+			{
+				int count = Math.min(padLen, padStrLen);
+				padding.append(padStr, 0, padStr.offsetByCodePoints(0, count));
+			}
 
 			return nf().text(padding + text);
+		}
+
+		/**
+		 * Converts a string into an integer like PHP's <code>(int)</code>
+		 * cast: Leading whitespace is skipped, the longest numeric prefix is
+		 * converted and a fractional part is truncated.
+		 *
+		 * @throws NumberFormatException
+		 *             Thrown if the string does not start with a number (PHP
+		 *             would yield 0).
+		 */
+		private static long phpIntCast(String str)
+		{
+			Matcher m = PHP_NUMBER_PREFIX_RX.matcher(str);
+			if (!m.lookingAt())
+				throw new NumberFormatException("Not a number: " + str);
+
+			String number = m.group(1);
+			if (number.indexOf('.') == -1
+					&& number.indexOf('e') == -1
+					&& number.indexOf('E') == -1)
+			{
+				try
+				{
+					return Long.parseLong(number);
+				}
+				catch (NumberFormatException e)
+				{
+					// PHP saturates integers which are out of range
+					return number.startsWith("-") ? Long.MIN_VALUE : Long.MAX_VALUE;
+				}
+			}
+
+			// Infinite values yield 0, finite values saturate
+			double value = Double.parseDouble(number);
+			return Double.isInfinite(value) ? 0 : (long) value;
 		}
 	}
 

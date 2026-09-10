@@ -66,41 +66,14 @@ public class ParserFunctionIfeq
 		String b = null;
 		try
 		{
-			a = tu().astToText(arg0).trim();
-			b = tu().astToText(arg1).trim();
+			a = decodeCharReferences(tu().astToText(arg0)).trim();
+			b = decodeCharReferences(tu().astToText(arg1)).trim();
 		}
 		catch (StringConversionException e1)
 		{
 			// FIXME: Do recursive equality check
 		}
 
-		boolean eval = false;
-		if (a != null && b != null)
-		{
-			boolean numbers = false;
-			double ia = -1;
-			double ib = +1;
-			try
-			{
-				ia = Double.parseDouble(a);
-				ib = Double.parseDouble(b);
-				numbers = true;
-			}
-			catch (NumberFormatException e)
-			{
-				numbers = false;
-			}
-
-			if (numbers)
-			{
-				eval = ia == ib;
-			}
-			else
-			{
-				eval = a.equals(b);
-			}
-		}
-
-		return eval;
+		return (a != null) && (b != null) && phpLooseEquals(a, b);
 	}
 }

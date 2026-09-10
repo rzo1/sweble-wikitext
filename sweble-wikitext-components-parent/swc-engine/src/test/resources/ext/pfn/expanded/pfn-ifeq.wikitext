@@ -7,7 +7,7 @@ no
 no
 no
 no
-1 <!-- NOT SUPPORTED YET: Should really be "0"! -->
+0
 yes <!-- NOT SUPPORTED YET: Should really be "no"! -->
 no
 no
