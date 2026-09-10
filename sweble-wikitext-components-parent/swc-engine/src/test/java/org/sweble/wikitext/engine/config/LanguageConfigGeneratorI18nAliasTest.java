@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 
@@ -95,5 +96,35 @@ public class LanguageConfigGeneratorI18nAliasTest
 			for (String name : alias.getAliases())
 				assertSame(name, alias, wikiConfig.getI18nAlias(name));
 		}
+	}
+
+	/**
+	 * Pretty-printed responses and magic words without aliases are read
+	 * correctly (issue #133).
+	 */
+	@Test
+	public void testPrettyPrintedMagicWords() throws Exception
+	{
+		URL magicWords = getClass().getResource("/i18n-alias-pretty-printed-magicwords.xml");
+		assertNotNull(magicWords);
+
+		WikiConfigImpl config = new WikiConfigImpl();
+		LanguageConfigGenerator.addi18NAliases(config, magicWords.toString());
+
+		I18nAliasImpl redirect = config.getI18nAliasById("redirect");
+		assertNotNull(redirect);
+		assertEquals(2, redirect.getAliases().size());
+		assertTrue(redirect.hasAlias("#WEITERLEITUNG"));
+		assertTrue(config.getParserConfig().isRedirectKeyword("#weiterleitung"));
+		assertEquals("redirect", config.getI18nAlias("#REDIRECT").getId());
+
+		assertEquals("lc", config.getI18nAlias("klein:").getId());
+		assertEquals("lc", config.getI18nAlias("LC:").getId());
+		for (String name : config.getI18nAliasById("lc").getAliases())
+			assertFalse(name, name.trim().isEmpty());
+
+		I18nAliasImpl noAliases = config.getI18nAliasById("noaliases");
+		assertNotNull(noAliases);
+		assertTrue(noAliases.getAliases().isEmpty());
 	}
 }

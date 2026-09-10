@@ -83,6 +83,12 @@ public class WikiConfigImpl
 {
 	private static final Logger logger = LoggerFactory.getLogger(WikiConfigImpl.class);
 
+	/**
+	 * The property of the JAXB reference implementation (jaxb-runtime) for
+	 * setting a {@link NamespacePrefixMapper}.
+	 */
+	private static final String NAMESPACE_PREFIX_MAPPER_PROPERTY = "org.glassfish.jaxb.namespacePrefixMapper";
+
 	@XmlElement()
 	private final ParserConfigImpl parserConfig;
 
@@ -709,6 +715,7 @@ public class WikiConfigImpl
 		result = prime * result + ((parserConfig == null) ? 0 : parserConfig.hashCode());
 		result = prime * result + ((pfnGroups == null) ? 0 : pfnGroups.hashCode());
 		result = prime * result + ((prefixToInterwikiMap == null) ? 0 : prefixToInterwikiMap.hashCode());
+		result = prime * result + ((siteName == null) ? 0 : siteName.hashCode());
 		result = prime * result + ((tagExtGroups == null) ? 0 : tagExtGroups.hashCode());
 		result = prime * result + (tagExtensionNamesCaseSensitive ? 1231 : 1237);
 		result = prime * result + ((templateNamespace == null) ? 0 : templateNamespace.hashCode());
@@ -797,6 +804,13 @@ public class WikiConfigImpl
 		}
 		else if (!prefixToInterwikiMap.equals(other.prefixToInterwikiMap))
 			return false;
+		if (siteName == null)
+		{
+			if (other.siteName != null)
+				return false;
+		}
+		else if (!siteName.equals(other.siteName))
+			return false;
 		if (tagExtGroups == null)
 		{
 			if (other.tagExtGroups != null)
@@ -854,6 +868,8 @@ public class WikiConfigImpl
 
 	private Marshaller createMarshaller() throws JAXBException
 	{
+		checkNamespacesForSave();
+
 		JAXBContext context = JAXBContext.newInstance(WikiConfigImpl.class);
 
 		Marshaller m = context.createMarshaller();
@@ -863,26 +879,41 @@ public class WikiConfigImpl
 			@Override
 			public boolean handleEvent(ValidationEvent event)
 			{
-				System.err.println(event);
+				logger.warn("Problem while saving the wiki configuration: {}", event);
 				return true;
 			}
 		});
 
+		m.setProperty(
+				Marshaller.JAXB_FORMATTED_OUTPUT,
+				Boolean.TRUE);
+
 		try
 		{
 			m.setProperty(
-					"com.sun.xml.bind.namespacePrefixMapper",
+					NAMESPACE_PREFIX_MAPPER_PROPERTY,
 					new NamespaceMapper());
-
-			m.setProperty(
-					Marshaller.JAXB_FORMATTED_OUTPUT,
-					Boolean.TRUE);
 		}
 		catch (PropertyException e)
 		{
+			logger.warn("Cannot set the namespace prefix mapper, the saved wiki configuration uses generated namespace prefixes", e);
 		}
 
 		return m;
+	}
+
+	/**
+	 * The default and the template namespace are part of the saved
+	 * configuration.
+	 */
+	private void checkNamespacesForSave()
+	{
+		if (defaultNamespace == null)
+			throw new WikiConfigurationException(
+					"Cannot save a wiki configuration without default namespace, see setDefaultNamespace().");
+		if (templateNamespace == null)
+			throw new WikiConfigurationException(
+					"Cannot save a wiki configuration without template namespace, see setTemplateNamespace().");
 	}
 
 	public static WikiConfigImpl load(File file) throws JAXBException
@@ -907,15 +938,21 @@ public class WikiConfigImpl
 
 	private static WikiConfigImpl finishImport(WikiConfigImpl config)
 	{
+		// Un-marshaling replaced the parser configuration. The node factory
+		// and the text utilities still refer to the one created by the
+		// constructor and have to be rebuilt before the extensions pick them
+		// up.
+		config.parserConfig.setWikiConfig(config);
+
+		config.nodeFactory = new EngineNodeFactoryImpl(config.parserConfig);
+
+		config.textUtils = new EngineAstTextUtilsImpl(config.parserConfig);
+
 		for (ParserFunctionBase pf : config.getParserFunctions())
 			pf.setWikiConfig(config);
 
 		for (TagExtensionBase te : config.getTagExtensions())
 			te.setWikiConfig(config);
-
-		config.parserConfig.setWikiConfig(config);
-
-		config.nodeFactory = new EngineNodeFactoryImpl(config.parserConfig);
 
 		config.rebuildTagExtensionLookup();
 

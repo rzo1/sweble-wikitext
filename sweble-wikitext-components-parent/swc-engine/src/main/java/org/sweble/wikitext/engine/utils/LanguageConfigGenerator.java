@@ -51,6 +51,7 @@ import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
 import org.sweble.wikitext.engine.ext.generic.GenericTagExtension;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -801,8 +802,9 @@ public class LanguageConfigGenerator
 			}
 
 			AliasCandidate candidate = new AliasCandidate(name, isCaseSensitive);
-			Node aliasesNode = apiI18nAlias.getFirstChild();
-			NodeList aliasesList = aliasesNode.getChildNodes();
+			// Pretty-printed responses contain whitespace between the
+			// elements, magic words without aliases have no <aliases>.
+			NodeList aliasesList = ((Element) apiI18nAlias).getElementsByTagName("alias");
 			for (int j = 0; j < aliasesList.getLength(); j++)
 			{
 				Node aliasNode = aliasesList.item(j);

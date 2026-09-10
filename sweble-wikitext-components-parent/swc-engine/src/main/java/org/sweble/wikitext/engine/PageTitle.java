@@ -32,6 +32,13 @@ import org.sweble.wikitext.engine.utils.UrlService;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 import org.sweble.wikitext.parser.parser.LinkTargetParser;
 
+/**
+ * A page title is serializable, e.g. as part of an {@link EngineException}
+ * or a warning. The wiki configuration it was created with is not
+ * serialized though: A de-serialized title has to be bound to a
+ * configuration using {@link #rebind(WikiConfig)} before {@link #getUrl()}
+ * or {@link #newWithNamespace(Namespace)} can be called.
+ */
 public class PageTitle
 		implements
 			Serializable
@@ -40,7 +47,10 @@ public class PageTitle
 
 	// =========================================================================
 
-	private final WikiConfig config;
+	/**
+	 * Not serialized, null after de-serialization.
+	 */
+	private final transient WikiConfig config;
 
 	// =========================================================================
 
@@ -207,7 +217,7 @@ public class PageTitle
 		{
 			try
 			{
-				return UrlService.makeUrlToArticle(this.config.getArticlePath(), this);
+				return UrlService.makeUrlToArticle(requireConfig().getArticlePath(), this);
 			}
 			catch (MalformedURLException e)
 			{
@@ -320,7 +330,36 @@ public class PageTitle
 				null,
 				interwiki,
 				initialColon,
-				ns.equals(config.getDefaultNamespace()));
+				ns.equals(requireConfig().getDefaultNamespace()));
+	}
+
+	/**
+	 * Returns a title equal to this one that is bound to the given wiki
+	 * configuration. Needed for titles that were de-serialized since the
+	 * configuration is not serialized.
+	 */
+	public PageTitle rebind(WikiConfig config)
+	{
+		if (config == null)
+			throw new IllegalArgumentException();
+
+		return new PageTitle(
+				config,
+				title,
+				fragment,
+				namespace,
+				namespaceAlias,
+				interwiki,
+				initialColon,
+				isDefaultNs);
+	}
+
+	private WikiConfig requireConfig()
+	{
+		if (config == null)
+			throw new IllegalStateException(
+					"The page title `" + this + "' is not bound to a wiki configuration (it was de-serialized), use rebind().");
+		return config;
 	}
 
 	public PageTitle newWithTitle(String title)
@@ -390,6 +429,9 @@ public class PageTitle
 			namespace = initialColon ? null : defaultNamespace;
 			if (namespace == null)
 				namespace = config.getDefaultNamespace();
+			if (namespace == null)
+				throw new WikiConfigurationException(
+						"The wiki configuration has no default namespace.");
 		}
 
 		// If it's an alias, convert to the exact alias name.

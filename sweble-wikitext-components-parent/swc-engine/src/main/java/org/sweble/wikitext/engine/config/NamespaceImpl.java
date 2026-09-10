@@ -261,6 +261,12 @@ public class NamespaceImpl
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + id;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((canonical == null) ? 0 : canonical.hashCode());
+		result = prime * result + (canHaveSubpages ? 1231 : 1237);
+		result = prime * result + (fileNs ? 1231 : 1237);
+		result = prime * result + caseSetting.hashCode();
+		result = prime * result + ((aliases == null) ? 0 : aliases.hashCode());
 		return result;
 	}
 
@@ -276,6 +282,33 @@ public class NamespaceImpl
 		NamespaceImpl other = (NamespaceImpl) obj;
 		if (id != other.id)
 			return false;
+		if (name == null)
+		{
+			if (other.name != null)
+				return false;
+		}
+		else if (!name.equals(other.name))
+			return false;
+		if (canonical == null)
+		{
+			if (other.canonical != null)
+				return false;
+		}
+		else if (!canonical.equals(other.canonical))
+			return false;
+		if (canHaveSubpages != other.canHaveSubpages)
+			return false;
+		if (fileNs != other.fileNs)
+			return false;
+		if (caseSetting != other.caseSetting)
+			return false;
+		if (aliases == null)
+		{
+			if (other.aliases != null)
+				return false;
+		}
+		else if (!aliases.equals(other.aliases))
+			return false;
 		return true;
 	}
 
@@ -289,9 +322,32 @@ public class NamespaceImpl
 
 	// =========================================================================
 
+	/**
+	 * Orders by id. Namespaces with the same id are ordered by their
+	 * remaining settings, which makes the order consistent with
+	 * {@link #equals(Object)}.
+	 */
 	@Override
 	public int compareTo(Namespace o)
 	{
-		return ((Integer) getId()).compareTo(o.getId());
+		int result = Integer.compare(getId(), o.getId());
+		if (result != 0)
+			return result;
+		result = ConfigComparisons.compare(getName(), o.getName());
+		if (result != 0)
+			return result;
+		result = ConfigComparisons.compare(getCanonical(), o.getCanonical());
+		if (result != 0)
+			return result;
+		result = Boolean.compare(isCanHaveSubpages(), o.isCanHaveSubpages());
+		if (result != 0)
+			return result;
+		result = Boolean.compare(isFileNs(), o.isFileNs());
+		if (result != 0)
+			return result;
+		result = getCase().compareTo(o.getCase());
+		if (result != 0)
+			return result;
+		return ConfigComparisons.compare(getAliases(), o.getAliases());
 	}
 }
