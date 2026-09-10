@@ -38,6 +38,7 @@
 
 	<modules>
 		<module>swc-parser-lazy</module>
+		<module>swc-convert-data</module>
 		<module>swc-engine</module>
 		<module>swc-dumpreader</module>
 		<module>swc-article-cruncher</module>

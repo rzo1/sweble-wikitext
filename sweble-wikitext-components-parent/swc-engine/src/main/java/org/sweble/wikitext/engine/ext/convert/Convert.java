@@ -208,6 +208,12 @@ public class Convert
 			return error("Too few arguments!");
 		}
 
+		// before anything else: error= would replace this message
+		if (!ConvertData.isAvailable())
+		{
+			return error(ConvertData.MISSING_DATA);
+		}
+
 		ArrayList<String> strArgs = new ArrayList<String>(args.size());
 		for (int i = 0; i < args.size(); i++)
 		{

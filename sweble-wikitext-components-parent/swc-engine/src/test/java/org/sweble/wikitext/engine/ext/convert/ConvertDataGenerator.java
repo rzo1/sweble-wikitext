@@ -33,14 +33,19 @@ import java.util.Map.Entry;
  * <a href="https://en.wikipedia.org/wiki/Module:Convert/data">Module:Convert/data</a>.
  *
  * <p>
- * Usage (after building the test classes):
+ * Usage (after building the test classes of swc-engine, in its directory):
  *
  * <pre>
  * curl -o data.lua 'https://en.wikipedia.org/w/index.php?title=Module:Convert/data&amp;action=raw'
  * java -cp target/classes:target/test-classes \
  *     org.sweble.wikitext.engine.ext.convert.ConvertDataGenerator \
- *     data.lua src/main/resources/org/sweble/wikitext/engine/ext/convert/convert-data.txt REVISION
+ *     data.lua ../swc-convert-data/src/main/resources/org/sweble/wikitext/convert-data/convert-data.txt REVISION
  * </pre>
+ *
+ * <p>
+ * The output is derived from Wikipedia and licensed under CC BY-SA 4.0, which
+ * is why it lives in the separate artifact swc-convert-data. Update the
+ * revision in its NOTICE file as well.
  *
  * <p>
  * Module:Convert/data is itself generated and only contains Lua table

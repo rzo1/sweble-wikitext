@@ -24,6 +24,7 @@ All modules share the group id `io.github.rzo1.org.sweble.wikitext`. The latest 
 |---|---|
 | `swc-parser-lazy` | Wikitext parser producing an AST (`WtNode`) |
 | `swc-engine` | MediaWiki emulation: expansion, post-processing, HTML rendering (pulls in `swc-parser-lazy`) |
+| `swc-convert-data` | Unit data for `{{convert}}`; add it next to `swc-engine` to use `{{convert}}`. It is derived from Wikipedia and licensed under CC BY-SA 4.0, not Apache 2.0 (see its `NOTICE`) |
 | `swc-dumpreader` | Streaming reader for MediaWiki XML dumps (plain, `.gz` or `.bz2`) |
 
 ```xml

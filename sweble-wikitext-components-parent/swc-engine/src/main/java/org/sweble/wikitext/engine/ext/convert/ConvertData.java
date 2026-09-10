@@ -35,15 +35,24 @@ import java.util.Set;
  *
  * The units are read from "convert-data.txt" which is generated from
  * <a href="https://en.wikipedia.org/wiki/Module:Convert/data">Module:Convert/data</a>
- * (see ConvertDataGenerator in the tests). The remaining tables are taken from
+ * (see ConvertDataGenerator in the tests). The file is licensed under CC BY-SA
+ * 4.0 and therefore ships in the separate artifact swc-convert-data; without
+ * it {{convert}} only reports an error. The remaining tables are taken from
  * <a href="https://en.wikipedia.org/wiki/Module:Convert/text">Module:Convert/text</a>.
  * The data is immutable and shared by all threads.
  */
 final class ConvertData
 {
-	private static final String RESOURCE = "convert-data.txt";
+	/**
+	 * The resource in swc-convert-data. Its directory is no valid package name,
+	 * so the resource is also found when the jars are used as modules.
+	 */
+	static final String RESOURCE = "org/sweble/wikitext/convert-data/convert-data.txt";
 
-	private static final ConvertData INSTANCE = load();
+	static final String MISSING_DATA = "The unit data of {{convert}} is missing, "
+			+ "add io.github.rzo1.org.sweble.wikitext:swc-convert-data to the class path";
+
+	private static final ConvertData INSTANCE = loadDefault();
 
 	/** SI prefixes which may be used with a unit that accepts them. */
 	static final Map<String, SiPrefix> SI_PREFIXES;
@@ -127,8 +136,23 @@ final class ConvertData
 	{
 	}
 
+	/**
+	 * @return Whether the unit data (swc-convert-data) is on the class path.
+	 */
+	static boolean isAvailable()
+	{
+		return INSTANCE != null;
+	}
+
+	/**
+	 * @throws IllegalStateException If the unit data is missing.
+	 */
 	static ConvertData get()
 	{
+		if (INSTANCE == null)
+		{
+			throw new IllegalStateException(MISSING_DATA);
+		}
 		return INSTANCE;
 	}
 
@@ -169,12 +193,32 @@ final class ConvertData
 
 	// =========================================================================
 
-	private static ConvertData load()
+	/**
+	 * Loads the data with the class loader of this class or, if it doesn't
+	 * see swc-convert-data, with the context class loader.
+	 */
+	private static ConvertData loadDefault()
 	{
-		InputStream in = ConvertData.class.getResourceAsStream(RESOURCE);
+		ConvertData data = load(ConvertData.class.getClassLoader());
+		ClassLoader context = Thread.currentThread().getContextClassLoader();
+		if (data == null && context != null)
+		{
+			data = load(context);
+		}
+		return data;
+	}
+
+	/**
+	 * @return The data or null if the loader doesn't find the resource.
+	 */
+	static ConvertData load(ClassLoader loader)
+	{
+		InputStream in = (loader != null) ?
+				loader.getResourceAsStream(RESOURCE) :
+				ClassLoader.getSystemResourceAsStream(RESOURCE);
 		if (in == null)
 		{
-			throw new IllegalStateException("Missing resource " + RESOURCE);
+			return null;
 		}
 		ConvertData data = new ConvertData();
 		try (BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)))
