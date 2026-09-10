@@ -19,6 +19,7 @@ package org.sweble.wom3.impl;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.sweble.wom3.Wom3Attribute;
 import org.sweble.wom3.Wom3Document;
@@ -39,7 +40,15 @@ public abstract class Backbone
 {
 	private static final long serialVersionUID = 1L;
 
+	private static final AtomicLong NEXT_DOCUMENT_ORDER_KEY = new AtomicLong();
+
 	protected transient int childrenChanges = 0;
+
+	/**
+	 * Orders disconnected nodes, see {@link #getDocumentOrderKey()}. Zero means
+	 * that no key was assigned yet.
+	 */
+	private transient long documentOrderKey = 0;
 
 	private DocumentImpl owner;
 
@@ -328,12 +337,26 @@ public abstract class Backbone
 	 */
 	private static short disconnected(Node thisRoot, Node otherRoot)
 	{
-		short order = (System.identityHashCode(thisRoot) < System.identityHashCode(otherRoot)) ?
+		long thisKey = ((Backbone) thisRoot).getDocumentOrderKey();
+		long otherKey = ((Backbone) otherRoot).getDocumentOrderKey();
+		short order = (thisKey < otherKey) ?
 				DOCUMENT_POSITION_FOLLOWING :
 				DOCUMENT_POSITION_PRECEDING;
 		return (short) (DOCUMENT_POSITION_DISCONNECTED
 				| DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
 				| order);
+	}
+
+	/**
+	 * Returns a number that orders this node relative to nodes of other trees.
+	 * Unlike an identity hash code the number is unique. It is assigned when it
+	 * is first needed and does not change afterwards.
+	 */
+	private long getDocumentOrderKey()
+	{
+		if (documentOrderKey == 0)
+			documentOrderKey = NEXT_DOCUMENT_ORDER_KEY.incrementAndGet();
+		return documentOrderKey;
 	}
 
 	@Override
@@ -566,6 +589,7 @@ public abstract class Backbone
 		newNode.prevSibling = null;
 		newNode.nextSibling = null;
 		newNode.userData = null;
+		newNode.documentOrderKey = 0;
 
 		return newNode;
 	}

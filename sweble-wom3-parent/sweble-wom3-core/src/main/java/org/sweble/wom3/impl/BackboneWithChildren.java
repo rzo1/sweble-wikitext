@@ -17,6 +17,7 @@
  */
 package org.sweble.wom3.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -194,13 +195,7 @@ public abstract class BackboneWithChildren
 
 		if (child instanceof Wom3DocumentFragment)
 		{
-			Backbone move = child.getFirstChild();
-			while (move != null)
-			{
-				Backbone next = move.getNextSibling();
-				insertOrMove(move, before, false /* cloning */);
-				move = next;
-			}
+			moveFragmentChildren(child, before, false /* cloning */);
 		}
 		else if (child == before)
 		{
@@ -235,12 +230,18 @@ public abstract class BackboneWithChildren
 			Backbone nextSibling = oldChild.getNextSibling();
 			removeChild(oldChild);
 
-			Backbone move = newChild.getFirstChild();
-			while (move != null)
+			try
 			{
-				Backbone next = move.getNextSibling();
-				insertOrMove(move, nextSibling, false /* cloning */);
-				move = next;
+				moveFragmentChildren(newChild, nextSibling, false /* cloning */);
+			}
+			catch (RuntimeException e)
+			{
+				// Put the old child back where it was
+				Backbone prev = (nextSibling == null) ?
+						appendChildIntern(oldChild, false /* check */, false /* cloning */) :
+						insertBeforeIntern(nextSibling, oldChild, false /* check */);
+				childInserted(prev, oldChild);
+				throw e;
 			}
 		}
 		else
@@ -296,13 +297,7 @@ public abstract class BackboneWithChildren
 
 		if (child instanceof Wom3DocumentFragment)
 		{
-			Backbone move = child.getFirstChild();
-			while (move != null)
-			{
-				Backbone next = move.getNextSibling();
-				insertOrMove(move, null, cloning);
-				move = next;
-			}
+			moveFragmentChildren(child, null, cloning);
 		}
 		else
 		{
@@ -393,6 +388,44 @@ public abstract class BackboneWithChildren
 		catch (RuntimeException e)
 		{
 			restore(newChild, oldParent, oldNext);
+			throw e;
+		}
+	}
+
+	/**
+	 * Moves the children of a document fragment in front of {@code before} or
+	 * appends them if {@code before} is {@code null}. The operation is atomic:
+	 * If one of the children is rejected, the children that were already moved
+	 * are put back into the fragment and the exception is rethrown.
+	 */
+	private void moveFragmentChildren(Backbone fragment, Backbone before, boolean cloning)
+	{
+		ArrayList<Backbone> moved = new ArrayList<Backbone>();
+		try
+		{
+			Backbone move = fragment.getFirstChild();
+			while (move != null)
+			{
+				Backbone next = move.getNextSibling();
+				insertOrMove(move, before, cloning);
+				moved.add(move);
+				move = next;
+			}
+		}
+		catch (RuntimeException e)
+		{
+			// The rejected child is still in the fragment. Put the moved
+			// children back in front of it.
+			BackboneWithChildren f = (BackboneWithChildren) fragment;
+			Backbone first = f.getFirstChild();
+			for (Backbone m : moved)
+			{
+				childRemoved(removeChildIntern(m, false /* check */), m);
+				Backbone prev = (first == null) ?
+						f.appendChildIntern(m, false /* check */, cloning) :
+						f.insertBeforeIntern(first, m, false /* check */);
+				f.childInserted(prev, m);
+			}
 			throw e;
 		}
 	}
