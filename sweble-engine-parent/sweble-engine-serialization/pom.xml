@@ -101,10 +101,22 @@
 			<artifactId>sweble-wom3-swc-adapter</artifactId>
 		</dependency>
 
+		<!-- =============================================================== -->
+		<!-- Testing - Testing - Testing - Testing - Testing - Testing - Tes -->
+		<!-- =============================================================== -->
+
 		<!-- JUnit -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- The XSLT and XQuery Processor (Saxon Home Edition) -->
+		<!-- Required for pretty printing XML -->
+		<dependency>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>Saxon-HE</artifactId>
 			<scope>test</scope>
 		</dependency>
 
@@ -138,6 +150,9 @@
 						<ignoredUsedUndeclaredDependencies>
 							<ignoredUsedUndeclaredDependency>xml-apis:xml-apis</ignoredUsedUndeclaredDependency>
 						</ignoredUsedUndeclaredDependencies>
+						<usedDependencies>
+							<usedDependency>net.sf.saxon:Saxon-HE</usedDependency>
+						</usedDependencies>
 					</configuration>
 				</plugin>
 
