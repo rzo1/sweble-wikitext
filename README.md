@@ -114,7 +114,7 @@ String html = HtmlRenderer.print(callback, config, pageTitle, cp.getPage());
 
 `swc-dumpreader` streams a dump and hands every `<page>` to `processPage`. Pages arrive as
 JAXB objects of the dump's schema version; `DumpConverter` turns them into the version-independent
-`Page` / `Revision` model. Supported export formats are **0.5 to 0.10**
+`Page` / `Revision` model. Supported export formats are **0.5 to 0.11**
 (`http://www.mediawiki.org/xml/export-0.X/`); other formats are rejected with an
 `IllegalArgumentException("Unknown xmlns")`. The file name passed as `url` decides decompression:
 names ending in `.bz2` or `.gz` are decompressed on the fly.
