@@ -22,6 +22,7 @@ import java.util.List;
 import org.sweble.wikitext.engine.ExpansionFrame;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.ext.parser_functions.ExprParser.ExprError;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.utils.StringConversionException;
@@ -70,6 +71,7 @@ public class ParserFunctionIfExpr
 		catch (StringConversionException e)
 		{
 			// Invalid expressions evaluate to false
+			fileInvalidNameWarning(frame, WarningSeverity.NORMAL, test);
 			return false;
 		}
 
@@ -85,6 +87,11 @@ public class ParserFunctionIfExpr
 		catch (ExprError e)
 		{
 			// Invalid expressions evaluate to false
+			fileIllegalArgumentsWarning(
+					frame,
+					WarningSeverity.NORMAL,
+					pfn,
+					"Invalid expression `" + expr + "': " + e.getMessage());
 			return false;
 		}
 

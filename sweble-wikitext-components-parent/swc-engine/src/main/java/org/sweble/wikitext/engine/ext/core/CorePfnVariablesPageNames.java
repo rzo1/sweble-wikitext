@@ -26,6 +26,7 @@ import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.utils.UrlEncoding;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
@@ -189,18 +190,23 @@ public class CorePfnVariablesPageNames
 
 			if (!argsValues.isEmpty())
 			{
+				WtNode titleNode = argsValues.get(0);
+
+				String titleStr = null;
 				try
 				{
-					String titleStr = tu().astToText(argsValues.get(0)).trim();
+					titleStr = tu().astToText(titleNode).trim();
 
 					title = PageTitle.make(frame.getWikiConfig(), titleStr);
 				}
 				catch (StringConversionException e)
 				{
+					fileInvalidNameWarning(frame, WarningSeverity.NORMAL, titleNode);
 					return var;
 				}
 				catch (LinkTargetException e)
 				{
+					fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, titleNode, titleStr);
 					return var;
 				}
 			}
@@ -354,18 +360,23 @@ public class CorePfnVariablesPageNames
 
 			if (!argsValues.isEmpty())
 			{
+				WtNode titleNode = argsValues.get(0);
+
+				String titleStr = null;
 				try
 				{
-					String titleStr = tu().astToText(argsValues.get(0)).trim();
+					titleStr = tu().astToText(titleNode).trim();
 
 					title = PageTitle.make(frame.getWikiConfig(), titleStr);
 				}
 				catch (StringConversionException e)
 				{
+					fileInvalidNameWarning(frame, WarningSeverity.NORMAL, titleNode);
 					return var;
 				}
 				catch (LinkTargetException e)
 				{
+					fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, titleNode, titleStr);
 					return var;
 				}
 			}

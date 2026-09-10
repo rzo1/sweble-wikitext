@@ -25,6 +25,7 @@ import org.sweble.wikitext.engine.PfnArgumentMode;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.utils.ApplyToText;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.utils.StringConversionException;
@@ -323,6 +324,7 @@ public class CorePfnFunctionsFormatting
 					}
 					catch (StringConversionException e)
 					{
+						fileInvalidNameWarning(frame, WarningSeverity.INFORMATIVE, arg2);
 					}
 
 					if (padStr.isEmpty())
@@ -331,10 +333,20 @@ public class CorePfnFunctionsFormatting
 			}
 			catch (StringConversionException e)
 			{
+				fileIllegalArgumentsWarning(
+						frame,
+						WarningSeverity.NORMAL,
+						pfn,
+						"Parser function arguments cannot be converted into plain text");
 				return arg0;
 			}
 			catch (NumberFormatException e)
 			{
+				fileIllegalArgumentsWarning(
+						frame,
+						WarningSeverity.NORMAL,
+						pfn,
+						"Length argument of parser function is not a number");
 				return arg0;
 			}
 

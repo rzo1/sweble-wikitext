@@ -22,6 +22,7 @@ import java.util.List;
 import org.sweble.wikitext.engine.ExpansionFrame;
 import org.sweble.wikitext.engine.PageTitle;
 import org.sweble.wikitext.engine.config.WikiConfig;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
@@ -75,16 +76,23 @@ public class ParserFunctionIfExist
 		catch (StringConversionException e1)
 		{
 			// We have to convert the entire argument to a string to create a page name from it.
+			fileInvalidNameWarning(frame, WarningSeverity.NORMAL, test);
 			return false;
 		}
 		catch (LinkTargetException e)
 		{
 			// A page with an illegal name cannot exist.
+			fileInvalidPagenameWarning(frame, WarningSeverity.INFORMATIVE, test, testStr);
 			return false;
 		}
 		catch (Exception e)
 		{
 			// Interpret an error while testing for existence as non-existence.
+			fileIllegalArgumentsWarning(
+					frame,
+					WarningSeverity.NORMAL,
+					pfn,
+					"Testing for existence of page `" + testStr + "' failed: " + e);
 			return false;
 		}
 	}
