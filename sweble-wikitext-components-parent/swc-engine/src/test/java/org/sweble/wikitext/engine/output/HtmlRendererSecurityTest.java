@@ -186,14 +186,22 @@ public class HtmlRendererSecurityTest
 	@Test
 	public void testUnknownElementsAreEscaped() throws Exception
 	{
-		String html = render("<foo bar=\"1\">x</foo> <gallery>\nFile:A.png\n</gallery> <references/>");
+		String html = render("<foo bar=\"1\">x</foo> <baz/>");
 
 		assertNoTag(html, "foo");
+		assertNoTag(html, "baz");
+		assertContains(html, "&lt;foo bar=&quot;1&quot;&gt;x&lt;/foo&gt;");
+		assertContains(html, "&lt;baz /&gt;");
+	}
+
+	@Test
+	public void testTagExtensionsAreNotEmittedAsRawTags() throws Exception
+	{
+		// gallery and references are tag extensions, not HTML elements
+		String html = render("<gallery>\nFile:A.png\n</gallery> <references/>");
+
 		assertNoTag(html, "gallery");
 		assertNoTag(html, "references");
-		assertContains(html, "&lt;foo bar=&quot;1&quot;&gt;x&lt;/foo&gt;");
-		assertContains(html, "&lt;gallery&gt;");
-		assertContains(html, "&lt;references /&gt;");
 	}
 
 	// =========================================================================
