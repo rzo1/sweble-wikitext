@@ -10,15 +10,15 @@ This library is published on Maven Central. You can use it by adding the followi
 <dependency>
   <groupId>io.github.rzo1.org.sweble.wikitext</groupId>
   <artifactId>swc-parser-lazy</artifactId>
-  <version>4.1.0-SNAPSHOT</version>
+  <version>4.1.0</version>
 </dependency>
 ```
 This module exposes the wikitext parser itself, [other Maven modules are available as well](https://search.maven.org/search?q=org.sweble.wikitext).
 
 ## Getting started
 
-All modules share the group id `io.github.rzo1.org.sweble.wikitext`. The latest release is `4.0.1`
-(see the `v4.0.1` tag); development versions carry a `-SNAPSHOT` suffix. Pick the module you need:
+All modules share the group id `io.github.rzo1.org.sweble.wikitext`. The latest release is `4.1.0`
+(see the `v4.1.0` tag); development versions carry a `-SNAPSHOT` suffix. Pick the module you need:
 
 | Artifact | Purpose |
 |---|---|
@@ -31,7 +31,7 @@ All modules share the group id `io.github.rzo1.org.sweble.wikitext`. The latest 
 <dependency>
   <groupId>io.github.rzo1.org.sweble.wikitext</groupId>
   <artifactId>swc-engine</artifactId>
-  <version>4.0.1</version>
+  <version>4.1.0</version>
 </dependency>
 ```
 

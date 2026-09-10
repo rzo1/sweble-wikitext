@@ -1,7 +1,7 @@
 # Change Log
 [A guide to writing change logs][keepachangelog]
 
-## 4.1.0 - unreleased
+## 4.1.0 - 2026-09-10
 Numbers refer to issues and pull requests in [rzo1/sweble-wikitext](https://github.com/rzo1/sweble-wikitext).
 
 ### Changed
