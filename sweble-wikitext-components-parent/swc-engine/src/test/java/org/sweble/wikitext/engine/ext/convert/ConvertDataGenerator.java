@@ -45,7 +45,8 @@ import java.util.Map.Entry;
  * <p>
  * The output is derived from Wikipedia and licensed under CC BY-SA 4.0, which
  * is why it lives in the separate artifact swc-convert-data. Update the
- * revision in its NOTICE file as well.
+ * revision in its NOTICE file and in the NOTICE file of the repository root,
+ * which repeats it (checked by ConvertDataNoticeTest).
  *
  * <p>
  * Module:Convert/data is itself generated and only contains Lua table
