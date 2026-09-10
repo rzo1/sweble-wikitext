@@ -14,8 +14,10 @@
 
 package org.sweble.wikitext.engine.utils;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -32,6 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -87,6 +90,21 @@ public class LanguageConfigGenerator
 	public static final String DEFAULT_API_PATH = "/w/api.php";
 
 	private static final String DEFAULT_SCHEME = "https";
+
+	/**
+	 * Timeout for establishing a connection to the API in milliseconds.
+	 */
+	public static final int CONNECT_TIMEOUT_MILLIS = 10000;
+
+	/**
+	 * Timeout for reading from the API in milliseconds.
+	 */
+	public static final int READ_TIMEOUT_MILLIS = 30000;
+
+	/**
+	 * The maximum size of a response of the API in bytes.
+	 */
+	public static final long MAX_RESPONSE_BYTES = 16L * 1024 * 1024;
 
 	/**
 	 * Matches the body of a MediaWiki link trail regex like
@@ -1072,18 +1090,153 @@ public class LanguageConfigGenerator
 		return namespaces;
 	}
 
+	/**
+	 * Fetches and parses the XML document at the given URL. Only the http,
+	 * https and file schemes are accepted. DOCTYPEs are rejected, so neither
+	 * external DTDs nor entities are processed. Requests time out after
+	 * {@value #CONNECT_TIMEOUT_MILLIS} ms (connect) and
+	 * {@value #READ_TIMEOUT_MILLIS} ms (read), responses of more than
+	 * {@value #MAX_RESPONSE_BYTES} bytes are rejected.
+	 *
+	 * @throws MalformedURLException
+	 *             If the URL is malformed or uses another scheme.
+	 */
 	public static Document getXMLFromUrl(String urlString)
 		throws IOException,
 			ParserConfigurationException,
 			SAXException
 	{
+		return getXMLFromUrl(urlString, CONNECT_TIMEOUT_MILLIS, READ_TIMEOUT_MILLIS, MAX_RESPONSE_BYTES);
+	}
+
+	static Document getXMLFromUrl(
+			String urlString,
+			int connectTimeoutMillis,
+			int readTimeoutMillis,
+			long maxResponseBytes)
+		throws IOException,
+			ParserConfigurationException,
+			SAXException
+	{
 		URL url = new URL(urlString);
+		String scheme = url.getProtocol();
+		if (!"http".equals(scheme) && !"https".equals(scheme) && !"file".equals(scheme))
+		{
+			throw new MalformedURLException("Unsupported URL scheme `" + scheme + "' in `" + urlString
+					+ "', only http, https and file are allowed.");
+		}
+
+		DocumentBuilder docBuilder = newDocumentBuilder();
+
 		URLConnection connection = url.openConnection();
-        connection.setRequestProperty("User-Agent", loadDefaultUserAgent());
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
-		Document document = docBuilder.parse(connection.getInputStream());
-		return document;
+		connection.setConnectTimeout(connectTimeoutMillis);
+		connection.setReadTimeout(readTimeoutMillis);
+		connection.setRequestProperty("User-Agent", loadDefaultUserAgent());
+		try (InputStream in = connection.getInputStream())
+		{
+			if (connection.getContentLengthLong() > maxResponseBytes)
+				throw new IOException(getResponseTooLargeMessage(urlString, maxResponseBytes));
+
+			return docBuilder.parse(new SizeLimitedInputStream(in, urlString, maxResponseBytes));
+		}
+	}
+
+	/**
+	 * Creates a document builder that rejects DOCTYPEs and neither loads
+	 * external DTDs nor resolves external entities.
+	 */
+	private static DocumentBuilder newDocumentBuilder() throws ParserConfigurationException
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+		factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+		factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+		factory.setXIncludeAware(false);
+		factory.setExpandEntityReferences(false);
+		// Not supported by all implementations, e.g. Xerces 2.11
+		setAttributeIfSupported(factory, XMLConstants.ACCESS_EXTERNAL_DTD, "");
+		setAttributeIfSupported(factory, XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+		return factory.newDocumentBuilder();
+	}
+
+	private static void setAttributeIfSupported(DocumentBuilderFactory factory, String name, Object value)
+	{
+		try
+		{
+			factory.setAttribute(name, value);
+		}
+		catch (IllegalArgumentException e)
+		{
+			logger.debug("The document builder factory does not support `{}'", name);
+		}
+	}
+
+	private static String getResponseTooLargeMessage(String urlString, long maxResponseBytes)
+	{
+		return "The response from `" + urlString + "' exceeds the limit of " + maxResponseBytes + " bytes.";
+	}
+
+	/**
+	 * Fails as soon as more than the given number of bytes was read.
+	 */
+	private static final class SizeLimitedInputStream
+			extends
+				FilterInputStream
+	{
+		private final String urlString;
+
+		private final long maxBytes;
+
+		private long count;
+
+		public SizeLimitedInputStream(InputStream in, String urlString, long maxBytes)
+		{
+			super(in);
+			this.urlString = urlString;
+			this.maxBytes = maxBytes;
+		}
+
+		@Override
+		public int read() throws IOException
+		{
+			int b = super.read();
+			if (b != -1)
+				count(1);
+			return b;
+		}
+
+		@Override
+		public int read(byte[] b, int off, int len) throws IOException
+		{
+			int n = super.read(b, off, len);
+			if (n > 0)
+				count(n);
+			return n;
+		}
+
+		@Override
+		public long skip(long n) throws IOException
+		{
+			long skipped = super.skip(n);
+			if (skipped > 0)
+				count(skipped);
+			return skipped;
+		}
+
+		@Override
+		public boolean markSupported()
+		{
+			return false;
+		}
+
+		private void count(long n) throws IOException
+		{
+			count += n;
+			if (count > maxBytes)
+				throw new IOException(getResponseTooLargeMessage(urlString, maxBytes));
+		}
 	}
 
     private static String loadDefaultUserAgent() {
