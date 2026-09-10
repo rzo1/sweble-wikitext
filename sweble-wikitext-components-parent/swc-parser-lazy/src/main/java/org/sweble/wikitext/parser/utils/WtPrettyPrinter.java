@@ -237,19 +237,49 @@ public class WtPrettyPrinter
 
 	public void visit(WtTable n)
 	{
-		p.clearEatNewlinesAndIndents();
-		p.needNewlines(2);
+		// An indented table (":{|") has to follow the list prefix directly
+		boolean indented = isIndentedTable(n);
+		if (!indented)
+		{
+			p.clearEatNewlinesAndIndents();
+			p.needNewlines(2);
+		}
 		p.print("{|");
 
 		dispatch(n.getXmlAttributes());
 		p.println();
 
+		// Lists inside the table must not pick up the prefix of a list which
+		// surrounds the table.
+		int outerInsideList = insideList;
+		insideList = 0;
+		scope.push(n);
 		dispatch(n.getBody());
+		scope.pop();
+		insideList = outerInsideList;
 
 		p.clearEatNewlinesAndIndents();
 		p.capNewlines(1, 1);
-		p.println(" |}");
-		p.needNewlines(2);
+		if (indented)
+		{
+			// The surrounding definition list definition terminates the line
+			p.print(" |}");
+		}
+		else
+		{
+			p.println(" |}");
+			p.needNewlines(2);
+		}
+	}
+
+	private boolean isIndentedTable(WtTable n)
+	{
+		if (scope.isEmpty())
+			return false;
+		WtNode parent = scope.peek();
+		return (parent.getNodeType() == WtNode.NT_DEFINITION_LIST_DEF)
+				&& !parent.isEmpty()
+				&& (parent.get(0) == n);
 	}
 
 	public void visit(WtTableCaption n)

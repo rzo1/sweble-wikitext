@@ -1,0 +1,12 @@
+WtParsedWikitextPage(
+	{P} entityMap = -
+	{P} warnings = C[]
+	[0] = WtUnorderedList[
+		[0] = WtListItem(
+			{P} rtd = RTD[ "*" <o> "" ]
+			[0] = "{|"
+		)
+	],
+	[1] = "\n",
+	[2] = WtParagraph[ [0] = "| Not a table\n|}" ]
+)

@@ -1,0 +1,12 @@
+
+; Term
+: Definition
+:{| class="wikitable"
+ ! Header
+ |-
+ | Cell
+ |} after table
+::{|
+ | Nested
+ |}
+: Last
