@@ -1113,20 +1113,6 @@ public class TreeBuilder
 		popFromStackUntilExcluding(PAGE, /*SECTION_HEADING, SECTION_BODY, */TR);
 	}
 
-	WtNode getAboveOnStack(WtNode node)
-	{
-		Iterator<WtNode> i = getStack().iterator();
-		while (i.hasNext())
-		{
-			if (i.next() == node)
-			{
-				if (i.hasNext())
-					return i.next();
-			}
-		}
-		return null;
-	}
-
 	void insertOnStackBelow(WtNode marker, WtNode node)
 	{
 		ListIterator<WtNode> i = getStack().listIterator();
