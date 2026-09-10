@@ -31,6 +31,7 @@ import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.EngNowiki;
 import org.sweble.wikitext.engine.nodes.EngProcessedPage;
 import org.sweble.wikitext.parser.nodes.WtNode;
+import org.sweble.wikitext.parser.utils.NonExpandingParser;
 
 public class EnginePrettyPrinterTest
 {
@@ -66,6 +67,46 @@ public class EnginePrettyPrinterTest
 		EngNowiki reparsed = findNowiki(engine.postprocess(pageId, printed, callback));
 		assertNotNull(reparsed);
 		assertEquals(nowiki.getContent(), reparsed.getContent());
+	}
+
+	@Test
+	public void testRtDataPrettyPrintersReproduceWikitext() throws Exception
+	{
+		String[] wikitexts = {
+				"[[Foo]]",
+				"[[Foo|bar]] and [[Foo]]s",
+				"[http://example.com T] and [http://example.com]",
+				"*# a\n*: b\n** c",
+				"; t : d\n: e",
+				"[[File:X.png|upright|Caption]]",
+				"-{zh-hans:a;zh-hant:b}-",
+				"== H ==\ntext\n\n=== I ===\nmore",
+				"{|\n|-\n| a || b\n|}\nc",
+		};
+
+		WikiConfig config = DefaultConfigEnWp.generate();
+		WtEngineImpl engine = new WtEngineImpl(config);
+		PageId pageId = new PageId(PageTitle.make(config, "Test"), -1);
+
+		for (String wikitext : wikitexts)
+		{
+			EngProcessedPage page = engine.postprocess(pageId, wikitext, new NoPagesCallback());
+
+			assertEquals(wikitext, EngineRtDataPrettyPrinter.print(page));
+			assertEquals(wikitext, NoTransparentRtDataPrettyPrinter.print(page));
+		}
+	}
+
+	@Test
+	public void testNoTransparentRtDataPrettyPrinterOmitsComments() throws Exception
+	{
+		// Comments do not survive the expansion
+		WtNode page = new NonExpandingParser(true, true, false).parseArticle(
+				"* a<!-- c -->b [[Foo]]",
+				"Test");
+
+		assertEquals("* a<!-- c -->b [[Foo]]", EngineRtDataPrettyPrinter.print(page));
+		assertEquals("* ab [[Foo]]", NoTransparentRtDataPrettyPrinter.print(page));
 	}
 
 	private static final class NoPagesCallback
