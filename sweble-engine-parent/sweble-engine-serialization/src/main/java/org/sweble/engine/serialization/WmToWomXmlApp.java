@@ -33,6 +33,7 @@ import org.sweble.wikitext.engine.EngineException;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 import org.sweble.wom3.swcadapter.utils.WtWom3Toolbox;
 import org.sweble.wom3.swcadapter.utils.WtWom3Toolbox.Artifacts;
+import org.sweble.wom3.util.SecureTransformerFactories;
 
 public class WmToWomXmlApp
 		extends
@@ -71,9 +72,8 @@ public class WmToWomXmlApp
 		Transformer transformer;
 		if (pretty)
 		{
-			TransformerFactory tf = TransformerFactory.newInstance(
-					"org.apache.xalan.processor.TransformerFactoryImpl",
-					null);
+			TransformerFactory tf = SecureTransformerFactories.newInstance(
+					"org.apache.xalan.processor.TransformerFactoryImpl");
 
 			InputStream xslt = getClass().getResourceAsStream("/org/sweble/wom3/pretty-print.xslt");
 
@@ -83,7 +83,7 @@ public class WmToWomXmlApp
 		}
 		else
 		{
-			TransformerFactory tf = TransformerFactory.newInstance();
+			TransformerFactory tf = SecureTransformerFactories.newInstance();
 
 			Transformer normalXmlTransformer = tf.newTransformer();
 

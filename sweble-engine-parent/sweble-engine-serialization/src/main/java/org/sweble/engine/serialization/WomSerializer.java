@@ -22,10 +22,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InvalidClassException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 
@@ -43,6 +47,7 @@ import org.sweble.engine.serialization.CompressorFactory.CompressionFormat;
 import org.sweble.wom3.serialization.Wom3JsonTypeAdapterBase;
 import org.sweble.wom3.serialization.Wom3NodeCompactJsonTypeAdapter;
 import org.sweble.wom3.serialization.Wom3NodeJsonTypeAdapter;
+import org.sweble.wom3.util.SecureTransformerFactories;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Node;
@@ -57,6 +62,46 @@ import com.google.gson.GsonBuilder;
 public class WomSerializer
 {
 	private static final Charset CHARSET = Charset.forName("UTF8");
+
+	/**
+	 * The filter used when deserializing the {@link SerializationFormat#JAVA}
+	 * format. It only accepts the classes of the WOM and the JDK and Joda-Time
+	 * classes a WOM refers to, and limits the nesting depth, the number of
+	 * references, the length of arrays and the size of the stream. To accept
+	 * additional classes, e.g. of a custom document implementation, prepend
+	 * their patterns and pass the result to
+	 * {@link #setJavaDeserializationFilter(ObjectInputFilter)}:
+	 *
+	 * <pre>
+	 * ObjectInputFilter.Config.createFilter("com.example.wom.**;" + DEFAULT_JAVA_DESERIALIZATION_FILTER)
+	 * </pre>
+	 */
+	public static final String DEFAULT_JAVA_DESERIALIZATION_FILTER = ""
+			+ "maxdepth=10000;"
+			+ "maxrefs=10000000;"
+			+ "maxarray=1000000;"
+			+ "maxbytes=268435456;"
+			+ "org.sweble.wom3.**;"
+			+ "java.lang.Object;"
+			+ "java.lang.Enum;"
+			+ "java.lang.Number;"
+			+ "java.lang.Boolean;"
+			+ "java.lang.Byte;"
+			+ "java.lang.Character;"
+			+ "java.lang.Short;"
+			+ "java.lang.Integer;"
+			+ "java.lang.Long;"
+			+ "java.lang.Float;"
+			+ "java.lang.Double;"
+			+ "java.lang.String;"
+			+ "java.util.ArrayList;"
+			+ "java.net.URL;"
+			+ "org.joda.time.DateTime;"
+			+ "org.joda.time.DateTimeZone$Stub;"
+			+ "org.joda.time.base.*;"
+			+ "org.joda.time.chrono.*;"
+			+ "org.joda.time.tz.*;"
+			+ "!*";
 
 	// =========================================================================
 
@@ -75,6 +120,9 @@ public class WomSerializer
 
 	private String documentImplClassName = org.sweble.wom3.impl.DocumentImpl.class.getName();
 
+	private ObjectInputFilter javaDeserializationFilter =
+			ObjectInputFilter.Config.createFilter(DEFAULT_JAVA_DESERIALIZATION_FILTER);
+
 	// =========================================================================
 
 	public WomSerializer()
@@ -91,6 +139,23 @@ public class WomSerializer
 	public void setDocumentImplClassName(String documentImplClassName)
 	{
 		this.documentImplClassName = documentImplClassName;
+	}
+
+	public ObjectInputFilter getJavaDeserializationFilter()
+	{
+		return javaDeserializationFilter;
+	}
+
+	/**
+	 * Sets the filter used when deserializing the
+	 * {@link SerializationFormat#JAVA} format, see
+	 * {@link #DEFAULT_JAVA_DESERIALIZATION_FILTER}.
+	 */
+	public void setJavaDeserializationFilter(ObjectInputFilter javaDeserializationFilter)
+	{
+		if (javaDeserializationFilter == null)
+			throw new IllegalArgumentException("The deserialization filter must not be null");
+		this.javaDeserializationFilter = javaDeserializationFilter;
 	}
 
 	// =========================================================================
@@ -166,41 +231,12 @@ public class WomSerializer
 		{
 			case JAVA:
 			{
-				ByteArrayInputStream bais = null;
-				ObjectInputStream ois = null;
-				try
-				{
-					bais = new ByteArrayInputStream(serialized);
-					ois = new ObjectInputStream(bais);
-					result = (Document) ois.readObject();
-				}
-				catch (ClassNotFoundException e)
-				{
-					throw new DeserializationException(e);
-				}
-				finally
-				{
-					IOUtils.closeQuietly(bais);
-					IOUtils.closeQuietly(ois);
-				}
+				result = readJava(new ByteArrayInputStream(serialized));
 				break;
 			}
 			case JSON:
 			{
-				DocumentFragment fragment = (DocumentFragment)
-						getGson(createDocumentForDeserialization(), compact, false)
-								.fromJson(new String(serialized, CHARSET), Node.class);
-
-				Node firstChild = fragment.getFirstChild();
-				if (firstChild.getParentNode() != null)
-					firstChild.getParentNode().removeChild(firstChild);
-
-				Document doc = (Document) fragment.getOwnerDocument();
-				if (doc.getDocumentElement() != null)
-					doc.removeChild(doc.getDocumentElement());
-				doc.appendChild(firstChild);
-
-				result = doc;
+				result = readJson(new StringReader(new String(serialized, CHARSET)), compact);
 				break;
 			}
 			case XML:
@@ -373,35 +409,12 @@ public class WomSerializer
 			{
 				case JAVA:
 				{
-					ObjectInputStream ois = null;
-					try
-					{
-						ois = new ObjectInputStream(cin);
-						result = (Document) ois.readObject();
-					}
-					catch (ClassNotFoundException e)
-					{
-						throw new DeserializationException(e);
-					}
-					finally
-					{
-						IOUtils.closeQuietly(ois);
-					}
+					result = readJava(cin);
 					break;
 				}
 				case JSON:
 				{
-					InputStreamReader isr = null;
-					try
-					{
-						isr = new InputStreamReader(cin, CHARSET);
-						Gson gson = getGson(createDocumentForDeserialization(), compact, false);
-						result = gson.fromJson(isr, Document.class);
-					}
-					finally
-					{
-						IOUtils.closeQuietly(isr);
-					}
+					result = readJson(new InputStreamReader(cin, CHARSET), compact);
 					break;
 				}
 				case XML:
@@ -438,7 +451,7 @@ public class WomSerializer
 	{
 		if (normalXmlTransformer == null)
 		{
-			TransformerFactory tf = TransformerFactory.newInstance();
+			TransformerFactory tf = SecureTransformerFactories.newInstance();
 
 			normalXmlTransformer = tf.newTransformer();
 		}
@@ -449,9 +462,8 @@ public class WomSerializer
 	{
 		if (prettyXmlTransformer == null)
 		{
-			TransformerFactory tf = TransformerFactory.newInstance(
-					"net.sf.saxon.TransformerFactoryImpl",
-					null);
+			TransformerFactory tf = SecureTransformerFactories.newInstance(
+					"net.sf.saxon.TransformerFactoryImpl");
 
 			InputStream xslt = getClass().getResourceAsStream("/org/sweble/wom3/pretty-print.xslt");
 
@@ -467,13 +479,103 @@ public class WomSerializer
 				getNormalXmlTransformer();
 	}
 
+	/**
+	 * Creates a parser that rejects DOCTYPEs and neither loads external DTDs
+	 * nor resolves external entities.
+	 */
 	private DOMParser getXmlParser() throws SAXNotRecognizedException, SAXNotSupportedException
 	{
 		DOMParser parser = new DOMParser();
 		parser.setProperty(
 				"http://apache.org/xml/properties/" + "dom/document-class-name",
 				documentImplClassName);
+		parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		parser.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		parser.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+		parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+		parser.setProperty(
+				"http://apache.org/xml/properties/security-manager",
+				new org.apache.xerces.util.SecurityManager());
 		return parser;
+	}
+
+	// =========================================================================
+
+	/**
+	 * Reads a document in the {@link SerializationFormat#JAVA} format. Only
+	 * the classes accepted by the deserialization filter are instantiated. A
+	 * process-wide filter (jdk.serialFilter) is consulted as well.
+	 */
+	private Document readJava(InputStream in) throws IOException, DeserializationException
+	{
+		ObjectInputStream ois = null;
+		try
+		{
+			ois = new ObjectInputStream(in);
+			ois.setObjectInputFilter(getEffectiveJavaDeserializationFilter());
+
+			Object result = ois.readObject();
+			if (!(result instanceof Document))
+			{
+				throw new DeserializationException("Expected a " + Document.class.getName() + " but got "
+						+ ((result == null) ? "null" : result.getClass().getName()));
+			}
+			return (Document) result;
+		}
+		catch (InvalidClassException | ClassNotFoundException e)
+		{
+			throw new DeserializationException(e);
+		}
+		finally
+		{
+			IOUtils.closeQuietly(ois);
+		}
+	}
+
+	private ObjectInputFilter getEffectiveJavaDeserializationFilter()
+	{
+		final ObjectInputFilter filter = javaDeserializationFilter;
+		final ObjectInputFilter processWideFilter = ObjectInputFilter.Config.getSerialFilter();
+		if (processWideFilter == null)
+			return filter;
+
+		return info -> {
+			ObjectInputFilter.Status status = filter.checkInput(info);
+			if (status == ObjectInputFilter.Status.REJECTED)
+				return status;
+			ObjectInputFilter.Status processWideStatus = processWideFilter.checkInput(info);
+			return (processWideStatus == ObjectInputFilter.Status.REJECTED) ? processWideStatus : status;
+		};
+	}
+
+	/**
+	 * Reads a document in the {@link SerializationFormat#JSON} format. The
+	 * type adapters return the document element in a document fragment.
+	 */
+	private Document readJson(Reader reader, boolean compact) throws DeserializationException
+	{
+		Node node = getGson(createDocumentForDeserialization(), compact, false)
+				.fromJson(reader, Node.class);
+		if (!(node instanceof DocumentFragment))
+		{
+			throw new DeserializationException("Expected a document fragment but got "
+					+ ((node == null) ? "null" : node.getClass().getName()));
+		}
+
+		DocumentFragment fragment = (DocumentFragment) node;
+		Node firstChild = fragment.getFirstChild();
+		if (firstChild == null)
+			throw new DeserializationException("The serialized document is empty");
+
+		if (firstChild.getParentNode() != null)
+			firstChild.getParentNode().removeChild(firstChild);
+
+		Document doc = (Document) fragment.getOwnerDocument();
+		if (doc.getDocumentElement() != null)
+			doc.removeChild(doc.getDocumentElement());
+		doc.appendChild(firstChild);
+
+		return doc;
 	}
 
 	// =========================================================================

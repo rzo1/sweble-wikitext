@@ -32,10 +32,13 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
  */
 public class XalanWomTransformations
 {
+	/**
+	 * Returns a Xalan transformer factory that uses secure processing, see
+	 * {@link SecureTransformerFactories#secure(TransformerFactory)}.
+	 */
 	public static TransformerFactory getXalanTransformerFactory() throws TransformerFactoryConfigurationError
 	{
-		return TransformerFactory.newInstance(
-				org.apache.xalan.processor.TransformerFactoryImpl.class.getName(),
-				null);
+		return SecureTransformerFactories.newInstance(
+				org.apache.xalan.processor.TransformerFactoryImpl.class.getName());
 	}
 }
