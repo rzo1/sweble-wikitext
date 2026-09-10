@@ -104,6 +104,16 @@ public class XmlCharRefTest
 	}
 
 	@Test
+	public void testUpperCaseHexCharRefs() throws Exception
+	{
+		// Like MediaWiki's Sanitizer::CHAR_REFS_REGEX
+		assertCharRef("&#X41;", 0x41);
+		assertCharRef("&#X1F600;", 0x1F600);
+		assertKeptAsText("&#X110000;");
+		assertKeptAsText("&#X0;");
+	}
+
+	@Test
 	public void testInvalidCharRefInAttributeIsKeptAsText() throws Exception
 	{
 		WtNode ast = parse("<span title=\"&#x110000;\">x</span>");
