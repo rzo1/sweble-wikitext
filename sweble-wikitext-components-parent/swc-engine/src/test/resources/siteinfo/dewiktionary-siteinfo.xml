@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<!--
+  Trimmed response of
+  https://de.wiktionary.org/w/api.php?action=query&meta=siteinfo&siprop=general|namespaces|interwikimap|magicwords&format=xml
+
+  The generator requests each property separately and reads only the
+  elements it needs, so this file can serve all four requests. The
+  namespace aliases are kept in a separate file since they use the same
+  element name as the namespaces.
+-->
+<api batchcomplete="">
+	<query>
+		<general mainpage="Wiktionary:Hauptseite" sitename="Wiktionary" linkprefixcharset="" linkprefix="" linktrail="/^([äöüßa-z]+)(.*)$/sDu" case="case-sensitive" lang="de" timezone="Europe/Berlin" timeoffset="120" articlepath="/wiki/$1" scriptpath="/w" script="/w/index.php" server="//de.wiktionary.org" servername="de.wiktionary.org" wikiid="dewiktionary" />
+		<namespaces>
+			<ns _idx="-2" id="-2" case="case-sensitive" canonical="Media" xml:space="preserve">Medium</ns>
+			<ns _idx="-1" id="-1" case="first-letter" canonical="Special" xml:space="preserve">Spezial</ns>
+			<ns _idx="0" id="0" case="case-sensitive" content="" xml:space="preserve" />
+			<ns _idx="1" id="1" case="case-sensitive" subpages="" canonical="Talk" xml:space="preserve">Diskussion</ns>
+			<ns _idx="2" id="2" case="first-letter" subpages="" canonical="User" xml:space="preserve">Benutzer</ns>
+			<ns _idx="3" id="3" case="first-letter" subpages="" canonical="User talk" xml:space="preserve">Benutzer Diskussion</ns>
+			<ns _idx="4" id="4" case="case-sensitive" subpages="" canonical="Project" xml:space="preserve">Wiktionary</ns>
+			<ns _idx="5" id="5" case="case-sensitive" subpages="" canonical="Project talk" xml:space="preserve">Wiktionary Diskussion</ns>
+			<ns _idx="6" id="6" case="case-sensitive" canonical="File" xml:space="preserve">Datei</ns>
+			<ns _idx="7" id="7" case="case-sensitive" subpages="" canonical="File talk" xml:space="preserve">Datei Diskussion</ns>
+			<ns _idx="8" id="8" case="first-letter" subpages="" canonical="MediaWiki" namespaceprotection="editinterface" xml:space="preserve">MediaWiki</ns>
+			<ns _idx="9" id="9" case="first-letter" subpages="" canonical="MediaWiki talk" xml:space="preserve">MediaWiki Diskussion</ns>
+			<ns _idx="10" id="10" case="case-sensitive" subpages="" canonical="Template" xml:space="preserve">Vorlage</ns>
+			<ns _idx="11" id="11" case="case-sensitive" subpages="" canonical="Template talk" xml:space="preserve">Vorlage Diskussion</ns>
+			<ns _idx="12" id="12" case="case-sensitive" subpages="" canonical="Help" xml:space="preserve">Hilfe</ns>
+			<ns _idx="13" id="13" case="case-sensitive" subpages="" canonical="Help talk" xml:space="preserve">Hilfe Diskussion</ns>
+			<ns _idx="14" id="14" case="case-sensitive" canonical="Category" xml:space="preserve">Kategorie</ns>
+			<ns _idx="15" id="15" case="case-sensitive" subpages="" canonical="Category talk" xml:space="preserve">Kategorie Diskussion</ns>
+			<ns _idx="104" id="104" case="case-sensitive" subpages="" canonical="Thesaurus" xml:space="preserve">Thesaurus</ns>
+			<ns _idx="105" id="105" case="case-sensitive" subpages="" canonical="Thesaurus Diskussion" xml:space="preserve">Thesaurus Diskussion</ns>
+			<ns _idx="108" id="108" case="case-sensitive" subpages="" canonical="Flexion" xml:space="preserve">Flexion</ns>
+			<ns _idx="109" id="109" case="case-sensitive" subpages="" canonical="Flexion Diskussion" xml:space="preserve">Flexion Diskussion</ns>
+		</namespaces>
+		<interwikimap>
+			<iw prefix="de" local="" language="Deutsch" bcp47="de" localinterwiki="" url="https://de.wiktionary.org/wiki/$1" />
+			<iw prefix="en" local="" language="English" bcp47="en" url="https://en.wiktionary.org/wiki/$1" />
+			<iw prefix="w" local="" url="https://de.wikipedia.org/wiki/$1" />
+		</interwikimap>
+		<magicwords>
+			<magicword name="contentlanguage" case-sensitive=""><aliases><alias>INHALTSSPRACHE</alias><alias>CONTENTLANGUAGE</alias><alias>CONTENTLANG</alias></aliases></magicword>
+			<magicword name="defaultsort" case-sensitive=""><aliases><alias>SORTIERUNG:</alias><alias>DEFAULTSORT:</alias><alias>DEFAULTSORTKEY:</alias><alias>DEFAULTCATEGORYSORT:</alias></aliases></magicword>
+			<magicword name="filepath"><aliases><alias>DATEIPFAD:</alias><alias>FILEPATH:</alias></aliases></magicword>
+			<magicword name="fullurl"><aliases><alias>VOLLSTÄNDIGE_URL:</alias><alias>FULLURL:</alias></aliases></magicword>
+			<magicword name="protectionlevel" case-sensitive=""><aliases><alias>SCHUTZSTATUS</alias><alias>PROTECTIONLEVEL</alias></aliases></magicword>
+			<magicword name="sitename" case-sensitive=""><aliases><alias>PROJEKTNAME</alias><alias>SITENAME</alias></aliases></magicword>
+			<magicword name="urlencode"><aliases><alias>URLENKODIERT:</alias><alias>URLENCODE:</alias></aliases></magicword>
+		</magicwords>
+	</query>
+</api>

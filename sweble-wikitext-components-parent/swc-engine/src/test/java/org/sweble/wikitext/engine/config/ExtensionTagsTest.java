@@ -94,6 +94,7 @@ public class ExtensionTagsTest
 				siteinfo.toString(),
 				siteinfo.toString(),
 				siteinfo.toString(),
+				null,
 				siteinfo.toString());
 	}
 

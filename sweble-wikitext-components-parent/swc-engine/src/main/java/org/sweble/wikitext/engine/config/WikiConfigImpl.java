@@ -65,8 +65,10 @@ import org.sweble.wikitext.engine.utils.EngineAstTextUtilsImpl;
 @XmlType(propOrder = {
 		"siteName",
 		"wikiUrl",
+		"articlePath",
 		"contentLang",
 		"iwPrefix",
+		"timezone",
 		"jaxbNamespaces",
 		"jaxbInterwikis",
 		"jaxbAliases",
@@ -102,10 +104,17 @@ public class WikiConfigImpl
 	private String wikiUrl;
 
 	@XmlElement()
+	private String articlePath;
+
+	@XmlElement()
 	private String contentLang;
 
 	@XmlElement()
 	private String iwPrefix;
+
+	/** The ID of the time zone, e.g. "Europe/Berlin". */
+	@XmlElement()
+	private String timezone;
 
 	// -- Aliases --
 
@@ -604,9 +613,22 @@ public class WikiConfigImpl
 		return this.wikiUrl;
 	}
 
+	/**
+	 * Sets the article path as full URL, e.g. "https://de.wikipedia.org/wiki/$1"
+	 * (MediaWiki's $wgServer followed by $wgArticlePath). If no article path
+	 * is set, it is derived from the wiki URL: <code>getWikiUrl() +
+	 * "?title=$1"</code>.
+	 */
+	public void setArticlePath(String articlePath)
+	{
+		this.articlePath = articlePath;
+	}
+
 	@Override
 	public String getArticlePath()
 	{
+		if (this.articlePath != null)
+			return this.articlePath;
 		return getWikiUrl() + "?title=$1";
 	}
 
@@ -632,10 +654,20 @@ public class WikiConfigImpl
 		return iwPrefix;
 	}
 
+	/**
+	 * Sets the time zone of the wiki (MediaWiki's $wgLocaltimezone). If no
+	 * time zone is set, the default time zone of the JVM is used.
+	 */
+	public void setTimezone(TimeZone timezone)
+	{
+		this.timezone = (timezone != null) ? timezone.getID() : null;
+	}
+
 	@Override
 	public TimeZone getTimezone()
 	{
-		// TODO: Make variable and save to / read from XML
+		if (this.timezone != null)
+			return TimeZone.getTimeZone(this.timezone);
 		return TimeZone.getDefault();
 	}
 
@@ -660,6 +692,7 @@ public class WikiConfigImpl
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((aliasesById == null) ? 0 : aliasesById.hashCode());
+		result = prime * result + ((articlePath == null) ? 0 : articlePath.hashCode());
 		result = prime * result + ((contentLang == null) ? 0 : contentLang.hashCode());
 		result = prime * result + ((defaultNamespace == null) ? 0 : defaultNamespace.hashCode());
 		result = prime * result + ((engineConfig == null) ? 0 : engineConfig.hashCode());
@@ -671,6 +704,7 @@ public class WikiConfigImpl
 		result = prime * result + ((tagExtGroups == null) ? 0 : tagExtGroups.hashCode());
 		result = prime * result + (tagExtensionNamesCaseSensitive ? 1231 : 1237);
 		result = prime * result + ((templateNamespace == null) ? 0 : templateNamespace.hashCode());
+		result = prime * result + ((timezone == null) ? 0 : timezone.hashCode());
 		result = prime * result + ((wikiUrl == null) ? 0 : wikiUrl.hashCode());
 		return result;
 	}
@@ -691,6 +725,13 @@ public class WikiConfigImpl
 				return false;
 		}
 		else if (!aliasesById.equals(other.aliasesById))
+			return false;
+		if (articlePath == null)
+		{
+			if (other.articlePath != null)
+				return false;
+		}
+		else if (!articlePath.equals(other.articlePath))
 			return false;
 		if (contentLang == null)
 		{
@@ -763,6 +804,13 @@ public class WikiConfigImpl
 				return false;
 		}
 		else if (!templateNamespace.equals(other.templateNamespace))
+			return false;
+		if (timezone == null)
+		{
+			if (other.timezone != null)
+				return false;
+		}
+		else if (!timezone.equals(other.timezone))
 			return false;
 		if (wikiUrl == null)
 		{
