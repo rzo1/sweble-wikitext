@@ -133,6 +133,12 @@ public class DocumentImpl
 		return null;
 	}
 
+	@Override
+	public void setTextContent(String textContent) throws DOMException
+	{
+		// Setting the text content of a document has no effect
+	}
+
 	// =========================================================================
 	// org.w3c.dom.Document - Document URI
 
@@ -223,65 +229,61 @@ public class DocumentImpl
 	// org.w3c.dom.Document - Node adoption
 
 	@Override
-	public Wom3Node adoptNode(Node source) throws DOMException
+	public Wom3Node adoptNode(Node source_) throws DOMException
 	{
-		if (!isSameNode(source.getOwnerDocument()))
+		if (!(source_ instanceof Backbone))
+			// Nodes of other DOM implementations cannot be adopted
+			return null;
+
+		Backbone source = (Backbone) source_;
+
+		// Check the whole subtree first so that we don't leave it half adopted
+		checkAdoptable(source);
+
+		// Only the adopted node's document has to be writable
+		source.assertWritableOnDocument();
+
+		if (source.getNodeType() == Node.ATTRIBUTE_NODE)
 		{
-			if (source.getNodeType() == Node.ATTRIBUTE_NODE)
-			{
-				Wom3Attribute attr = (Wom3Attribute) source;
-				if (attr.getOwnerElement() != null)
-				{
-					// Only the adopted node's document has to be writable
-					Toolbox.expectType(Backbone.class, source).assertWritableOnDocument();
-
-					attr.getOwnerElement().removeAttributeNode(attr);
-				}
-			}
-			else
-			{
-				if (source.getParentNode() != null)
-				{
-					// Only the adopted node's document has to be writable
-					Toolbox.expectType(Backbone.class, source).assertWritableOnDocument();
-
-					source.getParentNode().removeChild(source);
-				}
-			}
-
-			adoptRecursively(source);
+			Wom3Attribute attr = (Wom3Attribute) source;
+			if (attr.getOwnerElement() != null)
+				attr.getOwnerElement().removeAttributeNode(attr);
 		}
-		return (Wom3Node) source;
+		else if (source.getParentNode() != null)
+		{
+			source.getParentNode().removeChild(source);
+		}
+
+		if (!isSameNode(source.getOwnerDocument()))
+			adoptRecursively(source);
+
+		return source;
 	}
 
-	private void adoptRecursively(Node source_)
+	private static void checkAdoptable(Backbone source)
 	{
-		Backbone source = Toolbox.expectType(Backbone.class, source_);
 		switch (source.getNodeType())
 		{
-			case ATTRIBUTE_NODE:
-				source.adoptTo(this);
-				break;
 			case ELEMENT_NODE:
-				source.adoptTo(this);
-				for (Wom3Node child : source.getWomAttributes())
-					adoptRecursively(child);
-				for (Wom3Node child : source.getWomChildNodes())
-					adoptRecursively(child);
-				break;
-			case TEXT_NODE:
-				source.adoptTo(this);
-				break;
-
-			case DOCUMENT_FRAGMENT_NODE:
-			case ENTITY_REFERENCE_NODE:
-				// Can be adopted (specifics!), only we don't ...
+				for (Wom3Attribute attr : source.getWomAttributes())
+					checkAdoptable(Toolbox.expectType(Backbone.class, attr));
 				// Fall through
 
-			case PROCESSING_INSTRUCTION_NODE:
+			case DOCUMENT_FRAGMENT_NODE:
+				for (Backbone child = source.getFirstChild(); child != null; child = child.getNextSibling())
+					checkAdoptable(child);
+				break;
+
+			case ATTRIBUTE_NODE:
+			case TEXT_NODE:
 			case CDATA_SECTION_NODE:
 			case COMMENT_NODE:
-				// Can all be adopted (no specifics), only we don't ...
+			case PROCESSING_INSTRUCTION_NODE:
+				// Can all be adopted (no specifics)
+				break;
+
+			case ENTITY_REFERENCE_NODE:
+				// Can be adopted (specifics!), only we don't ...
 				// Fall through
 
 			case DOCUMENT_NODE:
@@ -292,8 +294,19 @@ public class DocumentImpl
 				// Fall through
 
 			default:
-				throw new UnsupportedOperationException("Cannot clone node: " + source.getNodeName());
+				throw new DOMException(
+						DOMException.NOT_SUPPORTED_ERR,
+						"Cannot adopt node: " + source.getNodeName());
 		}
+	}
+
+	private void adoptRecursively(Backbone source)
+	{
+		source.adoptTo(this);
+		for (Wom3Attribute attr : source.getWomAttributes())
+			adoptRecursively(Toolbox.expectType(Backbone.class, attr));
+		for (Backbone child = source.getFirstChild(); child != null; child = child.getNextSibling())
+			adoptRecursively(child);
 	}
 
 	@Override
@@ -461,7 +474,6 @@ public class DocumentImpl
 	@Override
 	public NodeList getElementsByTagNameNS(String namespaceURI, String localName)
 	{
-		// TODO: Implement
-		throw new UnsupportedOperationException();
+		return new ElementsByTagNameNodeList(this, namespaceURI, localName);
 	}
 }

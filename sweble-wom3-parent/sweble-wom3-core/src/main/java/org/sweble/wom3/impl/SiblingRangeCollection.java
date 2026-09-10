@@ -25,6 +25,15 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+/**
+ * A view of the children of a container that lie between two bounding
+ * children of the container. If a bound is {@code null}, the range extends to
+ * the first or last child of the container respectively.
+ *
+ * All modifications are performed through the DOM operations of the container
+ * which keeps the child list of the container consistent. Changes made to the
+ * child list of the container are reflected in this collection.
+ */
 public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Backbone>
 		extends
 			AbstractSequentialList<T>
@@ -33,10 +42,6 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 			Deque<T>
 {
 	private static final long serialVersionUID = 1L;
-
-	private T first;
-
-	private T last;
 
 	private final U container;
 
@@ -60,7 +65,7 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 	public int size()
 	{
 		int count = 0;
-		for (T i = first; i != null; i = advance(i))
+		for (T i = first(); i != null; i = advance(i))
 			++count;
 		return count;
 	}
@@ -84,18 +89,19 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 	@Override
 	public T peekFirst()
 	{
-		return first;
+		return first();
 	}
 
 	@Override
 	public T peekLast()
 	{
-		return last;
+		return last();
 	}
 
 	@Override
 	public T getFirst()
 	{
+		T first = first();
 		if (first == null)
 			throw new NoSuchElementException();
 		return first;
@@ -104,6 +110,7 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 	@Override
 	public T getLast()
 	{
+		T last = last();
 		if (last == null)
 			throw new NoSuchElementException();
 		return last;
@@ -118,37 +125,18 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 	@Override
 	public void addFirst(T e)
 	{
-		Backbone n = first;
-		if (n == null)
-			n = bounds.getSucc();
-		Backbone p = bounds.getPred();
+		checkBeforeAdd(e);
 
-		checkBeforeAdd(p, e);
-
-		e.link(container, p, n);
-		if (last == null)
-			last = e;
-		first = e;
-
-		container.childInserted(p, e);
+		Backbone pred = bounds.getPred();
+		insert(e, (pred != null) ? pred.getNextSibling() : container.getFirstChild());
 	}
 
 	@Override
 	public void addLast(T e)
 	{
-		Backbone p = last;
+		checkBeforeAdd(e);
 
-		if (p == null)
-			p = bounds.getPred();
-
-		checkBeforeAdd(p, e);
-
-		e.link(container, p, bounds.getSucc());
-		if (first == null)
-			first = e;
-		last = e;
-
-		container.childInserted(p, e);
+		insert(e, bounds.getSucc());
 	}
 
 	@Override
@@ -174,34 +162,18 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 	@Override
 	public T removeFirst()
 	{
-		checkBeforeRemove(first);
-
-		Backbone prev = first.getPreviousSibling();
-		T n = advance(first);
-		T removed = first;
-		removed.unlink();
-		first = n;
-		if (n == null)
-			last = null;
-
-		container.childRemoved(prev, removed);
+		T removed = first();
+		checkBeforeRemove(removed);
+		container.removeChild(removed);
 		return removed;
 	}
 
 	@Override
 	public T removeLast()
 	{
-		checkBeforeRemove(last);
-
-		Backbone prev = last.getPreviousSibling();
-		T p = retreat(last);
-		T removed = last;
-		removed.unlink();
-		last = p;
-		if (p == null)
-			first = null;
-
-		container.childRemoved(prev, removed);
+		T removed = last();
+		checkBeforeRemove(removed);
+		container.removeChild(removed);
 		return removed;
 	}
 
@@ -214,7 +186,7 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 	@Override
 	public T pollFirst()
 	{
-		if (first != null)
+		if (first() != null)
 			return removeFirst();
 		return null;
 	}
@@ -222,7 +194,7 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 	@Override
 	public T pollLast()
 	{
-		if (last != null)
+		if (last() != null)
 			return removeLast();
 		return null;
 	}
@@ -289,7 +261,41 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 
 	// =========================================================================
 
-	private void checkBeforeAdd(Backbone p, T e)
+	/**
+	 * The first node after the predecessor bound or {@code null} if the range
+	 * is empty.
+	 */
+	private T first()
+	{
+		Backbone pred = bounds.getPred();
+		Backbone first = (pred != null) ? pred.getNextSibling() : container.getFirstChild();
+		return (first == bounds.getSucc()) ? null : cast(first);
+	}
+
+	/**
+	 * The last node in front of the successor bound or {@code null} if the
+	 * range is empty.
+	 */
+	private T last()
+	{
+		Backbone succ = bounds.getSucc();
+		Backbone last = (succ != null) ? succ.getPreviousSibling() : container.getLastChild();
+		return (last == bounds.getPred()) ? null : cast(last);
+	}
+
+	/**
+	 * Inserts the given node in front of {@code before} or appends it to the
+	 * container if {@code before} is {@code null}.
+	 */
+	private void insert(T e, Backbone before)
+	{
+		if (before == null)
+			container.appendChild(e);
+		else
+			container.insertBefore(e, before);
+	}
+
+	private void checkBeforeAdd(T e)
 	{
 		if (e == null)
 			throw new IllegalArgumentException("Argument `e' is null.");
@@ -297,36 +303,30 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 		if (e.isLinked())
 			throw new IllegalStateException(
 					"Given node `e' is still child of another WOM node.");
-
-		container.allowsInsertion(p, e);
-		//e.acceptsParent(container);
 	}
 
 	private void checkBeforeRemove(T e)
 	{
 		if (e == null)
 			throw new NoSuchElementException();
-
-		container.allowsRemoval(e);
-		//e.childAllowsRemoval(container);
 	}
 
 	private T retreat(T i)
 	{
-		@SuppressWarnings("unchecked")
-		T p = (T) i.getPreviousSibling();
-		if (p == bounds.getPred())
-			p = null;
-		return p;
+		Backbone p = i.getPreviousSibling();
+		return (p == bounds.getPred()) ? null : cast(p);
 	}
 
 	private T advance(T i)
 	{
-		@SuppressWarnings("unchecked")
-		T n = (T) i.getNextSibling();
-		if (n == bounds.getSucc())
-			n = null;
-		return n;
+		Backbone n = i.getNextSibling();
+		return (n == bounds.getSucc()) ? null : cast(n);
+	}
+
+	@SuppressWarnings("unchecked")
+	private T cast(Backbone n)
+	{
+		return (T) n;
 	}
 
 	// =========================================================================
@@ -346,7 +346,7 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 			if (index < 0)
 				throw new IndexOutOfBoundsException();
 
-			T i = first;
+			T i = first();
 			for (int count = 0;; ++count)
 			{
 				if (count == index)
@@ -390,9 +390,7 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 			if (!hasPrevious())
 				throw new NoSuchElementException();
 
-			lastReturned = last;
-			if (next != null)
-				lastReturned = retreat(next);
+			lastReturned = (next != null) ? retreat(next) : last();
 			next = lastReturned;
 			--nextIndex;
 			return lastReturned;
@@ -417,42 +415,16 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 			if (removed == null)
 				throw new IllegalStateException();
 
-			container.allowsRemoval(removed);
-			//removed.childAllowsRemoval(container);
-			Backbone realPrev = removed.getPreviousSibling();
-
-			T lastPrev = retreat(removed);
 			T lastNext = advance(removed);
 
-			// Fix tree
-			removed.unlink();
-			if (removed == first)
-			{
-				first = lastNext;
-				if (first == null)
-					last = null;
-			}
-			else if (removed == last)
-			{
-				last = lastPrev;
-				// If lastPrev were zero and we only had one item left, the 
-				// previous if case would have been executed. No need to also 
-				// set first to null since last cannot become null here.
-			}
+			container.removeChild(removed);
 
 			// Fix iterator
 			if (next == removed)
-			{
 				next = lastNext;
-			}
 			else
-			{
 				nextIndex--;
-			}
 			lastReturned = null;
-
-			//  Let the parent know
-			container.childRemoved(realPrev, removed);
 		}
 
 		@Override
@@ -462,35 +434,14 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 			if (replaced == null)
 				throw new IllegalStateException();
 
-			if (e.isLinked())
-				throw new IllegalStateException(
-						"Given node `e' is still child of another WOM node.");
+			checkBeforeAdd(e);
 
-			container.allowsRemoval(replaced);
-			//replaced.childAllowsRemoval(container);
-
-			Backbone lastPrev = replaced.getPreviousSibling();
-			Backbone lastNext = replaced.getNextSibling();
-
-			//container.acceptsChild(lastPrev, e);
-			//replaced.acceptsParent(container);
-			container.allowsReplacement(replaced, e);
-
-			// Fix tree
-			replaced.unlink();
-			e.link(container, lastPrev, lastNext);
-			if (first == replaced)
-				first = e;
-			if (last == replaced)
-				last = e;
+			container.replaceChild(e, replaced);
 
 			// Fix iterator
 			if (next == replaced)
 				next = e;
 			lastReturned = e;
-
-			container.childRemoved(lastPrev, replaced);
-			container.childInserted(lastPrev, e);
 		}
 
 		@Override
@@ -503,26 +454,8 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 			}
 			else
 			{
-				if (e == null)
-					throw new IllegalArgumentException("Argument `e' is null.");
-
-				if (e.isLinked())
-					throw new IllegalStateException(
-							"Given node `e' is still child of another WOM node.");
-
-				Backbone p = retreat(next);
-				boolean becomesFirst = p == null;
-				if (becomesFirst)
-					p = bounds.getPred();
-
-				container.allowsInsertion(p, e);
-				//e.acceptsParent(container);
-
-				if (becomesFirst)
-					first = e;
-				e.link(container, p, next);
-
-				container.childInserted(p, e);
+				checkBeforeAdd(e);
+				container.insertBefore(e, next);
 			}
 			nextIndex++;
 		}

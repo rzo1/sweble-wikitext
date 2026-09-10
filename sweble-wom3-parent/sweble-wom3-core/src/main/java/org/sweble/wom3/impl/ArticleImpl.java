@@ -261,8 +261,15 @@ public class ArticleImpl
 	{
 		ArticleImpl newNode = (ArticleImpl) super.cloneNode(deep);
 
+		// The copied fields still refer to our children. Look up the children
+		// of the clone instead.
+		newNode.redirect = null;
+		newNode.body = null;
+		for (Backbone child = newNode.getFirstChild(); child != null; child = child.getNextSibling())
+			newNode.childInserted(child.getPreviousSibling(), child);
+
 		newNode.categories = new SiblingRangeCollection<ArticleImpl, CategoryImpl>(
-				this, new SiblingCollectionsBoundIml());
+				newNode, newNode.new SiblingCollectionsBoundIml());
 
 		return newNode;
 	}
@@ -301,6 +308,8 @@ public class ArticleImpl
 	{
 		if (removed == redirect)
 			redirect = null;
+		else if (removed == body)
+			body = null;
 	}
 
 	// =========================================================================

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -40,6 +41,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.sweble.wom3.Wom3Node;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 @RunWith(Parameterized.class)
 public class SiblingRangeCollectionTest
@@ -61,6 +63,12 @@ public class SiblingRangeCollectionTest
 
 	private final LinkedList<ChildNode> nodes;
 
+	private final Container container;
+
+	private final BoundaryChild pred;
+
+	private final BoundaryChild succ;
+
 	private DocumentImpl doc;
 
 	// =========================================================================
@@ -70,13 +78,103 @@ public class SiblingRangeCollectionTest
 		DomImplementationImpl domImpl = new DomImplementationImpl();
 		this.doc = domImpl.createDocument(Wom3Node.WOM_NS_URI, "article", null);
 
-		BoundaryChild pred = hasPred ? new BoundaryChild(doc) : null;
-		BoundaryChild succ = hasSucc ? new BoundaryChild(doc) : null;
-		Container c = new Container(doc, pred, succ);
-		this.c = c.getC();
+		this.pred = hasPred ? new BoundaryChild(doc) : null;
+		this.succ = hasSucc ? new BoundaryChild(doc) : null;
+		this.container = new Container(doc, pred, succ);
+		this.c = container.getC();
 		this.nodes = new LinkedList<ChildNode>();
 		for (int i = 0; i < 10; ++i)
 			nodes.add(gen(i));
+	}
+
+	// =========================================================================
+
+	/**
+	 * Every change to the collection must also be visible through the child
+	 * list of the container.
+	 */
+	@After
+	public void assertContainerChildListMatchesCollection() throws Exception
+	{
+		List<Backbone> expected = new ArrayList<Backbone>();
+		if (pred != null)
+			expected.add(pred);
+		expected.addAll(c);
+		if (succ != null)
+			expected.add(succ);
+
+		NodeList childNodes = container.getChildNodes();
+		assertEquals(expected.size(), childNodes.getLength());
+		for (int i = 0; i < expected.size(); ++i)
+			assertSame(expected.get(i), childNodes.item(i));
+
+		List<Backbone> backwards = new ArrayList<Backbone>();
+		for (Backbone n = container.getLastChild(); n != null; n = n.getPreviousSibling())
+			backwards.add(0, n);
+		assertEquals(expected.size(), backwards.size());
+		for (int i = 0; i < expected.size(); ++i)
+			assertSame(expected.get(i), backwards.get(i));
+
+		if (expected.isEmpty())
+		{
+			assertNull(container.getFirstChild());
+			assertNull(container.getLastChild());
+		}
+		else
+		{
+			assertSame(expected.get(0), container.getFirstChild());
+			assertSame(expected.get(expected.size() - 1), container.getLastChild());
+		}
+
+		for (ChildNode e : c)
+			assertSame(container, e.getParentNode());
+	}
+
+	// =========================================================================
+
+	@Test
+	public void testCollectionChangesAreVisibleInContainerChildList() throws Exception
+	{
+		int bounds = (pred != null ? 1 : 0) + (succ != null ? 1 : 0);
+
+		ChildNode a = gen(0);
+		ChildNode b = gen(1);
+		ChildNode x = gen(2);
+		c.add(a);
+		c.addFirst(b);
+		c.add(x);
+
+		assertSame(b, (pred == null) ? container.getFirstChild() : pred.getNextSibling());
+		assertSame(x, (succ == null) ? container.getLastChild() : succ.getPreviousSibling());
+		assertEquals(3 + bounds, container.getChildNodes().getLength());
+
+		assertTrue(c.remove(a));
+		assertNull(a.getParentNode());
+		assertEquals(2 + bounds, container.getChildNodes().getLength());
+
+		c.removeFirst();
+		c.removeLast();
+		assertTrue(c.isEmpty());
+		assertEquals(bounds, container.getChildNodes().getLength());
+	}
+
+	@Test
+	public void testCollectionSeesChildrenChangedThroughContainer() throws Exception
+	{
+		ChildNode a = gen(0);
+		if (succ != null)
+			container.insertBefore(a, succ);
+		else
+			container.appendChild(a);
+
+		assertEquals(1, c.size());
+		assertSame(a, c.getFirst());
+		assertSame(a, c.getLast());
+
+		container.removeChild(a);
+		assertTrue(c.isEmpty());
+		assertNull(c.peekFirst());
+		assertNull(c.peekLast());
 	}
 
 	// =========================================================================
@@ -691,11 +789,11 @@ public class SiblingRangeCollectionTest
 
 			this.pred = pred;
 			if (pred != null)
-				pred.link(this, null, null);
+				appendChild(pred);
 
 			this.succ = succ;
 			if (succ != null)
-				succ.link(this, pred, null);
+				appendChild(succ);
 		}
 
 		// ---------------------------------------------------------------------

@@ -18,9 +18,11 @@
 package org.sweble.wom3.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 import org.sweble.wom3.Wom3XmlText;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
 
 public class XmlTextTest
@@ -45,10 +47,18 @@ public class XmlTextTest
 		assertEquals("content", n.getNodeValue());
 	}
 
-	@Test(expected = UnsupportedOperationException.class)
+	@Test
 	public void testCannotAppendNode() throws Exception
 	{
-		n.appendChild(TestHelperDoc.genElem("b"));
+		try
+		{
+			n.appendChild(TestHelperDoc.genElem("b"));
+			fail("Expected a DOMException");
+		}
+		catch (DOMException e)
+		{
+			assertEquals(DOMException.HIERARCHY_REQUEST_ERR, e.code);
+		}
 	}
 
 	@Test

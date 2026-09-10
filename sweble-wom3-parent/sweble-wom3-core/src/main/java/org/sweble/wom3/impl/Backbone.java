@@ -180,9 +180,8 @@ public abstract class Backbone
 		if (!hasChildNodes())
 			return "";
 
-		if (getFirstChild() == getLastChild())
-			return getFirstChild().getTextContent();
-
+		// Always go through getTextContentRecursive() since not all children
+		// contribute to the text content (comments, processing instructions)
 		StringBuilder b = new StringBuilder();
 		getTextContentRecursive(b);
 		return b.toString();
@@ -221,7 +220,10 @@ public abstract class Backbone
 	@Override
 	public Wom3Node removeChild(Node child_) throws DOMException
 	{
-		return doesNotSupportChildNodes();
+		// A node without children cannot have the given node as child
+		throw new DOMException(
+				DOMException.NOT_FOUND_ERR,
+				"Given node is not a child of this node.");
 	}
 
 	@Override
@@ -233,10 +235,7 @@ public abstract class Backbone
 	@Override
 	public void normalize()
 	{
-		// TODO: Implement
-		throw new UnsupportedOperationException();
-
-		//assertWritable();
+		// Nodes without children have nothing to normalize
 	}
 
 	@Override
@@ -269,8 +268,72 @@ public abstract class Backbone
 	@Override
 	public boolean isEqualNode(Node arg)
 	{
-		// TODO: Implement
-		throw new UnsupportedOperationException();
+		if (arg == this)
+			return true;
+		if (arg == null)
+			return false;
+
+		if ((getNodeType() != arg.getNodeType())
+				|| !isEqual(getNodeName(), arg.getNodeName())
+				|| !isEqual(getLocalName(), arg.getLocalName())
+				|| !isEqual(getNamespaceURI(), arg.getNamespaceURI())
+				|| !isEqual(getPrefix(), arg.getPrefix())
+				|| !isEqual(getNodeValue(), arg.getNodeValue()))
+			return false;
+
+		if (!isEqualAttributes(getAttributes(), arg.getAttributes()))
+			return false;
+
+		Node a = getFirstChild();
+		Node b = arg.getFirstChild();
+		while ((a != null) && (b != null))
+		{
+			if (!a.isEqualNode(b))
+				return false;
+			a = a.getNextSibling();
+			b = b.getNextSibling();
+		}
+		return (a == null) && (b == null);
+	}
+
+	private static boolean isEqual(String a, String b)
+	{
+		return (a == null) ? (b == null) : a.equals(b);
+	}
+
+	/**
+	 * Attributes are compared regardless of their order.
+	 */
+	private static boolean isEqualAttributes(NamedNodeMap a, NamedNodeMap b)
+	{
+		int length = (a != null) ? a.getLength() : 0;
+		if (length != ((b != null) ? b.getLength() : 0))
+			return false;
+
+		for (int i = 0; i < length; ++i)
+		{
+			Node attrA = a.item(i);
+			Node attrB = (attrA.getLocalName() != null) ?
+					b.getNamedItemNS(attrA.getNamespaceURI(), attrA.getLocalName()) :
+					b.getNamedItem(attrA.getNodeName());
+			if ((attrB == null) || !attrA.isEqualNode(attrB))
+				return false;
+		}
+		return true;
+	}
+
+	/**
+	 * The position of two nodes that are not part of the same tree. The order
+	 * of the trees is implementation specific but consistent.
+	 */
+	private static short disconnected(Node thisRoot, Node otherRoot)
+	{
+		short order = (System.identityHashCode(thisRoot) < System.identityHashCode(otherRoot)) ?
+				DOCUMENT_POSITION_FOLLOWING :
+				DOCUMENT_POSITION_PRECEDING;
+		return (short) (DOCUMENT_POSITION_DISCONNECTED
+				| DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+				| order);
 	}
 
 	@Override
@@ -300,10 +363,8 @@ public abstract class Backbone
 			otherOwner = (Document) otherNode;
 		}
 
-		if (thisOwner == null || !thisOwner.isSameNode(otherOwner))
-			throw new DOMException(
-					DOMException.NOT_SUPPORTED_ERR,
-					"Cannot compare nodes from different documents");
+		if (!thisOwner.isSameNode(otherOwner))
+			return disconnected(thisOwner, otherOwner);
 
 		int thisDepth = 1;
 		Node thisAncestor = thisNode;
@@ -339,7 +400,7 @@ public abstract class Backbone
 				Element otherOwnerE = otherAncestorAttr.getOwnerElement();
 				if (thisOwnerE == null || otherOwnerE == null)
 				{
-					return DOCUMENT_POSITION_DISCONNECTED;
+					return disconnected(thisAncestor, otherAncestor);
 				}
 				else if (thisOwnerE.isSameNode(otherOwnerE))
 				{
@@ -395,8 +456,9 @@ public abstract class Backbone
 			}
 		}
 
-		if (thisAncestor != otherAncestor || thisAncestor != thisOwner)
-			throw new RuntimeException("This should not happen...");
+		if (thisAncestor != otherAncestor)
+			// The nodes are not part of the same tree
+			return disconnected(thisAncestor, otherAncestor);
 
 		if (thisDepth > otherDepth)
 		{
@@ -593,9 +655,10 @@ public abstract class Backbone
 		}
 	}
 
-	protected Wom3Node doesNotSupportChildNodes() throws UnsupportedOperationException
+	protected Wom3Node doesNotSupportChildNodes() throws DOMException
 	{
-		throw new UnsupportedOperationException(
+		throw new DOMException(
+				DOMException.HIERARCHY_REQUEST_ERR,
 				"Node `" + getNodeName() + "' does not support child nodes!");
 	}
 
