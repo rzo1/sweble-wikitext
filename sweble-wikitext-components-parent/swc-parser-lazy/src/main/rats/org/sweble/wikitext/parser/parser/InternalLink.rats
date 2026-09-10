@@ -136,14 +136,14 @@ body
 
   private WtNode addLinkPrefix(WtText text, WtInternalLink link)
   {
+    Pattern prefixPattern = getState().getInternalLinkPrefixPattern();
     String t = text.getContent();
-    if (!t.isEmpty())
+    if (prefixPattern != null && !t.isEmpty())
     {
       // shortcut (prefix cannot contain whitespace)
       if (!Character.isWhitespace(t.charAt(t.length() - 1)))
       {
-        Matcher matcher =
-                getState().getInternalLinkPrefixPattern().matcher(t);
+        Matcher matcher = prefixPattern.matcher(t);
 
         if (matcher.find())
         {
