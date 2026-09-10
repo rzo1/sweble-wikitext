@@ -32,7 +32,9 @@
  *     - Everything between denoted by "..." in the expression <tag...>...</tag>
  *       is treated as text by the preprocessor. Templates and nested tags are
  *       not recognized within tags and their attributes.
- *     - Start tags without closing tag run to the end of the input
+ *     - Start tags of includeonly, noinclude and onlyinclude without closing
+ *       tag run to the end of the input. All other start tags without closing
+ *       tag are treated as text and parsing resumes after them.
  *     - Start tags are recognized if a string "<X...>" can be found in the input,
  *       where X is a valid tag name and ... is everything but a '>'.
  *     - onlyinclude is treated specially and only recognized in the following form:

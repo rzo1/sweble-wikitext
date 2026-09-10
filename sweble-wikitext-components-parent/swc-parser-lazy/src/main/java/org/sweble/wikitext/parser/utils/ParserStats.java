@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.sweble.wikitext.parser.parser.RatsWikitextParser;
-
 import de.fau.cs.osr.utils.StringTools;
 
 public class ParserStats
@@ -91,7 +89,7 @@ public class ParserStats
 
 	public void dump(PrintStream err)
 	{
-		for (Entry<String, MemoizedProduction> x : RatsWikitextParser.getStats().getMemoizedProductions().entrySet())
+		for (Entry<String, MemoizedProduction> x : memoizedProductions.entrySet())
 		{
 			err.print(x.getKey() + ":");
 			err.print(StringTools.strrep(' ', 20 - x.getKey().length()));

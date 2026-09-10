@@ -32,6 +32,19 @@ public class WikitextParserContext
 
 	private LinkBuilder linkBuilder;
 
+	/**
+	 * The number of enclosing nested constructs, see
+	 * {@link ParserConfig#getMaxNestingDepth()}. Child contexts inherit the
+	 * depth, so it is restored when a stateful production is left.
+	 * <p>
+	 * The depth is deliberately not part of {@link #equals(Object)} and
+	 * {@link #hashCode()}. Otherwise content parsed again one level up after
+	 * an enclosing construct failed would never hit the memoization. Results
+	 * only depend on the depth once the limit is hit, which only happens for
+	 * pathological input.
+	 */
+	private int nestingDepth;
+
 	// =========================================================================
 
 	@Override
@@ -40,6 +53,7 @@ public class WikitextParserContext
 		this.scope = null;
 		this.stickingScopes = 0;
 		this.linkBuilder = null;
+		this.nestingDepth = 0;
 	}
 
 	@Override
@@ -49,6 +63,19 @@ public class WikitextParserContext
 		this.stickingScopes = p.stickingScopes;
 		this.scope = p.scope;
 		this.linkBuilder = p.linkBuilder; // null;
+		this.nestingDepth = p.nestingDepth;
+	}
+
+	// =========================================================================
+
+	public final int getNestingDepth()
+	{
+		return nestingDepth;
+	}
+
+	public final void setNestingDepth(int nestingDepth)
+	{
+		this.nestingDepth = nestingDepth;
 	}
 
 	// =========================================================================

@@ -27,7 +27,25 @@ public class WikitextPreprocessorContext
 
 	private int templateBraces;
 
+	/**
+	 * The number of enclosing nested constructs, see
+	 * {@link org.sweble.wikitext.parser.ParserConfig#getMaxNestingDepth()}.
+	 * Unlike the other fields it is inherited by child contexts, so it is
+	 * restored when a stateful production is left.
+	 */
+	private int nestingDepth;
+
 	// =========================================================================
+
+	public int getNestingDepth()
+	{
+		return nestingDepth;
+	}
+
+	public void setNestingDepth(int nestingDepth)
+	{
+		this.nestingDepth = nestingDepth;
+	}
 
 	public String getTagExtensionName()
 	{
@@ -56,5 +74,13 @@ public class WikitextPreprocessorContext
 	{
 		this.tagExtensionName = null;
 		this.templateBraces = 0;
+		this.nestingDepth = 0;
+	}
+
+	@Override
+	public void init(ParserContext parent)
+	{
+		clear();
+		this.nestingDepth = ((WikitextPreprocessorContext) parent).nestingDepth;
 	}
 }

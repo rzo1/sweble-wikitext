@@ -143,4 +143,32 @@ public interface ParserConfig
 	// ==[ Misc ]===============================================================
 
 	boolean isPreserveSemiPreLeadingSpace();
+
+	// ==[ Robustness ]=========================================================
+
+	/**
+	 * The default value of {@link #getMaxNestingDepth()}.
+	 */
+	int DEFAULT_MAX_NESTING_DEPTH = 100;
+
+	/**
+	 * The maximum depth to which recursive constructs can nest: Templates,
+	 * template parameters and internal links in the preprocessor; internal
+	 * links, image links and language conversion tags in the parser. All
+	 * constructs share one counter, the preprocessor and the parser count
+	 * separately. Beyond this depth the opening markup of a construct is
+	 * treated as text.
+	 * <p>
+	 * The limit prevents stack overflows on deeply nested input. The default
+	 * of {@value #DEFAULT_MAX_NESTING_DEPTH} is far beyond what real content
+	 * needs, while leaving head room on a normal 1 MB thread stack: Without a
+	 * limit, parsing and post-processing overflow such a stack at about 170
+	 * nested image links, 210 nested language conversion tags and 250 nested
+	 * templates or internal links. The remaining stack is needed for
+	 * constructs the limit does not cover (tables, lists, ...).
+	 */
+	default int getMaxNestingDepth()
+	{
+		return DEFAULT_MAX_NESTING_DEPTH;
+	}
 }

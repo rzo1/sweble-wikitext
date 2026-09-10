@@ -123,6 +123,18 @@ body
   {
     return getState().getConfig().isValidPageSwitchName(word);
   }
+
+  // ===========================================================================
+
+  private boolean canNest()
+  {
+    return getState().canNest();
+  }
+
+  private boolean enterNesting()
+  {
+    return getState().enterNesting();
+  }
 }
 
 option stateful(WikitextParserState);

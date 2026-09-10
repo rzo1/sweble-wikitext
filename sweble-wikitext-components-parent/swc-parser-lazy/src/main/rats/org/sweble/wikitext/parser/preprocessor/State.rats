@@ -69,6 +69,16 @@ body
     return getState().hasAtLeastTemplateBraces(count);
   }
 
+  private boolean enterNesting()
+  {
+    return getState().enterNesting();
+  }
+
+  private boolean hasClosingTagAfter(int pos)
+  {
+    return getState().hasClosingTagAfter(pos);
+  }
+
   public boolean isRedirectKeyword(String keyword)
   {
     return getState().isRedirectKeyword(keyword);

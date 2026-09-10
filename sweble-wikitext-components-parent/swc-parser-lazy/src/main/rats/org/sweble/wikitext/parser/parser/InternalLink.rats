@@ -217,7 +217,7 @@ noinline memoized WtNode InternalLinkMemoized =
 // -- Internal link ------------------------------------------------------------
 
 noinline transient WtNode InternalLinkTransient =
-    "[[" &{ accept(ParserAtoms.INTERNAL_LINK) } yyValue:InternalLinkChoice
+    "[[" &{ accept(ParserAtoms.INTERNAL_LINK) } &{ canNest() } yyValue:InternalLinkChoice
   / "["
     {
       yyValue = nf.text("[");
@@ -234,7 +234,13 @@ inline void InlineContentStopperInternalLink =
   / &{ inScope(ParserScopes.IMAGE_LINK_TITLE)    } ( "]]" / '|' )
 ;
 
+/* Without a "]]" further down the input the link cannot be closed. Checking
+ * this first keeps unclosed openers from parsing to the end of the input
+ * again and again. enterNesting() also guards the nested title parsed by
+ * InlineContentStopperInternalLink.
+ */
 private transient stateful WtNode InternalLinkChoice =
+    &{ getState().hasDoubleClosingBracketAfter(yyStart) } &{ enterNesting() }
     rt0:pTpStar target:LinkTarget rt1:pExtSpaceStar
     {
       getState().initLinkBuilder(target);

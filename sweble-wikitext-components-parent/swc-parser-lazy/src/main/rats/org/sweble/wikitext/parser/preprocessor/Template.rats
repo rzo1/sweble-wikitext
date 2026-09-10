@@ -57,7 +57,12 @@ body
 
 // -- Article ------------------------------------------------------------------
 
+/* Without a "}}" further down the input the template cannot be closed and
+ * beyond the maximum nesting depth it must not be opened. The braces are
+ * text in both cases.
+ */
 stateful WtNode Template =
+    &{ getState().hasDoubleClosingBraceAfter(yyStart) } &{ enterNesting() }
     eol:pEol? braces:Braces1Plus
     {
       /* ALL PRODUCTIONS THAT DEPEND ON THE NUMBER OF BRANCES MUST
