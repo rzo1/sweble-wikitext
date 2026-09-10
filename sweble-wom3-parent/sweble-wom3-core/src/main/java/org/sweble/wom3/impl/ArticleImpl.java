@@ -18,11 +18,12 @@
 package org.sweble.wom3.impl;
 
 import java.io.Serializable;
+import java.util.AbstractCollection;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.ListIterator;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.sweble.wom3.Wom3Article;
 import org.sweble.wom3.Wom3Body;
@@ -45,7 +46,7 @@ public class ArticleImpl
 
 	private RedirectImpl redirect = null;
 
-	private SiblingRangeCollection<ArticleImpl, CategoryImpl> categories;
+	private SiblingRangeCollection<ArticleImpl, Backbone> categories;
 
 	private BodyImpl body;
 
@@ -57,7 +58,7 @@ public class ArticleImpl
 
 		setAttributeDirectNoChecks("version", Wom3Node.VERSION);
 
-		categories = new SiblingRangeCollection<ArticleImpl, CategoryImpl>(
+		categories = new SiblingRangeCollection<ArticleImpl, Backbone>(
 				this, new SiblingCollectionsBoundIml());
 	}
 
@@ -179,26 +180,36 @@ public class ArticleImpl
 
 	// ----------------------------------------
 
+	/**
+	 * Returns an unmodifiable view of the category nodes. Other nodes between
+	 * the redirect and the body (e.g. comments) are not part of the view.
+	 */
 	@Override
 	public Collection<Wom3Category> getCategories()
 	{
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Collection<Wom3Category> uc =
-				(Collection) Collections.unmodifiableCollection(categories);
-		return uc;
+		return new AbstractCollection<Wom3Category>()
+		{
+			@Override
+			public Iterator<Wom3Category> iterator()
+			{
+				return new CategoryIterator();
+			}
+
+			@Override
+			public int size()
+			{
+				int count = 0;
+				for (Iterator<Wom3Category> i = iterator(); i.hasNext(); i.next())
+					++count;
+				return count;
+			}
+		};
 	}
 
 	@Override
 	public boolean hasCategory(String name) throws NullPointerException
 	{
-		ListIterator<CategoryImpl> i = categories.listIterator();
-		while (i.hasNext())
-		{
-			CategoryImpl cat = i.next();
-			if (cat.getName().equals(name))
-				return true;
-		}
-		return false;
+		return findCategory(name) != null;
 	}
 
 	@Override
@@ -208,17 +219,10 @@ public class ArticleImpl
 
 		if (name == null)
 			throw new NullPointerException();
-		ListIterator<CategoryImpl> i = categories.listIterator();
-		while (i.hasNext())
-		{
-			CategoryImpl cat = i.next();
-			if (cat.getName().equals(name))
-			{
-				i.remove();
-				return cat;
-			}
-		}
-		return null;
+		CategoryImpl cat = findCategory(name);
+		if (cat != null)
+			removeChild(cat);
+		return cat;
 	}
 
 	@Override
@@ -226,18 +230,83 @@ public class ArticleImpl
 	{
 		assertWritableOnDocument();
 
-		ListIterator<CategoryImpl> i = categories.listIterator();
-		while (i.hasNext())
+		CategoryImpl last = null;
+		for (Wom3Category c : getCategories())
 		{
-			CategoryImpl cat = i.next();
-			if (cat.getName().equals(name))
-				return cat;
+			if (c.getName().equals(name))
+				return c;
+			last = (CategoryImpl) c;
 		}
+
 		CategoryImpl cat = (CategoryImpl)
 				getOwnerDocument().createElementNS(Wom3Node.WOM_NS_URI, "category");
 		cat.setName(name);
-		i.add(cat);
+
+		// Insert the new category after the last category. Other nodes (e.g.
+		// comments) may lie between the categories and the body.
+		if (last == null)
+			categories.addFirst(cat);
+		else if (last.getNextSibling() == null)
+			appendChild(cat);
+		else
+			insertBefore(cat, last.getNextSibling());
 		return cat;
+	}
+
+	private CategoryImpl findCategory(String name)
+	{
+		for (Wom3Category cat : getCategories())
+		{
+			if (cat.getName().equals(name))
+				return (CategoryImpl) cat;
+		}
+		return null;
+	}
+
+	/**
+	 * Iterates over the category nodes between the redirect and the body and
+	 * skips all other nodes.
+	 */
+	private final class CategoryIterator
+			implements
+				Iterator<Wom3Category>
+	{
+		private final Iterator<Backbone> i = categories.iterator();
+
+		private CategoryImpl next = advance();
+
+		private CategoryImpl advance()
+		{
+			while (i.hasNext())
+			{
+				Backbone n = i.next();
+				if (n instanceof CategoryImpl)
+					return (CategoryImpl) n;
+			}
+			return null;
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return next != null;
+		}
+
+		@Override
+		public Wom3Category next()
+		{
+			if (next == null)
+				throw new NoSuchElementException();
+			CategoryImpl cat = next;
+			next = advance();
+			return cat;
+		}
+
+		@Override
+		public void remove()
+		{
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	// ----------------------------------------
@@ -268,7 +337,7 @@ public class ArticleImpl
 		for (Backbone child = newNode.getFirstChild(); child != null; child = child.getNextSibling())
 			newNode.childInserted(child.getPreviousSibling(), child);
 
-		newNode.categories = new SiblingRangeCollection<ArticleImpl, CategoryImpl>(
+		newNode.categories = new SiblingRangeCollection<ArticleImpl, Backbone>(
 				newNode, newNode.new SiblingCollectionsBoundIml());
 
 		return newNode;
@@ -318,19 +387,10 @@ public class ArticleImpl
 			CategoryImpl catImpl,
 			String newName)
 	{
-		ListIterator<CategoryImpl> i = categories.listIterator();
-		while (i.hasNext())
-		{
-			CategoryImpl cat = i.next();
-			if (cat.getName().equals(newName))
-			{
-				if (cat == catImpl)
-					return;
-
-				throw new IllegalStateException(
-						"Renaming the attribute leads to name collision in parent node!");
-			}
-		}
+		CategoryImpl cat = findCategory(newName);
+		if ((cat != null) && (cat != catImpl))
+			throw new IllegalStateException(
+					"Renaming the attribute leads to name collision in parent node!");
 	}
 
 	// =========================================================================
