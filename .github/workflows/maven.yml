@@ -11,9 +11,11 @@ on:
   workflow_dispatch:
 
 # Cancel a running pull request build when new commits are pushed to it.
-# Builds of develop and tags are never cancelled.
+# Every push (develop, tags) gets a group of its own: GitHub cancels queued
+# runs of a shared group even without cancel-in-progress, which would skip
+# the builds of merged commits.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
