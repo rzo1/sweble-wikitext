@@ -17,110 +17,107 @@
 
 package org.sweble.wikitext.engine.ext.parser_functions;
 
+import static org.junit.Assert.assertEquals;
+import static org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionTimeTest.ALL;
+import static org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionTimeTest.assertFormat;
+import static org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionTimeTest.date;
+import static org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionTimeTest.expand;
+
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class ParserFunctionTimeLocalTest
 {
+	private static final TimeZone BERLIN = TimeZone.getTimeZone("Europe/Berlin");
+
+	// =========================================================================
+
+	/**
+	 * The expected values were obtained from PHP 8.3's <code>date()</code>.
+	 */
 	@Test
-	public void testFormat()
+	public void testFormatCharactersInOtherTimeZones()
 	{
-		// Tuesday, 7th March 2017, 01:02:03 AM
-		final Calendar timestamp = new GregorianCalendar(2017, Calendar.MARCH, 7, 1, 2, 3);
-		timestamp.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
-		Locale locale = Locale.GERMAN;
+		assertFormat(
+				"07|Tue|7|Tuesday|2|2|65|10|March|03|Mar|3|31|0|2017|2017|17|am|AM|1|1|01|01|02|03|"
+						+ "2017-03-07T01:02:03+01:00|Tue, 07 Mar 2017 01:02:03 +0100|1488844923|Europe/Berlin|0|+0100|+01:00|CET|3600",
+				ALL,
+				date(2017, 3, 7, 1, 2, 3, ZoneId.of("Europe/Berlin")));
 
-		String format = "h";
-		String expResult = "01";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
+		// Daylight Saving Time
+		assertFormat(
+				"07|Fri|7|Friday|5|5|187|27|July|07|Jul|7|31|0|2017|2017|17|am|AM|1|1|01|01|02|03|"
+						+ "2017-07-07T01:02:03+02:00|Fri, 07 Jul 2017 01:02:03 +0200|1499382123|Europe/Berlin|1|+0200|+02:00|CEST|7200",
+				ALL,
+				date(2017, 7, 7, 1, 2, 3, ZoneId.of("Europe/Berlin")));
 
-		// check Unix time
-		format = "U";
-		expResult = "1488848523";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
+		assertFormat(
+				"07|Tue|7|Tuesday|2|2|65|10|March|03|Mar|3|31|0|2017|2017|17|am|AM|1|1|01|01|02|03|"
+						+ "2017-03-07T01:02:03-08:00|Tue, 07 Mar 2017 01:02:03 -0800|1488877323|America/Los_Angeles|0|-0800|-08:00|PST|-28800",
+				ALL,
+				date(2017, 3, 7, 1, 2, 3, ZoneId.of("America/Los_Angeles")));
 
-		// check time zone identifier
-		format = "e";
-		expResult = "Europe/Berlin";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
+		assertFormat(
+				"07|Tue|7|Tuesday|2|2|65|10|March|03|Mar|3|31|0|2017|2017|17|am|AM|1|1|01|01|02|03|"
+						+ "2017-03-07T01:02:03+09:30|Tue, 07 Mar 2017 01:02:03 +0930|1488814323|Australia/Darwin|0|+0930|+09:30|ACST|34200",
+				ALL,
+				date(2017, 3, 7, 1, 2, 3, ZoneId.of("Australia/Darwin")));
+	}
 
-		// check if Daylight Saving Time is currently used
-		format = "I";
-		expResult = "0";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-		Calendar activeDst = new GregorianCalendar(2017, Calendar.JULY, 7, 1, 2, 3);
-		activeDst.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
-		expResult = "1";
-		assertEquals(expResult, ParserFunctionTime.format(format, activeDst, locale));
+	@Test
+	public void testFormatCalendar()
+	{
+		Calendar timestamp = new GregorianCalendar(BERLIN);
+		timestamp.clear();
+		timestamp.set(2017, Calendar.MARCH, 7, 1, 2, 3);
 
-		format = "O";
-		expResult = "+0100";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
+		assertEquals(
+				"2017-03-07T01:02:03+01:00 1488844923 Europe/Berlin CET",
+				ParserFunctionTime.format("c U e T", timestamp, Locale.ENGLISH));
+	}
 
-		format = "P";
-		expResult = "+01:00";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
+	// =========================================================================
 
-		// check time zone offset in seconds
-		format = "Z";
-		expResult = "3600";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
+	@Test
+	public void testTimelUsesTimeZoneOfWiki() throws Exception
+	{
+		// dates without time zone are UTC, like in MediaWiki
+		assertEquals("14:05 CET", expand("{{#timel: H:i T|2021-03-04 13:05}}", BERLIN));
+		assertEquals("15:05 1", expand("{{#timel: H:i I|2021-07-04 13:05}}", BERLIN));
+		assertEquals("1970-01-01T01:00:00+01:00", expand("{{#timel: c|@0}}", BERLIN));
+		assertEquals(
+				"2021-03-03 19:00 PST",
+				expand("{{#timel: Y-m-d H:i T|2021-03-04 03:00}}", TimeZone.getTimeZone("America/Los_Angeles")));
+	}
 
-		// check time zone abbreviation
-		format = "T";
-		expResult = "Europe/Berlin";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
+	@Test
+	public void testTimelUsesCurrentTimeWithoutDate() throws Exception
+	{
+		assertEquals(
+				"2021-03-10 15:25:13 Europe/Berlin",
+				expand("{{#timel: Y-m-d H:i:s e}}", BERLIN));
+		assertEquals(
+				"2021-03-10 14:25:13 UTC",
+				expand("{{#timel: Y-m-d H:i:s e}}", TimeZone.getTimeZone("UTC")));
+	}
 
-		timestamp.setTimeZone(TimeZone.getTimeZone("PST")); // UTC-08:00
-		locale = Locale.US;
+	@Test
+	public void testTimelSupportsRelativeDatesAndLanguage() throws Exception
+	{
+		assertEquals("2021-03-09", expand("{{#timel: Y-m-d|-1 day}}", BERLIN));
+		assertEquals("Freitag", expand("{{#timel: l|2017-11-24|de}}", BERLIN));
+	}
 
-		// check time zone identifier
-		format = "e";
-		expResult = "PST";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-
-		// check if Daylight Saving Time is currently used
-		format = "I";
-		expResult = "0";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-		activeDst = new GregorianCalendar(2017, Calendar.JULY, 7, 1, 2, 3);
-		activeDst.setTimeZone(TimeZone.getTimeZone("PST"));
-		expResult = "1";
-		assertEquals(expResult, ParserFunctionTime.format(format, activeDst, locale));
-
-		format = "O";
-		expResult = "-0800";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-
-		format = "P";
-		expResult = "-08:00";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-
-		// check time zone offset in seconds
-		format = "Z";
-		expResult = "-28800";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-
-		// test also with Australian Central Standard Time
-		timestamp.setTimeZone(TimeZone.getTimeZone("ACT")); // UTC+09:30
-		format = "P";
-		expResult = "+09:30";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-
-		format = "O";
-		expResult = "+0930";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-
-		format = "P";
-		expResult = "+09:30";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
-
-		format = "Z";
-		expResult = "34200";
-		assertEquals(expResult, ParserFunctionTime.format(format, timestamp, locale));
+	@Test
+	public void testTimelInvalidTime() throws Exception
+	{
+		assertEquals(
+				"<strong class=\"error\">Error: Invalid time.</strong>",
+				expand("{{#timel: Y|foo}}", BERLIN));
 	}
 }
