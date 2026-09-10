@@ -42,6 +42,13 @@ import org.sweble.wikitext.parser.nodes.WtImStartTag;
 import org.sweble.wikitext.parser.nodes.WtImageLink;
 import org.sweble.wikitext.parser.nodes.WtInternalLink;
 import org.sweble.wikitext.parser.nodes.WtItalics;
+import org.sweble.wikitext.parser.nodes.WtLctFlags;
+import org.sweble.wikitext.parser.nodes.WtLctRule;
+import org.sweble.wikitext.parser.nodes.WtLctRuleConv;
+import org.sweble.wikitext.parser.nodes.WtLctRuleGarbage;
+import org.sweble.wikitext.parser.nodes.WtLctRuleText;
+import org.sweble.wikitext.parser.nodes.WtLctRules;
+import org.sweble.wikitext.parser.nodes.WtLctVarConv;
 import org.sweble.wikitext.parser.nodes.WtLinkOptionAltText;
 import org.sweble.wikitext.parser.nodes.WtLinkOptionGarbage;
 import org.sweble.wikitext.parser.nodes.WtLinkOptionKeyword;
@@ -123,7 +130,7 @@ public class SafeLinkTitlePrinter
 	@Override
 	public void visit(EngNowiki n)
 	{
-		p.print(esc(n.getContent(), true));
+		printNowiki(n.getContent());
 	}
 
 	@Override
@@ -231,6 +238,12 @@ public class SafeLinkTitlePrinter
 
 	public void visit(WtInternalLink n)
 	{
+		if (!n.getTarget().isResolved())
+		{
+			printAsWikitext(n);
+			return;
+		}
+
 		String linkTarget = n.getTarget().getAsString();
 		PageTitle target;
 		try
@@ -242,8 +255,10 @@ public class SafeLinkTitlePrinter
 			throw new VisitingException(e);
 		}
 
-		// Like the HtmlRenderer hide category links
-		if (target.getNamespace() == wikiConfig.getNamespace("Category"))
+		// Like the HtmlRenderer hide category links. A leading colon turns a
+		// category link into a normal link.
+		if (target.getNamespace() == wikiConfig.getNamespace("Category")
+				&& !target.hasInitialColon())
 			return;
 
 		// Print the text of the link as it is rendered: The target as written
@@ -265,6 +280,44 @@ public class SafeLinkTitlePrinter
 	public void visit(WtItalics n)
 	{
 		iterate(n);
+	}
+
+	// Language conversion markup: Like the HtmlRenderer print the text
+	// without conversion into a variant. Flags and rules produce no output.
+
+	public void visit(WtLctVarConv n)
+	{
+		dispatch(n.getText());
+	}
+
+	public void visit(WtLctRuleConv n)
+	{
+		// Rules only convert text into a variant
+	}
+
+	public void visit(WtLctFlags n)
+	{
+		// Produce no output
+	}
+
+	public void visit(WtLctRules n)
+	{
+		// Produce no output
+	}
+
+	public void visit(WtLctRule n)
+	{
+		// Produce no output
+	}
+
+	public void visit(WtLctRuleText n)
+	{
+		// Produce no output
+	}
+
+	public void visit(WtLctRuleGarbage n)
+	{
+		// Produce no output
 	}
 
 	@Override
@@ -450,7 +503,25 @@ public class SafeLinkTitlePrinter
 
 	public void visit(WtTagExtension n)
 	{
-		printAsWikitext(n);
+		// Like the HtmlRenderer print the text of the tag extension without
+		// interpreting it. Hidden tag extensions don't contribute any text.
+		if (isHiddenTagExtension(n))
+			return;
+
+		String name = getTagExtensionName(n);
+		String content = StringTools.collapseWhitespace(n.getBody().getContent());
+		if (name.equals("pre"))
+		{
+			printNowiki(NOWIKI_TAGS.matcher(content).replaceAll("$1"));
+		}
+		else if (name.equals("nowiki"))
+		{
+			printNowiki(content);
+		}
+		else
+		{
+			p.print(esc(content, true));
+		}
 	}
 
 	@Override
@@ -583,9 +654,22 @@ public class SafeLinkTitlePrinter
 
 	// =========================================================================
 
+	/**
+	 * Like the HtmlRenderer print markup which was not expanded or resolved
+	 * (e.g. a template or a template parameter) as text.
+	 */
 	private void printAsWikitext(WtNode n)
 	{
-		p.indentAtBol(esc(WtRtDataPrinter.print(n)));
+		p.print(esc(StringTools.collapseWhitespace(toWikitext(n)), true));
+	}
+
+	/**
+	 * Like the HtmlRenderer keep valid character references in the content of
+	 * {@code <nowiki>} and {@code <pre>}.
+	 */
+	private void printNowiki(String content)
+	{
+		p.print(HtmlSanitizer.escapeAttributeKeepingValidCharRefs(content, wikiConfig.getParserConfig()));
 	}
 
 	// =====================================================================

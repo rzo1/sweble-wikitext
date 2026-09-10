@@ -16,8 +16,11 @@
  */
 package org.sweble.wikitext.engine.output;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.sweble.wikitext.engine.PageId;
@@ -306,6 +309,123 @@ public class HtmlRendererMediaWikiOutputTest
 	}
 
 	// =========================================================================
+	// Block output of tag extensions (issue #136)
+
+	@Test
+	public void testBlockTagExtensionsCloseParagraph() throws Exception
+	{
+		assertInOrder(render("a <syntaxhighlight lang=\"java\">int x;</syntaxhighlight> b"),
+				"<p>", "a", "</p>", "<pre class=\"mw-highlight lang-java\">int x;</pre>", "<p>", "b", "</p>");
+		assertInOrder(render("a <poem>\nx\ny\n</poem> b"),
+				"<p>", "a", "</p>", "<div class=\"poem\">x<br />", "</div>", "<p>", "b", "</p>");
+		assertInOrder(render("a <gallery>\nFile:X.png\n</gallery> b"),
+				"<p>", "a", "</p>", "<div class=\"mw-ext-gallery\">", "</div>", "<p>", "b", "</p>");
+	}
+
+	@Test
+	public void testBlockTagExtensionAloneIsNotWrappedInParagraph() throws Exception
+	{
+		String html = render("<poem>x</poem>");
+
+		assertContains(html, "<div class=\"poem\">x</div>");
+		assertNotContains(html, "<p>");
+	}
+
+	@Test
+	public void testInlineTagExtensionsStayInParagraph() throws Exception
+	{
+		String html = render("a <syntaxhighlight lang=\"x\" inline>y</syntaxhighlight> <math>z</math> b");
+
+		assertInOrder(html,
+				"<p>", "a", "<code class=\"mw-highlight lang-x\">y</code>", "<span class=\"mw-ext-math\">z</span>", "b", "</p>");
+		assertEquals(html, 1, html.split("<p>", -1).length - 1);
+	}
+
+	// =========================================================================
+	// Unexpanded templates and parameters (issue #136)
+
+	@Test
+	public void testUnexpandedTemplatesAndParametersAreShownAsText() throws Exception
+	{
+		assertContains(render("a {{foo|b=c}} d {{{1|x}}} e"), "a {{foo|b=c}} d {{{1|x}}} e");
+	}
+
+	@Test
+	public void testUnexpandedTemplatesAreEscaped() throws Exception
+	{
+		String html = render("{{foo|<b>x</b>|\"&\"}}");
+
+		assertContains(html, "{{foo|&lt;b&gt;x&lt;/b&gt;|&quot;&amp;&quot;}}");
+		assertNotContains(html, "<b>");
+	}
+
+	@Test
+	public void testUnexpandedTemplateInAttributeValue() throws Exception
+	{
+		assertContains(render("<span title=\"a {{x}}\">y</span>"), "<span title=\"a {{x}}\">y</span>");
+	}
+
+	// =========================================================================
+	// Void elements (issue #136)
+
+	@Test
+	public void testMetaAndLinkDoNotWrapFollowingContent() throws Exception
+	{
+		String meta = render("<meta itemprop=\"a\" content=\"b\">text");
+		String link = render("<link itemprop=\"a\" href=\"http://e.com/\">text");
+
+		assertContains(meta, "<meta itemprop=\"a\" content=\"b\" />text");
+		assertNotContains(meta, "</meta>");
+		assertContains(link, "<link itemprop=\"a\" href=\"http://e.com/\" />text");
+		assertNotContains(link, "</link>");
+	}
+
+	// =========================================================================
+	// Empty paragraphs (issue #136)
+
+	@Test
+	public void testNoEmptyParagraphs() throws Exception
+	{
+		String[] inputs = {
+				"a\n\n<div>x</div>\n\nb",
+				"[[Category:X]]\n\ntext",
+				"__NOTOC__\n\ntext",
+				"<templatestyles src=\"x\"/>\n\ntext",
+				"<!-- c -->\n\ntext",
+				"a\n<pre>x</pre>\n\n<pre>y</pre>\nb",
+		};
+
+		for (String input : inputs)
+		{
+			String html = render(input);
+			assertFalse(html, EMPTY_PARAGRAPH.matcher(html).find());
+			assertContains(html, "<p>");
+		}
+	}
+
+	// =========================================================================
+	// Title of frameless images (issue #136)
+
+	@Test
+	public void testFramelessImageGetsCaptionAsTitle() throws Exception
+	{
+		// Like MediaWiki's Linker::makeImageLink()
+		assertContains(render("[[File:X.png|frameless|Cap]]"),
+				"<a href=\"/wiki/File:X.png\" class=\"image\" title=\"Cap\"><img alt=\"Cap\" ");
+		assertContains(render("[[File:X.png|frameless|link=Main Page]]"),
+				"<a href=\"/wiki/Main_Page\" title=\"Main Page\">");
+	}
+
+	@Test
+	public void testFramelessImageWithoutCaptionHasNoTitle() throws Exception
+	{
+		assertContains(render("[[File:X.png|frameless]]"),
+				"<a href=\"/wiki/File:X.png\" class=\"image\"><img alt=\"\" ");
+	}
+
+	// =========================================================================
+
+	private static final Pattern EMPTY_PARAGRAPH = Pattern.compile("<p>\\s*</p>");
 
 	private static void assertInOrder(String html, String... parts)
 	{

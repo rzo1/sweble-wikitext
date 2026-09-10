@@ -530,7 +530,39 @@ public final class HtmlSanitizer
 		return escapeKeepingCharRefs(text, false);
 	}
 
+	/**
+	 * Like {@link #escapeTextKeepingCharRefs(String)} but only valid character
+	 * references are kept: Numeric references to code points that may be
+	 * written to the output (see {@link #isValidCharReference(long)}) and
+	 * known named references. Named references which are not in the small
+	 * built-in set are looked up with the given resolver (if any). All other
+	 * references are escaped like normal text.
+	 */
+	public static String escapeTextKeepingValidCharRefs(String text, XmlEntityResolver resolver)
+	{
+		return escapeKeepingCharRefs(text, false, true, resolver);
+	}
+
+	/**
+	 * Like {@link #escapeAttributeKeepingCharRefs(String)} but only valid
+	 * character references are kept (see
+	 * {@link #escapeTextKeepingValidCharRefs(String, XmlEntityResolver)}).
+	 */
+	public static String escapeAttributeKeepingValidCharRefs(String text, XmlEntityResolver resolver)
+	{
+		return escapeKeepingCharRefs(text, true, true, resolver);
+	}
+
 	private static String escapeKeepingCharRefs(String text, boolean forAttribute)
+	{
+		return escapeKeepingCharRefs(text, forAttribute, false, null);
+	}
+
+	private static String escapeKeepingCharRefs(
+			String text,
+			boolean forAttribute,
+			boolean validOnly,
+			XmlEntityResolver resolver)
 	{
 		if (text == null)
 			return "";
@@ -541,11 +573,35 @@ public final class HtmlSanitizer
 		while (m.find())
 		{
 			b.append(escape(text.substring(last, m.start()), forAttribute));
-			b.append(m.group());
+			if (!validOnly || isValidCharReference(m, resolver))
+				b.append(m.group());
+			else
+				b.append(escape(m.group(), forAttribute));
 			last = m.end();
 		}
 		b.append(escape(text.substring(last), forAttribute));
 		return b.toString();
+	}
+
+	/**
+	 * Whether the character reference found by the given {@link #CHAR_REF}
+	 * matcher may be written to the output.
+	 */
+	private static boolean isValidCharReference(Matcher m, XmlEntityResolver resolver)
+	{
+		if (m.group(1) != null)
+		{
+			return NAMED_CHAR_REFS.containsKey(m.group(1))
+					|| (resolver != null && resolver.resolveXmlEntity(m.group(1)) != null);
+		}
+		else if (m.group(2) != null)
+		{
+			return isValidCharReference(parseCodePoint(m.group(2), 10));
+		}
+		else
+		{
+			return isValidCharReference(parseCodePoint(m.group(3), 16));
+		}
 	}
 
 	private static String escape(String text, boolean forAttribute)
