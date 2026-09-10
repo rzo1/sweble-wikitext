@@ -17,7 +17,11 @@
 
 package org.sweble.wikitext.engine.ext.convert;
 
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The following SI Units are used as scale base for conversions.
@@ -215,7 +219,7 @@ public enum Units
 	SHORT_HUNDREDWEIGHT(UnitType.MASS, 45.359237, "short\u00A0cwt", "short hundredweight", DefCvt.LB_KG, new String[]{"short cwt"}, null, null),
 	LONG_QUARTER(UnitType.MASS, 12.70058636, "long\u00A0qtr", "long quarter", DefCvt.LB_KG, new String[]	{"long qtr"}, null, null),
 	SHORT_QUARTER(UnitType.MASS, 11.33980925, "short\u00A0qtr", "short quarter", DefCvt.LB_KG, new String[]{"short qtr"}, null, null),
-	STONE(UnitType.MASS, 6.35029318, "st", "stone", DefCvt.LB_KG),
+	STONE(UnitType.MASS, 6.35029318, "st", "stone", DefCvt.LB_KG, null, "stone", null),
 	POUND(UnitType.MASS, 0.45359237, "lb", "pound", DefCvt.KG),
 	OUNCE(UnitType.MASS, 0.028349523125, "oz", "ounce", DefCvt.G),
 	DRACHM(UnitType.MASS, 0.001771845195, "drachm", "drachm", DefCvt.G, new String[]{"dram"}, null, null),
@@ -225,12 +229,49 @@ public enum Units
 	PENNYWEIGHT(UnitType.MASS, 0.00155517384, "dwt", "pennyweight", DefCvt.OZ_G),
 	CARAT(UnitType.MASS, 0.0002, "carat", "carat", DefCvt.G),
 
+	// power: https://en.wikipedia.org/wiki/Template:Convert/list_of_units/power
+	WATT(UnitType.POWER, 1d, "W", "watt", DefCvt.HP, new String[]{"W"}),
+	KILOWATT(UnitType.POWER, 1000d, "kW", "kilowatt", DefCvt.HP, new String[]{"kW"}),
+	MEGAWATT(UnitType.POWER, 1e6, "MW", "megawatt", DefCvt.HP, new String[]{"MW"}),
+	HORSEPOWER(UnitType.POWER, 745.69987158227022, "hp", "horsepower", DefCvt.KW, new String[]{"hp"}, "horsepower", null),
+
+	// pressure: https://en.wikipedia.org/wiki/Template:Convert/list_of_units/pressure
+	PASCAL(UnitType.PRESSURE, 1d, "Pa", "pascal", DefCvt.PSI, new String[]{"Pa"}),
+	HECTOPASCAL(UnitType.PRESSURE, 100d, "hPa", "hectopascal", DefCvt.PSI, new String[]{"hPa"}),
+	KILOPASCAL(UnitType.PRESSURE, 1000d, "kPa", "kilopascal", DefCvt.PSI, new String[]{"kPa"}),
+	MEGAPASCAL(UnitType.PRESSURE, 1e6, "MPa", "megapascal", DefCvt.PSI, new String[]{"MPa"}),
+	BAR(UnitType.PRESSURE, 100000d, "bar", "bar", DefCvt.KPA),
+	POUND_PER_SQUARE_INCH(UnitType.PRESSURE, 6894.7572931683608, "psi", "pound per square inch", DefCvt.KPA, new String[]{"psi"}, "pounds per square inch", null),
+	STANDARD_ATMOSPHERE(UnitType.PRESSURE, 101325d, "atm", "standard atmosphere", DefCvt.KPA, new String[]{"atm"}),
+	MILLIMETRE_OF_MERCURY(UnitType.PRESSURE, 133.322387415, "mmHg", "millimetre of mercury", DefCvt.KPA, new String[]{"mmHg"}, "millimetres of mercury", "millimeter of mercury"),
+	INCH_OF_MERCURY(UnitType.PRESSURE, 3386.388640341, "inHg", "inch of mercury", DefCvt.KPA, new String[]{"inHg"}, "inches of mercury", null),
+
+	// speed: https://en.wikipedia.org/wiki/Template:Convert/list_of_units/speed
+	KILOMETRE_PER_HOUR(UnitType.SPEED, 0.27777777777777779, "km/h", "kilometre per hour", DefCvt.MPH, new String[]{"km/h", "kph"}, "kilometres per hour", "kilometer per hour"),
+	MILE_PER_HOUR(UnitType.SPEED, 0.44704, "mph", "mile per hour", DefCvt.KM_PER_H, new String[]{"mph"}, "miles per hour", null),
+	METRE_PER_SECOND(UnitType.SPEED, 1d, "m/s", "metre per second", DefCvt.FT_PER_S, new String[]{"m/s"}, "metres per second", "meter per second"),
+	FOOT_PER_SECOND(UnitType.SPEED, 0.3048, "ft/s", "foot per second", DefCvt.M_PER_S, new String[]{"ft/s"}, "feet per second", null),
+	KNOT(UnitType.SPEED, 0.51444444444444448, "kn", "knot", DefCvt.KM_PER_H_MPH, new String[]{"kn"}),
+
 	// temperature
 	DEGREE_CELSIUS(UnitType.TEMPERATURE, 1d, -273.15, "°C", true, "degree Celsius", DefCvt.F, new String[]{"C", "Celsius", "°C"}, "degrees Celsius", null),
 	DEGREE_FAHRENHEIT(UnitType.TEMPERATURE, 0.55555555555555558, 32d - 273.15 * (9d / 5d), "°F", true, "degree Fahrenheit", DefCvt.C, new String[]{"F", "°F"}, "degrees Fahrenheit", null),
 	KELVIN(UnitType.TEMPERATURE, 1d, 0d, "K", true, "kelvin", DefCvt.C_F, new String[]{"K"}, null, null),
 	KILOELECTRONVOLT(UnitType.TEMPERATURE, 11.604505e6, "keV", "kiloelectronvolt", DefCvt.MK, new String[]{"keVT"}),
 	DEGREE_RANKINE(UnitType.TEMPERATURE, 0.55555555555555558, 0d, "°R", true, "degree Rankine", DefCvt.K_F_C, new String[]{"R", "°R"}, "degrees Rankine", null),
+
+	// volume: https://en.wikipedia.org/wiki/Template:Convert/list_of_units/volume
+	CUBIC_METRE(UnitType.VOLUME, 1d, "m³", "cubic metre", DefCvt.CUFT, new String[]{"m3", "m³"}, null, "cubic meter"),
+	CUBIC_CENTIMETRE(UnitType.VOLUME, 1e-6, "cm³", "cubic centimetre", DefCvt.CUIN, new String[]{"cm3", "cm³"}, null, "cubic centimeter"),
+	LITRE(UnitType.VOLUME, 0.001, "L", "litre", DefCvt.IMPGAL_USGAL, new String[]{"L", "l"}, null, "liter"),
+	MILLILITRE(UnitType.VOLUME, 1e-6, "ml", "millilitre", DefCvt.IMPOZ_USOZ, new String[]{"ml"}, null, "milliliter"),
+	MILLILITRE2(UnitType.VOLUME, 1e-6, "mL", "millilitre", DefCvt.IMPOZ_USOZ, new String[]{"mL"}, null, "milliliter"),
+	CUBIC_FOOT(UnitType.VOLUME, 0.028316846592, "cu\u00A0ft", "cubic foot", DefCvt.M3, new String[]{"cuft", "ft3"}, "cubic feet", null),
+	CUBIC_INCH(UnitType.VOLUME, 0.000016387064, "cu\u00A0in", "cubic inch", DefCvt.CM3, new String[]{"cuin", "in3"}, "cubic inches", null),
+	IMPERIAL_GALLON(UnitType.VOLUME, 0.00454609, "imp\u00A0gal", "imperial gallon", DefCvt.L_USGAL, new String[]{"impgal"}),
+	US_GALLON(UnitType.VOLUME, 0.003785411784, "US\u00A0gal", "US gallon", DefCvt.L_IMPGAL, new String[]{"USgal", "usgal"}, null, "U.S. gallon"),
+	IMPERIAL_FLUID_OUNCE(UnitType.VOLUME, 0.0000284130625, "imp\u00A0fl\u00A0oz", "imperial fluid ounce", DefCvt.ML_USOZ, new String[]{"impoz"}),
+	US_FLUID_OUNCE(UnitType.VOLUME, 0.0000295735295625, "US\u00A0fl\u00A0oz", "US fluid ounce", DefCvt.ML, new String[]{"USoz", "usoz"}, null, "U.S. fluid ounce"),
 	;
 
 	private final UnitType type; /// The type of the unit (e.g. length, mass, etc.)
@@ -278,6 +319,118 @@ public enum Units
 				}
 			}
 		}
+
+		// Plural names (e.g. "feet"). Symbols of other units take precedence.
+		final Set<String> symbols = new HashSet<String>();
+		for (final Units unit : Units.values())
+		{
+			symbols.add(unit.symbol);
+		}
+		for (final Units unit : Units.values())
+		{
+			for (final String plural : new String[]{
+					unit.getUnitName(true, false),
+					unit.getUnitName(true, true)})
+			{
+				if (!symbols.contains(plural) && !NAME_CODE_MAP.containsKey(plural))
+				{
+					NAME_CODE_MAP.put(plural, unit);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Wikipedia articles which are linked with the "lk=on" option. If a unit is
+	 * not contained, its name is used as link target (like Module:Convert).
+	 */
+	private static final Map<Units, String> LINKS = new EnumMap<Units, String>(Units.class);
+
+	/** Symbols used with the "sp=us" option (if different). */
+	private static final Map<Units, String> US_SYMBOLS = new EnumMap<Units, String>(Units.class);
+
+	/**
+	 * Allowed subdivisions of a unit for multi-unit input like
+	 * {{convert|5|ft|6|in}}, with the number of subdivisions per unit.
+	 */
+	private static final Map<Units, Map<Units, Integer>> SUBDIVISIONS =
+			new EnumMap<Units, Map<Units, Integer>>(Units.class);
+
+	/** Default output units for multi-unit input. */
+	private static final Map<Units, DefCvt> SUBDIVISION_DEFAULTS =
+			new EnumMap<Units, DefCvt>(Units.class);
+
+	static
+	{
+		// see https://en.wikipedia.org/wiki/Module:Convert/data
+		LINKS.put(METRE, "Metre");
+		LINKS.put(KILOMETRE, "Kilometre");
+		LINKS.put(HECTOMETRE, "Hectometre");
+		LINKS.put(DECAMETRE, "Decametre");
+		LINKS.put(MEAGAMETRE, "Megametre");
+		LINKS.put(DECIMETRE, "Decimetre");
+		LINKS.put(CENTIMETRE, "Centimetre");
+		LINKS.put(MILLIMETRE, "Millimetre");
+		LINKS.put(MICROMETRE, "Micrometre");
+		LINKS.put(NANOMETRE, "Nanometre");
+		LINKS.put(FOOT, "Foot (unit)");
+		LINKS.put(CHAIN, "Chain (unit)");
+		LINKS.put(HAND, "Hand (unit)");
+		LINKS.put(SQUARE_KILOMETRE, "Square kilometre");
+		LINKS.put(SQUARE_METRE, "Square metre");
+		LINKS.put(SQUARE_DECIMETRE, "Square decimetre");
+		LINKS.put(SQUARE_CENTIMETRE, "Square centimetre");
+		LINKS.put(SQUARE_MILLIMETRE, "Square millimetre");
+		LINKS.put(KILOGRAM, "Kilogram");
+		LINKS.put(GRAM, "Gram");
+		LINKS.put(POUND, "Pound (mass)");
+		LINKS.put(STONE, "Stone (unit)");
+		LINKS.put(DEGREE_CELSIUS, "Celsius");
+		LINKS.put(DEGREE_FAHRENHEIT, "Fahrenheit");
+		LINKS.put(KELVIN, "Kelvin");
+		LINKS.put(WATT, "Watt");
+		LINKS.put(KILOWATT, "Watt");
+		LINKS.put(MEGAWATT, "Watt");
+		LINKS.put(PASCAL, "Pascal (unit)");
+		LINKS.put(HECTOPASCAL, "Pascal (unit)");
+		LINKS.put(KILOPASCAL, "Pascal (unit)");
+		LINKS.put(MEGAPASCAL, "Pascal (unit)");
+		LINKS.put(BAR, "Bar (unit)");
+		LINKS.put(STANDARD_ATMOSPHERE, "Atmosphere (unit)");
+		LINKS.put(KILOMETRE_PER_HOUR, "Kilometres per hour");
+		LINKS.put(MILE_PER_HOUR, "Miles per hour");
+		LINKS.put(FOOT_PER_SECOND, "Feet per second");
+		LINKS.put(KNOT, "Knot (unit)");
+		LINKS.put(CUBIC_METRE, "Cubic metre");
+		LINKS.put(LITRE, "Litre");
+		LINKS.put(MILLILITRE, "Litre");
+		LINKS.put(MILLILITRE2, "Litre");
+
+		US_SYMBOLS.put(US_GALLON, "U.S.\u00A0gal");
+		US_SYMBOLS.put(US_FLUID_OUNCE, "U.S.\u00A0fl\u00A0oz");
+
+		addSubdivision(FOOT, INCH, 12, DefCvt.M);
+		addSubdivision(YHARD, FOOT, 3, DefCvt.M);
+		addSubdivision(CHAIN, FOOT, 66, DefCvt.M);
+		addSubdivision(CHAIN, YHARD, 22, DefCvt.M);
+		addSubdivision(MILE, CHAIN, 80, DefCvt.KM);
+		addSubdivision(MILE, FOOT, 5280, DefCvt.KM);
+		addSubdivision(MILE, FURLONG, 8, DefCvt.KM);
+		addSubdivision(MILE, YHARD, 1760, DefCvt.KM);
+		addSubdivision(STONE, POUND, 14, DefCvt.KG_LB);
+		addSubdivision(POUND, OUNCE, 16, DefCvt.KG);
+	}
+
+	private static void addSubdivision(Units unit, Units subunit, int count, DefCvt defCvt)
+	{
+		Map<Units, Integer> subdivisions = SUBDIVISIONS.get(unit);
+		if (subdivisions == null)
+		{
+			subdivisions = new EnumMap<Units, Integer>(Units.class);
+			SUBDIVISIONS.put(unit, subdivisions);
+		}
+		subdivisions.put(subunit, count);
+		SUBDIVISION_DEFAULTS.put(unit, defCvt);
 	}
 
 	private Units(
@@ -429,13 +582,132 @@ public enum Units
 	}
 
 	/**
+	 * Gets the name of the unit, even if the symbol is used as primary
+	 * descriptor (e.g. "degrees Celsius").
+	 *
+	 * @param plural Whether the plural form is wanted.
+	 * @param usSpelling Whether the U.S. spelling is wanted (e.g. "meters"
+	 * instead of "metres").
+	 * @return The name of the unit.
+	 */
+	final String getUnitName(boolean plural, boolean usSpelling)
+	{
+		if (usSpelling && usName != null)
+		{
+			if (!plural)
+			{
+				return usName;
+			}
+			if (this.plural == null)
+			{
+				return usName + "s";
+			}
+			return this.plural.replace("metre", "meter").replace("litre", "liter");
+		}
+
+		if (!plural)
+		{
+			return name;
+		}
+		return (this.plural == null) ? name + "s" : this.plural;
+	}
+
+	/**
+	 * @param usSpelling Whether the U.S. variant of the symbol is wanted (e.g.
+	 * "U.S. gal" instead of "US gal").
+	 * @return The symbol of the unit.
+	 */
+	final String getSymbol(boolean usSpelling)
+	{
+		String usSymbol = usSpelling ? US_SYMBOLS.get(this) : null;
+		return (usSymbol != null) ? usSymbol : symbol;
+	}
+
+	/**
+	 * @return True if the symbol is used even for the input unit when no
+	 * abbreviation option was given (e.g. "37 °C").
+	 */
+	final boolean isSymbolPreferred()
+	{
+		return isSymbolDesc;
+	}
+
+	/**
+	 * @return The title of the Wikipedia article about the unit.
+	 */
+	final String getLink()
+	{
+		String link = LINKS.get(this);
+		return (link != null) ? link : name;
+	}
+
+	/**
+	 * @return True for the temperature scales Celsius, Fahrenheit, Kelvin and
+	 * Rankine, which are converted with an offset.
+	 */
+	final boolean isTemperature()
+	{
+		return type == UnitType.TEMPERATURE && this != KILOELECTRONVOLT;
+	}
+
+	/**
+	 * @return True if a conversion to this unit uses more precision when the
+	 * input value is an integer ("integer_more_precision" in Module:Convert).
+	 */
+	final boolean hasIntegerMorePrecision()
+	{
+		return this == FOOT || this == POUND;
+	}
+
+	/**
+	 * @return True if a conversion from a multi-unit input which ends with this
+	 * unit uses more precision ("subunit_more_precision" in Module:Convert).
+	 */
+	final boolean hasSubunitMorePrecision()
+	{
+		return this == INCH;
+	}
+
+	/**
+	 * @param subunit The following unit of a multi-unit input.
+	 * @return The number of subunits per unit (e.g. 12 inches per foot) or 0 if
+	 * the given unit is no subdivision of this unit.
+	 */
+	final int getSubdivisions(Units subunit)
+	{
+		Map<Units, Integer> subdivisions = SUBDIVISIONS.get(this);
+		Integer count = (subdivisions != null) ? subdivisions.get(subunit) : null;
+		return (count != null) ? count : 0;
+	}
+
+	/**
+	 * @return The default output units of a multi-unit input starting with
+	 * this unit.
+	 */
+	final DefCvt getSubdivisionDefaultCvt()
+	{
+		DefCvt defCvt = SUBDIVISION_DEFAULTS.get(this);
+		return (defCvt != null) ? defCvt : defaultConv;
+	}
+
+	/**
+	 * @return The kind of quantity (e.g. "length").
+	 */
+	final String getTypeName()
+	{
+		return type.name().toLowerCase().replace('_', ' ');
+	}
+
+	/**
 	 * Searches the Unit according to the given name.
 	 *
-	 * @param name The official name, symbol or alternating code for the Unit.
+	 * @param code The official name, symbol or alternating code for the Unit.
 	 * @return The Unit corresponding to the name or null if no match was found.
 	 */
-	public static Units searchUnitFromName(final String name)
+	public static Units searchUnitFromName(final String code)
 	{
+		// like Module:Convert, "board_feet" or "admiralty&nbsp;nmi" are accepted
+		final String name = code.replace('_', ' ').replace("&nbsp;", " ").replaceAll("  +", " ");
 		if(NAME_CODE_MAP.containsKey(name))
 		{
 			return NAME_CODE_MAP.get(name);
@@ -476,6 +748,10 @@ public enum Units
 		ENERGY,
 		LENGTH,
 		MASS,
+		POWER,
+		PRESSURE,
+		SPEED,
 		TEMPERATURE,
+		VOLUME,
 	}
 }
