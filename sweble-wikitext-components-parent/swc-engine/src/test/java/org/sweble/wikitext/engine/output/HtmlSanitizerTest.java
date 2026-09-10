@@ -28,6 +28,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import de.fau.cs.osr.utils.XmlEntityResolver;
+
 public class HtmlSanitizerTest
 {
 	private static final String INSECURE = HtmlSanitizer.INSECURE_CSS_REPLACEMENT;
@@ -199,5 +201,55 @@ public class HtmlSanitizerTest
 				"a&amp;b&amp;c&#34;&#x3C;\"&lt;&gt;'",
 				HtmlSanitizer.escapeTextKeepingCharRefs("a&amp;b&c&#34;&#x3C;\"<>'"));
 		assertEquals("", HtmlSanitizer.escapeTextKeepingCharRefs(null));
+	}
+
+	@Test
+	public void testDecodeCharReferencesWithResolver()
+	{
+		XmlEntityResolver resolver = new XmlEntityResolver()
+		{
+			@Override
+			public String resolveXmlEntity(String name)
+			{
+				return name.equals("eacute") ? "é" : null;
+			}
+		};
+
+		assertEquals(
+				"café &amp; &unknown; A",
+				HtmlSanitizer.decodeCharReferences("caf&eacute; &amp;amp; &unknown; &#65;", resolver));
+		assertEquals("&eacute;", HtmlSanitizer.decodeCharReferences("&eacute;"));
+	}
+
+	@Test
+	public void testEscapeIdForAttribute()
+	{
+		assertEquals("Foo_bar", HtmlSanitizer.escapeIdForAttribute("Foo bar"));
+		assertEquals("a_b_c_d_e", HtmlSanitizer.escapeIdForAttribute("a\tb\nc\fd\re"));
+		assertEquals("a%41&<\"", HtmlSanitizer.escapeIdForAttribute("a%41&<\""));
+		assertEquals("Über_日本", HtmlSanitizer.escapeIdForAttribute("Über 日本"));
+	}
+
+	@Test
+	public void testEscapeIdForAttributeTruncatesLongIds()
+	{
+		StringBuilder ascii = new StringBuilder();
+		StringBuilder supplementary = new StringBuilder();
+		for (int i = 0; i < 1100; ++i)
+		{
+			ascii.append('x');
+			supplementary.append("𝄞");
+		}
+
+		assertEquals(1024, HtmlSanitizer.escapeIdForAttribute(ascii.toString()).length());
+		assertEquals(2048, HtmlSanitizer.escapeIdForAttribute(supplementary.toString()).length());
+	}
+
+	@Test
+	public void testEscapeIdForLink()
+	{
+		assertEquals("a%2541_b", HtmlSanitizer.escapeIdForLink("a%41 b"));
+		assertEquals("100%", HtmlSanitizer.escapeIdForLink("100%"));
+		assertEquals("%zz", HtmlSanitizer.escapeIdForLink("%zz"));
 	}
 }

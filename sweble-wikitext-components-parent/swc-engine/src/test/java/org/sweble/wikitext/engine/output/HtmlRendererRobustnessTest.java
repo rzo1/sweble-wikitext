@@ -85,8 +85,8 @@ public class HtmlRendererRobustnessTest
 	{
 		String html = render("== [http://e.com x] ==\nText");
 
-		// Heading ids keep the (encoded) whitespace around the heading text
-		assertContains(html, "id=\"_x_\"");
+		// Like MediaWiki the whitespace around the heading text is trimmed
+		assertContains(html, "id=\"x\"");
 		assertContains(html, "href=\"http://e.com\">x</a>");
 	}
 
@@ -95,7 +95,7 @@ public class HtmlRendererRobustnessTest
 	{
 		String html = render("== see http://e.com ==\nText");
 
-		assertContains(html, "id=\"_see_http://e.com_\"");
+		assertContains(html, "id=\"see_http://e.com\"");
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public class HtmlRendererRobustnessTest
 		String html = render("[http://a.com]\n\n== [http://e.com] ==\nText");
 
 		assertContains(html, "href=\"http://a.com\">[1]</a>");
-		assertContains(html, "id=\"_[2]_\"");
+		assertContains(html, "id=\"[2]\"");
 		assertContains(html, "href=\"http://e.com\">[2]</a>");
 	}
 
@@ -133,7 +133,7 @@ public class HtmlRendererRobustnessTest
 		String html = render("== cap [[File:Y.png|10px]] ==\nText");
 
 		// Like MediaWiki the nested image does not contribute any text
-		assertContains(html, "id=\"_cap__\"");
+		assertContains(html, "id=\"cap\"");
 	}
 
 	@Test
@@ -141,7 +141,7 @@ public class HtmlRendererRobustnessTest
 	{
 		String html = render("== Sig ~~~~ ==\n[[File:X.png|by ~~~]]");
 
-		assertContains(html, "id=\"_Sig_~~~~_\"");
+		assertContains(html, "id=\"Sig_~~~~\"");
 		assertContains(html, "alt=\"by ~~~\"");
 	}
 

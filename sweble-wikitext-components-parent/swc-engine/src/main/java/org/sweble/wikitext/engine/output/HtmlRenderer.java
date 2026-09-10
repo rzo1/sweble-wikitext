@@ -33,7 +33,6 @@ import org.sweble.wikitext.parser.utils.StringConversionException;
 import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
 
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,12 +50,16 @@ public class HtmlRenderer
 	// Fix #62: Counter for sequential number for untitled external links
 	private long untitledLinkCounter = 1L;
 
+	// Fix #89: Lower case (ASCII only) versions of the heading ids used so far
+	private final Set<String> headingIds = new HashSet<String>();
+
 	// =====================================================================
 
 	@Override
 	protected WtNode before(WtNode node)
 	{
 		untitledLinkCounter = 1L;
+		headingIds.clear();
 		return super.before(node);
 	}
 
@@ -530,6 +533,33 @@ public class HtmlRenderer
 		if (target.getNamespace() == wikiConfig.getNamespace("Category"))
 			return;
 
+		// Fix #89: Links to a section of the current page ([[#Foo]] or
+		// [[CurrentPage#Foo]]) only consist of the fragment
+		if (isFragmentLinkToThisPage(target))
+		{
+			String href = "#" + HtmlSanitizer.escapeIdForLink(normalizeFragment(target.getFragment()));
+			String cssClass = target.getTitle().isEmpty() ? "" : " class=\"mw-selflink-fragment\"";
+			if (n.hasTitle())
+			{
+				pt("<a href=\"%~\"%s>%=%!%=</a>",
+						href,
+						cssClass,
+						n.getPrefix(),
+						n.getTitle(),
+						n.getPostfix());
+			}
+			else
+			{
+				pt("<a href=\"%~\"%s>%=%=%=</a>",
+						href,
+						cssClass,
+						n.getPrefix(),
+						makeTitleFromTarget(n, target),
+						n.getPostfix());
+			}
+			return;
+		}
+
 		if (!callback.resourceExists(target))
 		{
 			String title = target.getDenormalizedFullTitle();
@@ -824,9 +854,9 @@ public class HtmlRenderer
 	public void visit(WtSection n)
 	{
 		p.indent();
-		pt("<h%d><span class=\"mw-headline\" id=\"%s\">%!</span></h%d>",
+		pt("<h%d><span class=\"mw-headline\" id=\"%~\">%!</span></h%d>",
 				n.getLevel(),
-				escAttrKeepCharRefs(makeSectionTitle(n.getHeading())),
+				makeSectionId(n.getHeading()),
 				n.getHeading(),
 				n.getLevel());
 
@@ -1494,37 +1524,79 @@ public class HtmlRenderer
 
 	// =====================================================================
 
-	private String makeSectionTitle(WtHeading n)
+	/**
+	 * Fix #89: Computes the id of a heading like MediaWiki's
+	 * Parser::finalizeHeadings(). The markup is stripped, character
+	 * references are decoded and the whitespace is normalized. The id is not
+	 * HTML escaped. Ids are unique (ignoring the case of ASCII letters)
+	 * within the rendered page: Duplicates get a suffix "_2", "_3", ...
+	 */
+	private String makeSectionId(WtHeading n)
 	{
-		byte[] title;
-		try
-		{
-			title = makeTitleFromNodes(n).getBytes("UTF8");
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			throw new VisitingException(e);
-		}
+		// The printer returns HTML escaped text without markup
+		String text = makeTitleFromNodes(n);
+		text = SECTION_NAME_WHITESPACE.matcher(text).replaceAll(" ").trim();
+		text = HtmlSanitizer.decodeCharReferences(text, wikiConfig.getParserConfig());
 
-		StringBuilder b = new StringBuilder();
-		for (byte u : title)
-		{
-			if (u < 0)
-			{
-				b.append('.');
-				b.append(String.format("%02X", u));
-			}
-			else if (u == ' ')
-			{
-				b.append('_');
-			}
-			else
-			{
-				b.append((char) u);
-			}
-		}
+		// MediaWiki gives up normalizing names with invalid characters
+		if (text.indexOf('\uFFFD') < 0)
+			text = normalizeFragment(text);
 
+		String id = HtmlSanitizer.escapeIdForAttribute(text);
+
+		String key = toLowerCaseAscii(id);
+		if (headingIds.add(key))
+			return id;
+
+		int i = 2;
+		while (headingIds.contains(key + "_" + i))
+			++i;
+		headingIds.add(key + "_" + i);
+		return id + "_" + i;
+	}
+
+	/**
+	 * Normalizes a section name or the fragment of a link target like
+	 * MediaWiki's title parser: Bidi override characters are removed, runs of
+	 * whitespace become a single space and trailing whitespace is removed.
+	 */
+	private static String normalizeFragment(String fragment)
+	{
+		fragment = BIDI_CHARS.matcher(fragment).replaceAll("");
+		fragment = FRAGMENT_WHITESPACE.matcher(fragment).replaceAll(" ");
+		int end = fragment.length();
+		while (end > 0 && fragment.charAt(end - 1) == ' ')
+			--end;
+		return fragment.substring(0, end);
+	}
+
+	private static String toLowerCaseAscii(String text)
+	{
+		StringBuilder b = new StringBuilder(text.length());
+		for (int i = 0; i < text.length(); ++i)
+		{
+			char ch = text.charAt(i);
+			b.append((ch >= 'A' && ch <= 'Z') ? (char) (ch + ('a' - 'A')) : ch);
+		}
 		return b.toString();
+	}
+
+	/**
+	 * Whether the given link target has a fragment and points to the page
+	 * that is rendered (or to no page at all, like [[#Foo]]).
+	 */
+	private boolean isFragmentLinkToThisPage(PageTitle target)
+	{
+		if (target.getFragment() == null || !target.isLocal())
+			return false;
+
+		if (target.getTitle().isEmpty())
+			return true;
+
+		return pageTitle != null
+				&& pageTitle.isLocal()
+				&& target.getNamespace().equals(pageTitle.getNamespace())
+				&& target.getTitle().equals(pageTitle.getTitle());
 	}
 
 	private String makeImageAltText(WtImageLink n)
@@ -1836,6 +1908,14 @@ public class HtmlRenderer
 	protected static final Logger logger = LoggerFactory.getLogger(HtmlRenderer.class);
 
 	protected static final Set<String> blockElements = new HashSet<String>();
+
+	private static final Pattern SECTION_NAME_WHITESPACE = Pattern.compile("[ _]+");
+
+	private static final Pattern FRAGMENT_WHITESPACE = Pattern.compile(
+			"[ _\\u00A0\\u1680\\u180E\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]+");
+
+	private static final Pattern BIDI_CHARS = Pattern.compile(
+			"[\\u200E\\u200F\\u202A-\\u202E]");
 
 	protected final WikiConfig wikiConfig;
 
