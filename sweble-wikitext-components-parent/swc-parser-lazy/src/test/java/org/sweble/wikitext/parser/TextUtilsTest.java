@@ -155,6 +155,26 @@ public class TextUtilsTest
 	}
 
 	@Test
+	public void testValidCharRefs() throws Exception
+	{
+		assertEquals("A\uD83D\uDE00", tu.astToText(nf.list(
+				nf.charRef(0x41),
+				nf.charRef(0x1F600))));
+	}
+
+	@Test
+	public void testInvalidCharRefsBecomeReplacementCharacters() throws Exception
+	{
+		assertEquals("\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD", tu.astToText(nf.list(
+				nf.charRef(0x110000),
+				nf.charRef(Integer.MAX_VALUE),
+				nf.charRef(-1),
+				nf.charRef(0xD800),
+				nf.charRef(0),
+				nf.charRef(0xFFFE))));
+	}
+
+	@Test
 	public void testPartialDoesNotFailOnUnkonwnNodes() throws Exception
 	{
 		WtNodeList ast = nf.list(

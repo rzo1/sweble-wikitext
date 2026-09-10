@@ -35,6 +35,23 @@ import org.sweble.wikitext.parser.utils.Numbers;
 
 body
 {
+  /**
+   * Ids with more digits would overflow an int and cannot have been
+   * registered.
+   */
+  private static final int MAX_ENTITY_ID_DIGITS = 9;
+
+  /**
+   * Returns null if no entity with the given id was registered, in which case
+   * the marker is not a parser entity.
+   */
+  private WtNode getEntityOrNull(String id) throws java.io.IOException
+  {
+    if (id.length() > MAX_ENTITY_ID_DIGITS)
+      return null;
+    return getEntity(Integer.parseInt(id));
+  }
+
   private boolean isXmlCommentOrIgnored(WtNode n)
   {
     switch (n.getNodeType())
@@ -80,9 +97,9 @@ body
 // -- Entity -------------------------------------------------------------------
 
 WtNode ParserEntity =
-  '\uE000' id:DecimalNumeral '\uE001'
+  '\uE000' id:DecimalNumeral '\uE001' &{ getEntityOrNull(id) != null }
   {
-    yyValue = getEntity(Integer.parseInt(id));
+    yyValue = getEntityOrNull(id);
   }
 ;
 

@@ -18,8 +18,10 @@
 package org.sweble.wikitext.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.StringReader;
 
 import org.junit.Test;
 import org.sweble.wikitext.parser.encval.ValidatedWikitext;
@@ -103,5 +105,191 @@ public class EncodingValidatorTest
 		ref.append("Letzt noch ein Wohlklang \uE0004\uE001.");
 
 		assertEquals(ref.toString(), validatedWikitext);
+	}
+
+	@Test
+	public void testTrailingLoneHighSurrogateKeepsText() throws IOException
+	{
+		ValidatedWikitext result = validate("Some text\uD800");
+
+		assertEquals("Some text\uE0000\uE001", result.getWikitext());
+		assertIllegal(result, 0, "\uD800", IllegalCodePointType.ISOLATED_SURROGATE, 0, 9);
+		assertEquals(1, result.getEntityMap().getEntities().size());
+	}
+
+	@Test
+	public void testOnlyALoneHighSurrogate() throws IOException
+	{
+		ValidatedWikitext result = validate("\uDBFF");
+
+		assertEquals("\uE0000\uE001", result.getWikitext());
+		assertIllegal(result, 0, "\uDBFF", IllegalCodePointType.ISOLATED_SURROGATE, 0, 0);
+	}
+
+	@Test
+	public void testLeadingLoneLowSurrogateIsFlagged() throws IOException
+	{
+		ValidatedWikitext result = validate("\uDC00abc");
+
+		assertEquals("\uE0000\uE001abc", result.getWikitext());
+		assertIllegal(result, 0, "\uDC00", IllegalCodePointType.ISOLATED_SURROGATE, 0, 0);
+	}
+
+	@Test
+	public void testLoneHighSurrogateBeforeParserEntityMarkers() throws IOException
+	{
+		ValidatedWikitext result = validate("\uD800\uE0000\uE001");
+
+		assertEquals("\uE0000\uE001\uE0001\uE0010\uE0002\uE001", result.getWikitext());
+		assertIllegal(result, 0, "\uD800", IllegalCodePointType.ISOLATED_SURROGATE, 0, 0);
+		assertIllegal(result, 1, "\uE000", IllegalCodePointType.PRIVATE_USE_CHARACTER, 0, 1);
+		assertIllegal(result, 2, "\uE001", IllegalCodePointType.PRIVATE_USE_CHARACTER, 0, 3);
+	}
+
+	@Test
+	public void testParserEntityMarkersBeforeLoneLowSurrogate() throws IOException
+	{
+		ValidatedWikitext result = validate("\uE0000\uE001\uDC00");
+
+		assertEquals("\uE0000\uE0010\uE0001\uE001\uE0002\uE001", result.getWikitext());
+		assertIllegal(result, 0, "\uE000", IllegalCodePointType.PRIVATE_USE_CHARACTER, 0, 0);
+		assertIllegal(result, 1, "\uE001", IllegalCodePointType.PRIVATE_USE_CHARACTER, 0, 2);
+		assertIllegal(result, 2, "\uDC00", IllegalCodePointType.ISOLATED_SURROGATE, 0, 3);
+	}
+
+	@Test
+	public void testLoneSurrogatesNextToControlCharacters() throws IOException
+	{
+		ValidatedWikitext result = validate("\uD800\u0007\u0008\uDC00");
+
+		assertEquals("\uE0000\uE001\uE0001\uE001\uE0002\uE001\uE0003\uE001", result.getWikitext());
+		assertIllegal(result, 0, "\uD800", IllegalCodePointType.ISOLATED_SURROGATE, 0, 0);
+		assertIllegal(result, 1, "\u0007", IllegalCodePointType.CONTROL_CHARACTER, 0, 1);
+		assertIllegal(result, 2, "\u0008", IllegalCodePointType.CONTROL_CHARACTER, 0, 2);
+		assertIllegal(result, 3, "\uDC00", IllegalCodePointType.ISOLATED_SURROGATE, 0, 3);
+	}
+
+	@Test
+	public void testLoneSurrogatesNextToNonCharacters() throws IOException
+	{
+		ValidatedWikitext result = validate("\uD800\uFDD0\uFFFF\uDC00");
+
+		assertEquals("\uE0000\uE001\uE0001\uE001\uE0002\uE001\uE0003\uE001", result.getWikitext());
+		assertIllegal(result, 0, "\uD800", IllegalCodePointType.ISOLATED_SURROGATE, 0, 0);
+		assertIllegal(result, 1, "\uFDD0", IllegalCodePointType.NON_CHARACTER, 0, 1);
+		assertIllegal(result, 2, "\uFFFF", IllegalCodePointType.NON_CHARACTER, 0, 2);
+		assertIllegal(result, 3, "\uDC00", IllegalCodePointType.ISOLATED_SURROGATE, 0, 3);
+	}
+
+	@Test
+	public void testTwoLoneHighSurrogates() throws IOException
+	{
+		ValidatedWikitext result = validate("\uD800\uD801x");
+
+		assertEquals("\uE0000\uE001\uE0001\uE001x", result.getWikitext());
+		assertIllegal(result, 0, "\uD800", IllegalCodePointType.ISOLATED_SURROGATE, 0, 0);
+		assertIllegal(result, 1, "\uD801", IllegalCodePointType.ISOLATED_SURROGATE, 0, 1);
+	}
+
+	@Test
+	public void testSupplementaryCodePoints() throws IOException
+	{
+		ValidatedWikitext result = validate("\uD83D\uDE00\uDB80\uDC00\uD83F\uDFFE\uDBFF\uDFFD\uDBFF\uDFFF");
+
+		assertEquals("\uD83D\uDE00\uE0000\uE001\uE0001\uE001\uE0002\uE001\uE0003\uE001", result.getWikitext());
+		assertIllegal(result, 0, "\uDB80\uDC00", IllegalCodePointType.PRIVATE_USE_CHARACTER, 0, 2);
+		assertIllegal(result, 1, "\uD83F\uDFFE", IllegalCodePointType.NON_CHARACTER, 0, 4);
+		assertIllegal(result, 2, "\uDBFF\uDFFD", IllegalCodePointType.PRIVATE_USE_CHARACTER, 0, 6);
+		assertIllegal(result, 3, "\uDBFF\uDFFF", IllegalCodePointType.NON_CHARACTER, 0, 8);
+	}
+
+	@Test
+	public void testAllControlCharactersAreFlagged() throws IOException
+	{
+		StringBuilder source = new StringBuilder();
+		for (char ch = 0; ch < 0x20; ++ch)
+			source.append(ch);
+		source.append('\u007F');
+
+		ValidatedWikitext result = validate(source.toString());
+
+		StringBuilder expected = new StringBuilder();
+		int id = 0;
+		for (char ch = 0; ch < 0x20; ++ch)
+		{
+			if (ch == '\t' || ch == '\n' || ch == '\r')
+				expected.append(ch);
+			else
+				expected.append('\uE000').append(id++).append('\uE001');
+		}
+		expected.append('\uE000').append(id++).append('\uE001');
+
+		assertEquals(expected.toString(), result.getWikitext());
+		assertEquals(30, result.getEntityMap().getEntities().size());
+		assertIllegal(result, 28, "\u001F", IllegalCodePointType.CONTROL_CHARACTER, 4, 17);
+		assertIllegal(result, 29, "\u007F", IllegalCodePointType.CONTROL_CHARACTER, 4, 18);
+	}
+
+	@Test
+	public void testLineAndColumnCounting() throws IOException
+	{
+		ValidatedWikitext result = validate("a\r\nb\rc\nd\u2028\u0007e\u0085\uD83D\uDE00\u0007");
+
+		assertIllegal(result, 0, "\u0007", IllegalCodePointType.CONTROL_CHARACTER, 4, 0);
+		assertIllegal(result, 1, "\u0007", IllegalCodePointType.CONTROL_CHARACTER, 5, 2);
+	}
+
+	@Test
+	public void testReaderOverloadHonoursConvertIllegalCodePoints() throws IOException
+	{
+		SimpleParserConfig parserConfig = new SimpleParserConfig(
+				true /*convertIllegalCodePoints*/,
+				true /*warningsEnabled*/,
+				true /*gatherRtd*/,
+				false /*autoCorrect*/,
+				true /*langConvTagsEnabled*/);
+
+		WikitextEncodingValidator v = new WikitextEncodingValidator();
+		ValidatedWikitext result = v.validate(parserConfig, new StringReader("a\u0007b\uD800"), "dummy");
+
+		assertEquals("a\uFFFDb\uFFFD", result.getWikitext());
+		assertTrue(result.containsIllegalCodePoints());
+	}
+
+	@Test
+	public void testReaderOverloadMatchesStringOverload() throws IOException
+	{
+		StringBuilder source = new StringBuilder();
+		for (int i = 0; i < 5000; ++i)
+			source.append("x\u0007\uD83D\uDE00\uD800");
+
+		SimpleParserConfig parserConfig = new SimpleParserConfig();
+		WikitextEncodingValidator v = new WikitextEncodingValidator();
+		ValidatedWikitext fromString = v.validate(parserConfig, source.toString(), "dummy");
+		ValidatedWikitext fromReader = v.validate(parserConfig, new StringReader(source.toString()), "dummy");
+
+		assertEquals(fromString.getWikitext(), fromReader.getWikitext());
+	}
+
+	// =========================================================================
+
+	private static ValidatedWikitext validate(String source) throws IOException
+	{
+		WikitextEncodingValidator v = new WikitextEncodingValidator();
+		return v.validate(new SimpleParserConfig(), source, "dummy");
+	}
+
+	private static void assertIllegal(
+			ValidatedWikitext result,
+			int id,
+			String codePoint,
+			IllegalCodePointType type,
+			int line,
+			int column)
+	{
+		WtIllegalCodePoint cp = (WtIllegalCodePoint) result.getEntityMap().getEntity(id);
+		assertEquals(codePoint, cp.getCodePoint());
+		assertEquals(type, cp.getType());
+		assertEquals(new AstLocation("dummy", line, column), cp.getNativeLocation());
 	}
 }

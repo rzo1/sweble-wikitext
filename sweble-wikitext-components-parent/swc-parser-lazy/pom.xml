@@ -42,7 +42,6 @@
 		<swc-parent.path>../</swc-parent.path>
 
 		<rats-sources.directory>${project.basedir}/src/main/rats</rats-sources.directory>
-		<jflex-sources.directory>${project.basedir}/src/main/jflex</jflex-sources.directory>
 		<generated-sources.directory>${project.build.directory}/generated-sources</generated-sources.directory>
 	</properties>
 
@@ -162,24 +161,11 @@
 						<configuration>
 							<sources>
 								<source>${rats-sources.directory}</source>
-								<source>${jflex-sources.directory}</source>
 								<source>${generated-sources.directory}</source>
 							</sources>
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
-
-			<!-- Generate JFlex lexers -->
-			<plugin>
-				<groupId>de.jflex</groupId>
-				<artifactId>jflex-maven-plugin</artifactId>
-				<configuration>
-					<outputDirectory>${generated-sources.directory}</outputDirectory>
-					<lexDefinitions>
-						<lexDefinition>${jflex-sources.directory}</lexDefinition>
-					</lexDefinitions>
-				</configuration>
 			</plugin>
 
 			<!-- Generate Rats! parsers -->
