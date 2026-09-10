@@ -57,7 +57,7 @@ public class InternalLinkPrefixTest
 	public void testNoPostfixWithoutPostfixPattern() throws Exception
 	{
 		ParserConfigImpl config = defaultParserConfig();
-		assertNull(config.getInternalLinkPostfixPattern());
+		config.setInternalLinkPostfixPattern(null);
 
 		List<WtInternalLink> links = new ArrayList<WtInternalLink>();
 		List<String> texts = new ArrayList<String>();
@@ -104,8 +104,8 @@ public class InternalLinkPrefixTest
 	// =========================================================================
 
 	/**
-	 * The parser configuration of {@link DefaultConfig}, which configures
-	 * neither a prefix nor a postfix pattern.
+	 * The parser configuration of {@link DefaultConfig}, which configures no
+	 * prefix pattern (English has no link prefixes).
 	 */
 	private static ParserConfigImpl defaultParserConfig()
 	{
