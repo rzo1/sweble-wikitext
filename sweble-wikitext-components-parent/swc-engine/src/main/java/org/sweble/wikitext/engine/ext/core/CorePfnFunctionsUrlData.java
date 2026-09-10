@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -702,7 +703,7 @@ public class CorePfnFunctionsUrlData
 				{
 					String encoderName = tu().astToText(args.get(1)).trim();
 
-					encoder = UrlEncoding.valueOf(encoderName.toUpperCase());
+					encoder = UrlEncoding.valueOf(encoderName.toUpperCase(Locale.ROOT));
 				}
 				catch (StringConversionException e)
 				{

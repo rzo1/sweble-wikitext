@@ -18,6 +18,7 @@ package org.sweble.wikitext.dumpreader;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,7 @@ final class LSResourceResolverImplementation
 		if (xsdPath == null)
 		{
 			String message = String.format(
+					Locale.ROOT,
 					"Refusing to resolve: type = '''%s''', namespaceURI = '''%s''', publicId = '''%s''', systemId = '''%s''', baseURI = '''%s'''",
 					type,
 					namespaceURI,

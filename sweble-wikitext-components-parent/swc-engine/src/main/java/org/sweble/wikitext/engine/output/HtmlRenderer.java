@@ -41,6 +41,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -365,7 +366,7 @@ public class HtmlRenderer
 		// -- <a> classes
 
 		if (!aClasses.isEmpty())
-			aClasses = String.format(" class=\"%s\"", aClasses.trim());
+			aClasses = String.format(Locale.ROOT, " class=\"%s\"", aClasses.trim());
 
 		// -- <a> title --
 
@@ -393,7 +394,7 @@ public class HtmlRenderer
 			aTitle = escAttrKeepCharRefs(callback.makeUrl(linkUrl));
 		}
 		if (!aTitle.isEmpty())
-			aTitle = String.format(" title=\"%s\"", aTitle);
+			aTitle = String.format(Locale.ROOT, " title=\"%s\"", aTitle);
 
 		// -- width & height --
 
@@ -446,14 +447,14 @@ public class HtmlRenderer
 					break;
 			}
 
-			p.indentln(String.format("<div class=\"thumb %s\">", align));
+			p.indentln(String.format(Locale.ROOT, "<div class=\"thumb %s\">", align));
 			p.incIndent();
-			p.indentln(String.format("<div class=\"thumbinner\" style=\"width:%dpx;\">", width + 2));
+			p.indentln(String.format(Locale.ROOT, "<div class=\"thumbinner\" style=\"width:%dpx;\">", width + 2));
 			p.incIndent();
 
 			aTitle = "";
 			if (!exists)
-				aTitle = String.format(" title=\"%s\"", esc(makeImageTitle(n, target), true));
+				aTitle = String.format(Locale.ROOT, " title=\"%s\"", esc(makeImageTitle(n, target), true));
 		}
 		else
 		{
@@ -474,7 +475,7 @@ public class HtmlRenderer
 						break;
 				}
 
-				p.indentln(String.format("<div class=\"%s\">", align));
+				p.indentln(String.format(Locale.ROOT, "<div class=\"%s\">", align));
 				p.incIndent();
 			}
 
@@ -496,7 +497,7 @@ public class HtmlRenderer
 
 		imgClasses = imgClasses.trim();
 		if (!imgClasses.isEmpty())
-			imgClasses = String.format(" class=\"%s\"", esc(imgClasses, true));
+			imgClasses = String.format(Locale.ROOT, " class=\"%s\"", esc(imgClasses, true));
 
 		if (exists)
 		{
@@ -1305,7 +1306,7 @@ public class HtmlRenderer
 	{
 		if (name == null)
 			return "";
-		return name.toLowerCase().replaceAll("[^a-z0-9_-]", "");
+		return name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_-]", "");
 	}
 
 	@Override
@@ -1459,7 +1460,7 @@ public class HtmlRenderer
 			return;
 		}
 
-		if (VOID_ELEMENTS.contains(name.toLowerCase()))
+		if (VOID_ELEMENTS.contains(name.toLowerCase(Locale.ROOT)))
 		{
 			// Void elements have no content. If the tree builder moved the
 			// following content into the element, that content is rendered
@@ -1478,7 +1479,7 @@ public class HtmlRenderer
 			// an empty element. Browsers would treat it as a start tag. If the
 			// tree builder already moved the following content into the
 			// element, that content is rendered after the element.
-			if (blockElements.contains(name.toLowerCase()))
+			if (blockElements.contains(name.toLowerCase(Locale.ROOT)))
 			{
 				p.indent();
 				pt("<%s%!></%s>", name, attribs, name);
@@ -1495,7 +1496,7 @@ public class HtmlRenderer
 		}
 		else
 		{
-			if (blockElements.contains(name.toLowerCase()))
+			if (blockElements.contains(name.toLowerCase(Locale.ROOT)))
 			{
 				p.indent();
 				pt("<%s%!>", name, attribs);

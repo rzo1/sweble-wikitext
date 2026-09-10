@@ -19,6 +19,7 @@ package org.sweble.wikitext.parser.utils;
 
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -40,6 +41,7 @@ public class ParserStats
 		public String toString()
 		{
 			return String.format(
+					Locale.ROOT,
 					"MemoizedProduction [called=%5d, reused=%5d, parsed=%5d, failed=%5d]",
 					called,
 					reused,

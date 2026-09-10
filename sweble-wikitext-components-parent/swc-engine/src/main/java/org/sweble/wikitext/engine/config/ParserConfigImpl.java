@@ -248,7 +248,7 @@ public class ParserConfigImpl
 	@Override
 	public boolean isUrlProtocol(String protocol)
 	{
-		return allowedUrlProtocols.contains(protocol.toLowerCase());
+		return allowedUrlProtocols.contains(protocol.toLowerCase(Locale.ROOT));
 	}
 
 	public void setInternalLinkPrefixPattern(String pat)
@@ -489,7 +489,7 @@ public class ParserConfigImpl
 	@Override
 	public String normalizeLctFlag(String flag)
 	{
-		flag = flag.trim().toUpperCase();
+		flag = flag.trim().toUpperCase(Locale.ROOT);
 		String normalized = lctFlagMap.get(flag);
 		if (normalized == null)
 			normalized = flag;

@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -259,7 +260,7 @@ public class AstToWomConverter
 	{
 		this.xhtmlElems = new HashMap<String, HtmlElement>();
 		for (HtmlElement e : HtmlElement.values())
-			xhtmlElems.put(e.name().toLowerCase(), e);
+			xhtmlElems.put(e.name().toLowerCase(Locale.ROOT), e);
 
 		this.astTextUtils = parserConfig.getAstTextUtils();
 		this.nodeFactory = parserConfig.getNodeFactory();
@@ -590,7 +591,7 @@ public class AstToWomConverter
 
 	public Wom3ElementNode visit(WtXmlElement n)
 	{
-		String lowercaseName = n.getName().toLowerCase();
+		String lowercaseName = n.getName().toLowerCase(Locale.ROOT);
 		HtmlElement elementType = xhtmlElems.get(lowercaseName);
 		if (elementType != null)
 		{

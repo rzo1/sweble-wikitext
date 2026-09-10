@@ -17,6 +17,8 @@
 
 package org.sweble.wikitext.parser.parser;
 
+import java.util.Locale;
+
 public final class LinkTargetException
 		extends
 			Exception
@@ -71,7 +73,7 @@ public final class LinkTargetException
 			String title,
 			String offendingSubstring)
 	{
-		return String.format(reason.getDescription(), title, offendingSubstring);
+		return String.format(Locale.ROOT, reason.getDescription(), title, offendingSubstring);
 	}
 
 	// =========================================================================

@@ -316,6 +316,26 @@
 					</configuration>
 				</plugin>
 
+				<!-- Also forbid default locale and default charset APIs in main code -->
+				<plugin>
+					<groupId>de.thetaphi</groupId>
+					<artifactId>forbiddenapis</artifactId>
+					<executions>
+						<execution>
+							<id>check-for-default-locale-and-charset</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>check</goal>
+							</goals>
+							<configuration>
+								<bundledSignatures combine.self="override">
+									<bundledSignature>jdk-unsafe</bundledSignature>
+								</bundledSignatures>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+
 				<!-- Don't fail when building from a source archive without .git -->
 				<plugin>
 					<groupId>pl.project13.maven</groupId>

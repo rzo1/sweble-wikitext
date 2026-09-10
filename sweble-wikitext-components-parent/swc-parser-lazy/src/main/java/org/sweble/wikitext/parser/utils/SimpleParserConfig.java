@@ -20,6 +20,7 @@ package org.sweble.wikitext.parser.utils;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -217,7 +218,7 @@ public class SimpleParserConfig
 	@Override
 	public boolean isTalkNamespace(String resultNs)
 	{
-		return resultNs.toLowerCase().equals("talk");
+		return resultNs.toLowerCase(Locale.ROOT).equals("talk");
 	}
 
 	@Override
@@ -364,7 +365,7 @@ public class SimpleParserConfig
 
 	public String normalizeLctFlag(String flag)
 	{
-		return flag.trim().toUpperCase();
+		return flag.trim().toUpperCase(Locale.ROOT);
 	}
 
 	private static final Set<String> knownVariants = new HashSet<String>(Arrays.asList(
@@ -384,6 +385,6 @@ public class SimpleParserConfig
 
 	public String normalizeLctVariant(String variant)
 	{
-		return variant.trim().toLowerCase();
+		return variant.trim().toLowerCase(Locale.ROOT);
 	}
 }

@@ -20,6 +20,7 @@ package org.sweble.wikitext.example;
 import java.math.BigInteger;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import org.sweble.wikitext.articlecruncher.Job;
@@ -89,7 +90,7 @@ public class RevisionJob
 		}
 		else
 		{
-			this.timestamp = new GregorianCalendar();
+			this.timestamp = new GregorianCalendar(TimeZone.getTimeZone("UTC"), Locale.ROOT);
 			this.timestamp.setTimeZone(TimeZone.getTimeZone("UTC"));
 			this.timestamp.setTimeInMillis(0);
 		}

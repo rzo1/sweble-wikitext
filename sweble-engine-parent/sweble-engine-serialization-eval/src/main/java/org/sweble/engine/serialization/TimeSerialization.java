@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -167,7 +168,7 @@ public class TimeSerialization
 			fname += "-compact";
 		if (pretty)
 			fname += "-pretty";
-		fname += "." + serializationFormat.toString().toLowerCase();
+		fname += "." + serializationFormat.toString().toLowerCase(Locale.ROOT);
 		FileUtils.writeByteArrayToFile(new File(fname), serialized);
 	}
 
@@ -303,7 +304,7 @@ public class TimeSerialization
 
 	private void print(int indent, String header, TimingResults timings)
 	{
-		String msg = String.format(""
+		String msg = String.format(Locale.ROOT, ""
 				+ "Mean:   % 7.2f ms\n"
 				+ "Median: % 7.2f ms\n"
 				+ "StdDev: % 7.2f ms",
@@ -326,7 +327,7 @@ public class TimeSerialization
 
 	private void printSize(int indent, String what, long bytes)
 	{
-		String msg = String.format("Size of %s: %d Bytes", what, bytes);
+		String msg = String.format(Locale.ROOT, "Size of %s: %d Bytes", what, bytes);
 		System.out.println(StringTools.indent(msg, StringTools.strrep(' ', indent)));
 	}
 
@@ -339,6 +340,7 @@ public class TimeSerialization
 	{
 		final double percent = (double) bytes / (double) comparedToBytes * 100.;
 		String msg = String.format(
+				Locale.ROOT,
 				"Size of %s: %d Bytes (% 3.1f %% of the size of %s)",
 				what, bytes, percent, comparedTo);
 		System.out.println(StringTools.indent(msg, StringTools.strrep(' ', indent)));

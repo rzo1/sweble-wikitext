@@ -26,7 +26,9 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -277,7 +279,7 @@ public class Serializer
 
 		WtNode original = parse(title, content);
 
-		int wikitextLength = content.getBytes().length;
+		int wikitextLength = content.getBytes(StandardCharsets.UTF_8).length;
 
 		this.title = title;
 		this.original = original;
@@ -285,7 +287,7 @@ public class Serializer
 
 		if (!quiet)
 		{
-			System.out.format("  Wikitext size: %d Bytes\n", wikitextLength);
+			System.out.format(Locale.ROOT, "  Wikitext size: %d Bytes\n", wikitextLength);
 			System.out.println();
 
 			NodeStats.process(original);
@@ -384,7 +386,7 @@ public class Serializer
 			watch.stop();
 
 			float time = watch.getElapsedTime() / (float) measurementIterations;
-			float len = content.getBytes().length;
+			float len = content.getBytes(StandardCharsets.UTF_8).length;
 			float tp = len / 1024.f / 1024.f / (time / 1000.f);
 
 			System.out.println("  Parser settings:");
@@ -396,8 +398,8 @@ public class Serializer
 			System.out.println("    Strip locations      : " + ppStripLocations);
 			System.out.println("    Simplify AST         : " + ppSimplifyAst);
 			System.out.println();
-			System.out.println(String.format("  Time: %d ms", (long) time));
-			System.out.println(String.format("  Throughput: %1.2f MB/s", tp));
+			System.out.println(String.format(Locale.ROOT, "  Time: %d ms", (long) time));
+			System.out.println(String.format(Locale.ROOT, "  Throughput: %1.2f MB/s", tp));
 		}
 
 		return doParse(title, content);
@@ -442,9 +444,9 @@ public class Serializer
 			long pow = serialized.length * 100 / wikitextLength;
 
 			System.out.println("Timed serialization:");
-			System.out.format("  Average time: %d ms\n", time);
-			System.out.format("  Serialized size: %d Bytes\n", serialized.length);
-			System.out.format("    Inflation: %3d%%\n", pow);
+			System.out.format(Locale.ROOT, "  Average time: %d ms\n", time);
+			System.out.format(Locale.ROOT, "  Serialized size: %d Bytes\n", serialized.length);
+			System.out.format(Locale.ROOT, "    Inflation: %3d%%\n", pow);
 			System.out.println();
 		}
 
@@ -574,7 +576,7 @@ public class Serializer
 			long time = watch.getElapsedTime() / measurementIterations;
 
 			System.out.println("Timed deserialization:");
-			System.out.format("  Average time: %d ms\n", time);
+			System.out.format(Locale.ROOT, "  Average time: %d ms\n", time);
 			System.out.println();
 		}
 
@@ -645,10 +647,10 @@ public class Serializer
 			long pow = wikitextLength * 100 / zipped.length;
 
 			System.out.println("Timed zip:");
-			System.out.format("  Average time: %d ms\n", time);
-			System.out.format("  Zipped size: %d Bytes\n", zipped.length);
-			System.out.format("    Compression ratio serialized to serialized zipped: %3d%%\n", pou);
-			System.out.format("    Compression ratio wikitext to serialized zipped: %3d%%\n", pow);
+			System.out.format(Locale.ROOT, "  Average time: %d ms\n", time);
+			System.out.format(Locale.ROOT, "  Zipped size: %d Bytes\n", zipped.length);
+			System.out.format(Locale.ROOT, "    Compression ratio serialized to serialized zipped: %3d%%\n", pou);
+			System.out.format(Locale.ROOT, "    Compression ratio wikitext to serialized zipped: %3d%%\n", pow);
 			System.out.println();
 		}
 
@@ -685,7 +687,7 @@ public class Serializer
 			long time = watch.getElapsedTime() / measurementIterations;
 
 			System.out.println("Timed unzip and deserialize:");
-			System.out.format("  Average time: %d ms\n", time);
+			System.out.format(Locale.ROOT, "  Average time: %d ms\n", time);
 			System.out.println();
 		}
 

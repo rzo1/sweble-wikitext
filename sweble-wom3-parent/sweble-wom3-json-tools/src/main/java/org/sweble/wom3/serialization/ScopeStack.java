@@ -18,6 +18,7 @@
 package org.sweble.wom3.serialization;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public final class ScopeStack
@@ -104,6 +105,7 @@ public final class ScopeStack
 		{
 			if (this.xmlns != null && !this.xmlns.equals(xmlns))
 				throw new NamespaceException(String.format(
+						Locale.ROOT,
 						"Conflicting default namespace URI declarations in "
 								+ "element's scope: '%s' vs. '%s'",
 						this.xmlns,

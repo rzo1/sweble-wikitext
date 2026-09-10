@@ -17,6 +17,8 @@
 
 package org.sweble.wikitext.engine;
 
+import java.util.Locale;
+
 import org.sweble.wikitext.engine.nodes.EngLogProcessingPass;
 
 public final class EngineException
@@ -54,7 +56,7 @@ public final class EngineException
 
 	private static String makeMessage(PageTitle pageTitle, String message)
 	{
-		return String.format("%s (%s)", message, pageTitle.getDenormalizedFullTitle());
+		return String.format(Locale.ROOT, "%s (%s)", message, pageTitle.getDenormalizedFullTitle());
 	}
 
 	private static Throwable unwrap(Throwable t)

@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -801,7 +802,7 @@ public class LanguageConfigGenerator
 				}
 
 				// MediaWiki registers extension tags in lower case
-				String name = m.group(1).toLowerCase();
+				String name = m.group(1).toLowerCase(Locale.ROOT);
 				if (wikiConfig.getTagExtension(name) != null || added.contains(name))
 					continue;
 
@@ -906,7 +907,7 @@ public class LanguageConfigGenerator
 			ArrayList<String> aliases = new ArrayList<String>();
 			for (String aliasName : candidate.names)
 			{
-				if (owners.get(aliasName.toLowerCase()) == candidate)
+				if (owners.get(aliasName.toLowerCase(Locale.ROOT)) == candidate)
 					aliases.add(aliasName);
 			}
 
@@ -1007,7 +1008,7 @@ public class LanguageConfigGenerator
 		void addName(String name, boolean isGenerated)
 		{
 			names.add(name);
-			String lcName = name.toLowerCase();
+			String lcName = name.toLowerCase(Locale.ROOT);
 			Boolean old = generated.get(lcName);
 			if (old == null || old)
 				generated.put(lcName, isGenerated);

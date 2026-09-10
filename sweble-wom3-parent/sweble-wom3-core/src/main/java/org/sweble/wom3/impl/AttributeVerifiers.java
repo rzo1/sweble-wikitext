@@ -17,6 +17,8 @@
  */
 package org.sweble.wom3.impl;
 
+import java.util.Locale;
+
 import org.joda.time.DateTime;
 import org.sweble.wom3.Wom3BulletStyle;
 import org.sweble.wom3.Wom3Clear;
@@ -452,6 +454,7 @@ public enum AttributeVerifiers implements AttributeVerificationAndConverion
 	{
 		if (value < lower || value > upper)
 			throw new IllegalArgumentException(String.format(
+					Locale.ROOT,
 					"Attribute value out of bounds: %d <= (%d) <= %d.",
 					lower,
 					value,

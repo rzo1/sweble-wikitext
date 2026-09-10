@@ -19,6 +19,7 @@ package org.sweble.wikitext.engine.output;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -120,7 +121,7 @@ public class HtmlRendererBase
 	 */
 	protected static String charRef(WtXmlCharRef n)
 	{
-		String ref = String.format("&#%d;", n.getCodePoint());
+		String ref = String.format(Locale.ROOT, "&#%d;", n.getCodePoint());
 		return HtmlSanitizer.isValidCharReference(n.getCodePoint()) ? ref : esc(ref);
 	}
 
@@ -163,7 +164,7 @@ public class HtmlRendererBase
 	 */
 	protected static String getTagExtensionName(WtTagExtension n)
 	{
-		return n.getName().trim().toLowerCase();
+		return n.getName().trim().toLowerCase(Locale.ROOT);
 	}
 
 	/**
@@ -187,7 +188,7 @@ public class HtmlRendererBase
 	 */
 	protected void pf(String format, Object... args)
 	{
-		p.print(String.format(format, args));
+		p.print(String.format(Locale.ROOT, format, args));
 	}
 
 	/**
@@ -262,7 +263,7 @@ public class HtmlRendererBase
 			}
 			else
 			{
-				p.print(String.format(f, a.toArray()));
+				p.print(String.format(Locale.ROOT, f, a.toArray()));
 				a.clear();
 			}
 		}

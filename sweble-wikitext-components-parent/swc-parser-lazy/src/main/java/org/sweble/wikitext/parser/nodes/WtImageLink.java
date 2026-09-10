@@ -18,6 +18,7 @@
 package org.sweble.wikitext.parser.nodes;
 
 import java.util.ListIterator;
+import java.util.Locale;
 
 import de.fau.cs.osr.ptk.common.ast.AstNodePropertyIterator;
 import de.fau.cs.osr.ptk.common.ast.Uninitialized;
@@ -467,7 +468,7 @@ public class WtImageLink
 			if (s == null)
 				throw new NullPointerException();
 
-			s = s.trim().toLowerCase();
+			s = s.trim().toLowerCase(Locale.ROOT);
 			for (ImageHorizAlign h : ImageHorizAlign.values())
 			{
 				if (s.equals(h.asKeyword()))
@@ -554,7 +555,7 @@ public class WtImageLink
 			if (s == null)
 				throw new NullPointerException();
 
-			s = s.trim().toLowerCase();
+			s = s.trim().toLowerCase(Locale.ROOT);
 			for (ImageVertAlign v : ImageVertAlign.values())
 			{
 				if (v.asKeyword().equals(s))
@@ -668,7 +669,7 @@ public class WtImageLink
 			if (s == null)
 				throw new NullPointerException();
 
-			s = s.trim().toLowerCase();
+			s = s.trim().toLowerCase(Locale.ROOT);
 			for (int i = 0; i < formatMap.length; i += 2)
 			{
 				String f = (String) formatMap[i];

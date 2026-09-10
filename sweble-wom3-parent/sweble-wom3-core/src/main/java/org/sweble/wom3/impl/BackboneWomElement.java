@@ -18,6 +18,7 @@
 package org.sweble.wom3.impl;
 
 import java.net.URL;
+import java.util.Locale;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -268,7 +269,7 @@ public abstract class BackboneWomElement
 			// FIXME: This is probably not correct. A prefix could be bound
 			// to the empty namespace, in which case the attribute would
 			// be in the per-element-type partition.
-			AttributeDescriptor d = nameMap.get(qualifiedName.toLowerCase());
+			AttributeDescriptor d = nameMap.get(qualifiedName.toLowerCase(Locale.ROOT));
 			if (d != null)
 				return d;
 		}

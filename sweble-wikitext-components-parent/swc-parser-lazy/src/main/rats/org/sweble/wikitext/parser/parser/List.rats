@@ -45,6 +45,7 @@ header
   import java.util.ArrayList;
   import java.util.Arrays;
   import java.util.HashSet;
+  import java.util.Locale;
   import java.util.Set;
   import java.util.Vector;
 }
@@ -341,7 +342,7 @@ body
           return new WtNodeList[] { term, definition };
         }
         case WtNode.NT_XML_START_TAG:
-          if (!VOID_ELEMENTS.contains(((WtXmlStartTag) n).getName().toLowerCase()))
+          if (!VOID_ELEMENTS.contains(((WtXmlStartTag) n).getName().toLowerCase(Locale.ROOT)))
             ++openElements;
           break;
         case WtNode.NT_XML_END_TAG:

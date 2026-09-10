@@ -19,6 +19,7 @@ package org.sweble.wikitext.articlecruncher;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class JobTrace
@@ -116,7 +117,7 @@ public class JobTrace
 	{
 		StringBuilder b = new StringBuilder();
 
-		b.append(String.format("[ Job Trace: Job Id = %9d", jobId));
+		b.append(String.format(Locale.ROOT, "[ Job Trace: Job Id = %9d", jobId));
 
 		boolean first = true;
 		b.append("; Signed by = ");
