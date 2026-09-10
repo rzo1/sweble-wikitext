@@ -39,6 +39,29 @@ import org.sweble.wikitext.parser.parser.Whitespace;
 
 
 
+// -- Header / Body / Footer ---------------------------------------------------
+
+body
+{
+  /* The union of the elements MediaWiki (BlockLevelPass) checks for in the
+   * open and close matches. Each of them is matched as start and as end tag
+   * by one of the two matches. "tbody" is our own idea.
+   */
+  private static final java.util.Set<String> SEMI_PRE_BLOCK_ELEMS =
+      new java.util.HashSet<String>(java.util.Arrays.asList(
+          "table", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "p", "ul", "ol",
+          "dl", "td", "th", "tr", "caption", "dt", "dd", "li", "center",
+          "blockquote", "div", "hr", "aside", "figure", "tbody"));
+
+  private boolean isSemiPreBlockElem(String name)
+  {
+    return SEMI_PRE_BLOCK_ELEMS.contains(name.toLowerCase(java.util.Locale.ROOT));
+  }
+}
+
+
+
+
 // -- SemiPre --[ State Aware Memoization ]-------------------------------------
 
 noinline transient WtNode SemiPre =
@@ -105,61 +128,27 @@ private inline void EmptyLine =
   pExtSpaceStar slEol
 ;
 
-/* If there is a start tag or end tag (BlockElemStart/End) on a line, that
- * line will never be recognized as SemiPre. Furthermore, if a previous line 
- * had a start tag (BlockElemStart) and no end tag has been encountered since 
- * then the line will also not be recognized as SemiPre. However, we can only
- * model the behavior of the first case with these rules.
+/* If there is a start tag or end tag (BlockElem) on a line, that line will
+ * never be recognized as SemiPre. Furthermore, if a previous line had a start
+ * tag and no end tag has been encountered since then the line will also not
+ * be recognized as SemiPre. However, we can only model the behavior of the
+ * first case with these rules.
  * TODO: Model the scoping behavior in a post-processing step.
  */
 private inline void HasBlockElem =
-  ( !BlockElemStart !BlockElemEnd !slEol _ )* ( BlockElemStart / BlockElemEnd )
+  ( !BlockElem !slEol _ )* BlockElem
 ;
 
-private inline void BlockElemStart =
-    "<table"
-  / "<blockquote"
-  / "<caption"   // That's my own idea...
-  / "<tbody"    // That's my own idea...
-  / "<h1"
-  / "<h2"
-  / "<h3"
-  / "<h4"
-  / "<h5"
-  / "<h6"
-  / "<pre"
-  / "<tr"
-  / "<p"
-  / "<ul"
-  / "<ol"
-  / "<dl"
-  / "<li"
-  / "</tr"
-  / "</td"
-  / "</th"
+/* Like MediaWiki (BlockLevelPass) the element name is matched
+ * case-insensitively and has to be followed by a word boundary ("<p" does not
+ * match "<poem>").
+ */
+private transient String BlockElem =
+  '<' '/'? yyValue:BlockElemName &{ isSemiPreBlockElem(yyValue) }
 ;
 
-private inline void BlockElemEnd =
-    "</table"
-  / "</blockquote"
-  / "</tbody"
-  / "</h1"
-  / "</h2"
-  / "</h3"
-  / "</h4"
-  / "</h5"
-  / "</h6"
-  / "<td"
-  / "<th"
-  / "<" '/'? "div"
-  / "<hr"
-  / "</pre"
-  / "</p"
-  / "</li"
-  / "</ul"
-  / "</ol"
-  / "</dl"
-  / "<" '/'? "center"
+private transient String BlockElemName =
+  [A-Za-z0-9_]+
 ;
 
 private inline stateful WtNodeList SemiPreContentStar =
