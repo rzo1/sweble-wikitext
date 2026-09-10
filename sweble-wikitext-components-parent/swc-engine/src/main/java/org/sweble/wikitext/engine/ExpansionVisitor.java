@@ -19,12 +19,15 @@ package org.sweble.wikitext.engine;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.AbstractMap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -896,7 +899,7 @@ public final class ExpansionVisitor
 		FullPage page = getWikitext(title);
 		if (page != null)
 		{
-			// EXPANDS ARGUMENTS!
+			// EXPANDS ARGUMENT NAMES! Values are expanded when looked up.
 			Map<String, WtNodeList> tmplArgs = prepareTransclusionArguments(args, log);
 
 			EngProcessedPage processedPage = getEngine().preprocessAndExpand(
@@ -1023,31 +1026,31 @@ public final class ExpansionVisitor
 
 	/**
 	 * Prepares the template argument list for transclusion. This encompasses
-	 * the expansion of name and value of each argument.
+	 * the expansion of the name of each argument. Like in MediaWiki, the value
+	 * of an argument is only expanded (by this visitor) when the transcluded
+	 * page looks it up for the first time, so that unused arguments are never
+	 * expanded.
 	 * 
 	 * Each argument is added to the mapping with its one-based index as key.
 	 * 
 	 * If an argument has a name which can be resolved to a string, the argument
-	 * will additionally be put into the mapping with the resolved name as key.
+	 * will instead be put into the mapping with the resolved name as key.
 	 */
 	private Map<String, WtNodeList> prepareTransclusionArguments(
 			List<WtTemplateArgument> args,
 			EngLogTransclusionResolution log)
 	{
-		HashMap<String, WtNodeList> transclArgs = new HashMap<String, WtNodeList>();
+		TransclusionArguments transclArgs = new TransclusionArguments();
 
 		int index = 1;
 		for (WtTemplateArgument arg : args)
 		{
-			// EXPAND VALUE!
-			WtValue value = (WtValue) dispatch(arg.getValue());
+			// ONLY TRIM NAMED VALUES!
+			LazyArgument value = new LazyArgument(arg.getValue(), arg.hasName());
 
 			boolean named = false;
 			if (arg.hasName())
 			{
-				// ONLY TRIM NAMED VALUES!
-				value = (WtValue) tu.trim(value);
-
 				// EXPAND NAME!
 				WtName name = (WtName) dispatch(arg.getName());
 
@@ -1057,7 +1060,7 @@ public final class ExpansionVisitor
 
 					if (!nameStr.isEmpty())
 					{
-						transclArgs.put(nameStr, nf.toList(value));
+						transclArgs.put(nameStr, value);
 						named = true;
 					}
 				}
@@ -1074,7 +1077,7 @@ public final class ExpansionVisitor
 			{
 				// Like in MediaWiki, a later argument overrides an earlier
 				// one, even if the earlier one was explicitly numbered.
-				transclArgs.put(String.valueOf(index), nf.toList(value));
+				transclArgs.put(String.valueOf(index), value);
 
 				// Only unnamed arguments increase the index
 				index++;
@@ -1672,5 +1675,93 @@ public final class ExpansionVisitor
 		//return new SoftErrorNode(n, e);
 		n.setAttribute(SKIP_ATTR_NAME, e);
 		return n;
+	}
+
+	// =========================================================================
+
+	/**
+	 * The value of a template argument, which is expanded by this visitor (the
+	 * visitor of the calling frame) when it is needed for the first time.
+	 */
+	private final class LazyArgument
+	{
+		private final WtValue value;
+
+		private final boolean trim;
+
+		private WtNodeList expanded;
+
+		public LazyArgument(WtValue value, boolean trim)
+		{
+			this.value = value;
+			this.trim = trim;
+		}
+
+		public WtNodeList getValue()
+		{
+			if (expanded == null)
+			{
+				// EXPAND VALUE!
+				WtValue v = (WtValue) dispatch(value);
+
+				if (trim)
+					v = (WtValue) tu.trim(v);
+
+				expanded = nf.toList(v);
+			}
+
+			return expanded;
+		}
+	}
+
+	/**
+	 * The arguments passed to a transcluded page. Looking up an argument
+	 * expands its value, iterating over the entries expands all values.
+	 */
+	private final class TransclusionArguments
+			extends
+				AbstractMap<String, WtNodeList>
+	{
+		private final Map<String, LazyArgument> args =
+				new LinkedHashMap<String, LazyArgument>();
+
+		public void put(String name, LazyArgument value)
+		{
+			args.put(name, value);
+		}
+
+		@Override
+		public WtNodeList get(Object name)
+		{
+			LazyArgument value = args.get(name);
+			return (value != null) ? value.getValue() : null;
+		}
+
+		@Override
+		public boolean containsKey(Object name)
+		{
+			return args.containsKey(name);
+		}
+
+		@Override
+		public int size()
+		{
+			return args.size();
+		}
+
+		@Override
+		public Set<String> keySet()
+		{
+			return Collections.unmodifiableSet(args.keySet());
+		}
+
+		@Override
+		public Set<Map.Entry<String, WtNodeList>> entrySet()
+		{
+			Map<String, WtNodeList> expanded = new LinkedHashMap<String, WtNodeList>();
+			for (Map.Entry<String, LazyArgument> e : args.entrySet())
+				expanded.put(e.getKey(), e.getValue().getValue());
+			return Collections.unmodifiableMap(expanded).entrySet();
+		}
 	}
 }

@@ -337,6 +337,79 @@ public class ExpansionVisitorTest
 	}
 
 	// =========================================================================
+	// == Template arguments
+
+	@Test
+	public void testUnusedArgumentIsNotExpanded() throws Exception
+	{
+		callback.add("Template:T", "[{{{1}}}]");
+
+		EngProcessedPage page = expand("{{T|a|{{Missing}}}}");
+
+		assertOutput("[a]", page);
+		assertNoWarnings(page);
+		assertEquals(0, callback.getRetrievalCount("Template:Missing"));
+	}
+
+	@Test
+	public void testOverriddenArgumentIsNotExpanded() throws Exception
+	{
+		callback.add("Template:T", "[{{{1}}}]");
+
+		EngProcessedPage page = expand("{{T|{{Missing}}|1=b}}");
+
+		assertOutput("[b]", page);
+		assertNoWarnings(page);
+		assertEquals(0, callback.getRetrievalCount("Template:Missing"));
+	}
+
+	@Test
+	public void testArgumentIsExpandedOnlyOnce() throws Exception
+	{
+		callback.add("Template:T", "{{{1}}}{{{1}}}");
+		callback.add("Template:U", "u");
+
+		assertExpansion("uu", "{{T|{{U}}}}");
+		assertEquals(1, callback.getRetrievalCount("Template:U"));
+	}
+
+	@Test
+	public void testNamedArgumentIsTrimmed() throws Exception
+	{
+		callback.add("Template:T", "[{{{a}}}]");
+		callback.add("Template:U", "u");
+
+		assertExpansion("[u]", "{{T| a = {{U}} }}");
+	}
+
+	@Test
+	public void testPositionalArgumentIsNotTrimmed() throws Exception
+	{
+		callback.add("Template:T", "[{{{1}}}]");
+		callback.add("Template:U", "u");
+
+		assertExpansion("[ u ]", "{{T| {{U}} }}");
+	}
+
+	@Test
+	public void testArgumentIsExpandedInCallingFrame() throws Exception
+	{
+		callback.add("Template:Outer", "{{Inner|{{{1}}}|{{{2|d}}}}}");
+		callback.add("Template:Inner", "[{{{1}}}|{{{2}}}|{{{3|e}}}]");
+
+		assertExpansion("[z|d|e]", "{{Outer|z}}");
+	}
+
+	@Test
+	public void testArgumentsArePassedToRedirectTarget() throws Exception
+	{
+		callback.add("Template:R", "#REDIRECT [[Template:T]]");
+		callback.add("Template:T", "[{{{1}}}]");
+
+		assertExpansion("[a]", "{{R|a}}");
+	}
+
+	// =========================================================================
 
 	/**
 	 * Adds the templates {@code prefix1} to {@code prefixN}, each transcluding
