@@ -55,6 +55,20 @@ public class ExpansionFrame
 
 	private final boolean noRedirect;
 
+	private final int depth;
+
+	/**
+	 * The post-expand include size of the whole expansion process. Only the
+	 * field of the root frame is used.
+	 */
+	private long postExpandIncludeSize;
+
+	/**
+	 * Set in the root frame once a transclusion exceeded the maximum
+	 * post-expand include size.
+	 */
+	private boolean postExpandIncludeSizeExceeded;
+
 	private ExpansionVisitor expansionVisitor;
 
 	// FIXME: That should have been initialized from a request!
@@ -120,6 +134,7 @@ public class ExpansionFrame
 		this.frameLog = frameLog;
 		this.rootFrame = this;
 		this.parentFrame = null;
+		this.depth = 0;
 
 		expansionVisitor = new ExpansionVisitor(
 				this,
@@ -156,6 +171,7 @@ public class ExpansionFrame
 		this.frameLog = frameLog;
 		this.rootFrame = rootFrame;
 		this.parentFrame = parentFrame;
+		this.depth = (parentFrame != null) ? parentFrame.getDepth() + 1 : 0;
 
 		expansionVisitor = new ExpansionVisitor(
 				this,
@@ -240,6 +256,58 @@ public class ExpansionFrame
 	public UrlService getUrlService()
 	{
 		return urlService;
+	}
+
+	/**
+	 * Returns the number of nested transclusions that lead from the root frame
+	 * to this frame. The root frame has depth 0.
+	 */
+	public int getDepth()
+	{
+		return depth;
+	}
+
+	/**
+	 * Returns the post-expand include size of the whole expansion process so
+	 * far.
+	 *
+	 * @see org.sweble.wikitext.engine.config.EngineConfig#getMaxPostExpandIncludeSize()
+	 */
+	public long getPostExpandIncludeSize()
+	{
+		return rootFrame.postExpandIncludeSize;
+	}
+
+	/**
+	 * Returns whether a transclusion of the expansion process exceeded the
+	 * maximum post-expand include size. All further transclusions are omitted.
+	 */
+	public boolean isPostExpandIncludeSizeExceeded()
+	{
+		return rootFrame.postExpandIncludeSizeExceeded;
+	}
+
+	/**
+	 * Adds the size of an expanded transclusion to the post-expand include
+	 * size of the whole expansion process.
+	 *
+	 * @return False if the size would exceed the given limit. The size is not
+	 *         added then and all further calls fail as well.
+	 */
+	boolean incrementPostExpandIncludeSize(long size, long limit)
+	{
+		ExpansionFrame root = rootFrame;
+		if (root.postExpandIncludeSizeExceeded)
+			return false;
+
+		if (size > limit - root.postExpandIncludeSize)
+		{
+			root.postExpandIncludeSizeExceeded = true;
+			return false;
+		}
+
+		root.postExpandIncludeSize += size;
+		return true;
 	}
 
 	// =========================================================================

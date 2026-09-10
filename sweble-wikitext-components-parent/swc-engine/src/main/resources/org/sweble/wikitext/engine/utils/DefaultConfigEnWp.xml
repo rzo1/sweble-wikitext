@@ -1417,5 +1417,7 @@
     </parserConfig>
     <engineConfig>
         <trimTransparentBeforeParsing>true</trimTransparentBeforeParsing>
+        <maxTemplateDepth>40</maxTemplateDepth>
+        <maxPostExpandIncludeSize>2097152</maxPostExpandIncludeSize>
     </engineConfig>
 </swc-engine:WikiConfig>

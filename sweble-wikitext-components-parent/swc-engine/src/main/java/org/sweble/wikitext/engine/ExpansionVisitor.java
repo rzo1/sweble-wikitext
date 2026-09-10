@@ -19,6 +19,7 @@ package org.sweble.wikitext.engine;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.sweble.wikitext.engine.config.EngineConfig;
 import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.EngLogContainer;
@@ -47,6 +49,7 @@ import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtNodeList;
 import org.sweble.wikitext.parser.nodes.WtPageSwitch;
 import org.sweble.wikitext.parser.nodes.WtRedirect;
+import org.sweble.wikitext.parser.nodes.WtStringNode;
 import org.sweble.wikitext.parser.nodes.WtTagExtension;
 import org.sweble.wikitext.parser.nodes.WtTagExtensionBody;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
@@ -844,6 +847,16 @@ public final class ExpansionVisitor
 			return n;
 		}
 
+		int maxDepth = getEngineConfig().getMaxTemplateDepth();
+		if (expFrame.getDepth() >= maxDepth)
+		{
+			fileTemplateRecursionDepthWarning(n, title, maxDepth);
+
+			// Same error message as MediaWiki
+			return nf.text("<span class=\"error\">Template recursion depth limit exceeded (" +
+					maxDepth + ")</span>");
+		}
+
 		if (isTemplateLoop(title))
 		{
 			fileTemplateLoopWarning(n, title);
@@ -852,6 +865,11 @@ public final class ExpansionVisitor
 			return nf.text("<span class=\"error\">Template loop detected: [[" +
 					title.getDenormalizedFullTitle() + "]]</span>");
 		}
+
+		// Once the budget is used up, don't even expand further transclusions
+		long maxSize = getEngineConfig().getMaxPostExpandIncludeSize();
+		if (expFrame.isPostExpandIncludeSizeExceeded())
+			return omitOversizedTransclusion(n, title, maxSize);
 
 		log.setCanonical(title.getDenormalizedFullTitle());
 
@@ -874,6 +892,10 @@ public final class ExpansionVisitor
 			log.setSuccess(true);
 
 			WtNode tResult = mergeLogsAndWarnings(log, processedPage);
+
+			long size = measurePostExpandIncludeSize(tResult, maxSize);
+			if (!expFrame.incrementPostExpandIncludeSize(size, maxSize))
+				return omitOversizedTransclusion(n, title, maxSize);
 
 			return treatBlockElements(n, tResult);
 		}
@@ -910,6 +932,55 @@ public final class ExpansionVisitor
 		Namespace ns = a.getNamespace();
 		return (ns == null ? b.getNamespace() == null : ns.equals(b.getNamespace())) &&
 				a.getTitle().equals(b.getTitle());
+	}
+
+	/**
+	 * Returns the post-expand include size of an expanded transclusion: The
+	 * length of the text it contains plus one for every other node, but at
+	 * least 1. Counting every node bounds the time needed to measure, since
+	 * the AST can share expanded arguments in many places (which are counted
+	 * at every place).
+	 *
+	 * Stops counting as soon as the size exceeds the given limit.
+	 */
+	private static long measurePostExpandIncludeSize(WtNode result, long limit)
+	{
+		long size = 0;
+
+		ArrayDeque<WtNode> pending = new ArrayDeque<WtNode>();
+		pending.push(result);
+		while (!pending.isEmpty() && size <= limit)
+		{
+			WtNode n = pending.pop();
+			if (n instanceof WtStringNode)
+				size += ((WtStringNode) n).getContent().length();
+			else
+				size += 1;
+
+			for (WtNode child : n)
+			{
+				if (child != null)
+					pending.push(child);
+			}
+		}
+
+		return Math.max(1, size);
+	}
+
+	/**
+	 * Replaces a transclusion that would exceed the post-expand include size
+	 * with a link to the transcluded page.
+	 */
+	private WtNode omitOversizedTransclusion(
+			WtTemplate n,
+			PageTitle title,
+			long limit)
+	{
+		filePostExpandIncludeSizeWarning(n, title, limit);
+
+		// Same replacement as MediaWiki
+		return nf.text("[[:" + title.getPrefixedText() + "]]" +
+				"<!-- WARNING: template omitted, post-expand include size too large -->");
 	}
 
 	/**
@@ -1345,6 +1416,11 @@ public final class ExpansionVisitor
 		return expFrame.getWikiConfig();
 	}
 
+	private EngineConfig getEngineConfig()
+	{
+		return expFrame.getWikiConfig().getEngineConfig();
+	}
+
 	private WtEngineImpl getEngine()
 	{
 		return expFrame.getEngine();
@@ -1422,6 +1498,32 @@ public final class ExpansionVisitor
 				getClass(),
 				n,
 				title));
+	}
+
+	private void fileTemplateRecursionDepthWarning(
+			WtNode n,
+			PageTitle title,
+			int limit)
+	{
+		expFrame.fileWarning(new TemplateRecursionDepthWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title,
+				limit));
+	}
+
+	private void filePostExpandIncludeSizeWarning(
+			WtNode n,
+			PageTitle title,
+			long limit)
+	{
+		expFrame.fileWarning(new PostExpandIncludeSizeWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title,
+				limit));
 	}
 
 	private WtNodeList mergeLogsAndWarnings(

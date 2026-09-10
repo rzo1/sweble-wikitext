@@ -123,6 +123,126 @@ public class ExpansionVisitorTest
 	}
 
 	// =========================================================================
+	// == Template depth
+
+	@Test
+	public void testTemplateDepthIsLimitedByDefault() throws Exception
+	{
+		addTemplateChain("L", 50, "", "end");
+
+		EngProcessedPage page = expand("{{L1}}");
+
+		assertOutput(
+				"<span class=\"error\">Template recursion depth limit exceeded (40)</span>",
+				page);
+		assertHasWarning(page, "TemplateRecursionDepthWarning");
+	}
+
+	@Test
+	public void testTemplateDepthLimitIsConfigurable() throws Exception
+	{
+		config.getEngineConfig().setMaxTemplateDepth(3);
+		addTemplateChain("L", 5, "x", "end");
+
+		EngProcessedPage page = expand("{{L1}}");
+
+		assertOutput(
+				"xxx<span class=\"error\">Template recursion depth limit exceeded (3)</span>",
+				page);
+		assertHasWarning(page, "TemplateRecursionDepthWarning");
+	}
+
+	@Test
+	public void testTemplatesWithinDepthLimitAreExpanded() throws Exception
+	{
+		config.getEngineConfig().setMaxTemplateDepth(5);
+		addTemplateChain("L", 5, "x", "end");
+
+		assertExpansion("xxxxend", "{{L1}}");
+	}
+
+	// =========================================================================
+	// == Post-expand include size
+
+	private static final String OMITTED =
+			"<!-- WARNING: template omitted, post-expand include size too large -->";
+
+	@Test
+	public void testPostExpandIncludeSizeIsLimited() throws Exception
+	{
+		// Each transclusion of T has size 11: 10 characters plus the list
+		config.getEngineConfig().setMaxPostExpandIncludeSize(25);
+		callback.add("Template:T", "0123456789");
+
+		EngProcessedPage page = expand("{{T}}{{T}}{{T}}");
+
+		assertOutput("01234567890123456789[[:Template:T]]" + OMITTED, page);
+		assertHasWarning(page, "PostExpandIncludeSizeWarning");
+	}
+
+	@Test
+	public void testTransclusionsAfterExceedingPostExpandIncludeSizeAreOmitted() throws Exception
+	{
+		// Each transclusion of T has size 11: 10 characters plus the list
+		config.getEngineConfig().setMaxPostExpandIncludeSize(25);
+		callback.add("Template:T", "0123456789");
+		callback.add("Template:U", "u");
+
+		EngProcessedPage page = expand("{{T}}{{T}}{{T}}{{U}}");
+
+		assertOutput(
+				"01234567890123456789[[:Template:T]]" + OMITTED + "[[:Template:U]]" + OMITTED,
+				page);
+		assertEquals(0, callback.getRetrievalCount("Template:U"));
+	}
+
+	@Test
+	public void testNestedTransclusionsCountAtEveryLevel() throws Exception
+	{
+		config.getEngineConfig().setMaxPostExpandIncludeSize(15);
+		callback.add("Template:Outer", "{{Inner}}");
+		callback.add("Template:Inner", "0123456789");
+
+		EngProcessedPage page = expand("{{Outer}}");
+
+		assertOutput("[[:Template:Outer]]" + OMITTED, page);
+		assertHasWarning(page, "PostExpandIncludeSizeWarning");
+	}
+
+	@Test(timeout = 10000)
+	public void testExponentialTemplateIsCut() throws Exception
+	{
+		config.getEngineConfig().setMaxPostExpandIncludeSize(1000);
+
+		// Every level transcludes the next level twice: 2^29 empty transclusions
+		for (int i = 1; i < 30; ++i)
+			callback.add("Template:L" + i, "{{L" + (i + 1) + "}}{{L" + (i + 1) + "}}");
+		callback.add("Template:L30", "");
+
+		EngProcessedPage page = expand("{{L1}}");
+
+		assertHasWarning(page, "PostExpandIncludeSizeWarning");
+	}
+
+	@Test(timeout = 10000)
+	public void testExponentialArgumentIsCut() throws Exception
+	{
+		config.getEngineConfig().setMaxPostExpandIncludeSize(1000);
+
+		// Every call doubles its argument: 2^30 characters
+		callback.add("Template:T", "{{{1}}}{{{1}}}");
+
+		StringBuilder wikitext = new StringBuilder("x");
+		for (int i = 0; i < 30; ++i)
+			wikitext.insert(0, "{{T|").append("}}");
+
+		EngProcessedPage page = expand(wikitext.toString());
+
+		assertHasWarning(page, "PostExpandIncludeSizeWarning");
+		assertOutput("[[:Template:T]]" + OMITTED, page);
+	}
+
+	// =========================================================================
 
 	/**
 	 * Adds the templates {@code prefix1} to {@code prefixN}, each transcluding
