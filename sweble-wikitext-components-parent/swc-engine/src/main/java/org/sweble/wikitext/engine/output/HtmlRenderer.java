@@ -874,6 +874,7 @@ public class HtmlRenderer
 	private static final Set<String> INVISIBLE_TAG_EXTENSIONS = setOf(
 			"categorytree",
 			"indicator",
+			"inputbox",
 			"section",
 			"templatedata",
 			"templatestyles");
