@@ -181,9 +181,26 @@ public class InterwikiImpl
 
 	// =========================================================================
 
+	/**
+	 * Orders by prefix. Interwikis with the same prefix are ordered by their
+	 * remaining settings, which makes the order consistent with
+	 * {@link #equals(Object)}.
+	 */
 	@Override
 	public int compareTo(Interwiki o)
 	{
-		return this.prefix.compareTo(o.getPrefix());
+		int result = ConfigComparisons.compare(this.prefix, o.getPrefix());
+		if (result != 0)
+			return result;
+		if (o instanceof InterwikiImpl)
+		{
+			result = ConfigComparisons.compare(this.url, ((InterwikiImpl) o).getUrl());
+			if (result != 0)
+				return result;
+		}
+		result = Boolean.compare(this.local, o.isLocal());
+		if (result != 0)
+			return result;
+		return Boolean.compare(this.trans, o.isTrans());
 	}
 }

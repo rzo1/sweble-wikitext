@@ -19,10 +19,16 @@ package org.sweble.wikitext.engine.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Collections;
 
 import org.junit.Test;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
@@ -114,5 +120,145 @@ public class WikiConfigTest
 		assertFalse(config.getNamespaces().isEmpty());
 		for (Namespace ns : config.getNamespaces())
 			assertEquals(ns.getName(), NamespaceCase.FIRST_LETTER, ns.getCase());
+	}
+
+	private static WikiConfigImpl saveAndLoad(WikiConfigImpl config) throws Exception
+	{
+		StringWriter writer = new StringWriter();
+		config.save(writer);
+		return WikiConfigImpl.load(new StringReader(writer.toString()));
+	}
+
+	/** Case-insensitive aliases stay case-insensitive after loading (issue #133). */
+	@Test
+	public void testAliasesStayCaseInsensitiveAfterLoad() throws Exception
+	{
+		WikiConfigImpl generated = DefaultConfigEnWp.generate();
+		assertTrue(generated.getParserConfig().isRedirectKeyword("#redirect"));
+
+		for (WikiConfigImpl loaded : new WikiConfigImpl[] {
+				saveAndLoad(generated),
+				WikiConfigImpl.load(getClass().getResourceAsStream(
+						"/org/sweble/wikitext/engine/utils/DefaultConfigEnWp.xml")) })
+		{
+			ParserConfigImpl parserConfig = loaded.getParserConfig();
+			assertTrue(parserConfig.isRedirectKeyword("#REDIRECT"));
+			assertTrue(parserConfig.isRedirectKeyword("#redirect"));
+			assertTrue(parserConfig.isRedirectKeyword("#Redirect"));
+			assertTrue(loaded.getI18nAliasById("redirect").hasAlias("#redirect"));
+		}
+	}
+
+	/** The site name is part of the configuration (issue #133). */
+	@Test
+	public void testEqualsIncludesSiteName() throws Exception
+	{
+		WikiConfigImpl a = DefaultConfigEnWp.generate();
+		WikiConfigImpl b = DefaultConfigEnWp.generate();
+		assertEquals(a, b);
+
+		b.setSiteName("Another Wiki");
+		assertNotEquals(a, b);
+	}
+
+	/** All parser switches are part of the configuration (issue #133). */
+	@Test
+	public void testParserConfigEqualsIncludesAllSwitches() throws Exception
+	{
+		WikiConfigImpl a = DefaultConfigEnWp.generate();
+		WikiConfigImpl b = DefaultConfigEnWp.generate();
+
+		b.getParserConfig().setConvertIllegalCodePoints(!a.getParserConfig().isConvertIllegalCodePoints());
+		assertNotEquals(a.getParserConfig(), b.getParserConfig());
+		assertNotEquals(a, b);
+
+		b = DefaultConfigEnWp.generate();
+		b.getParserConfig().setPreserveSemiPreLeadingSpace(!a.getParserConfig().isPreserveSemiPreLeadingSpace());
+		assertNotEquals(a.getParserConfig(), b.getParserConfig());
+		assertNotEquals(a, b);
+
+		b = DefaultConfigEnWp.generate();
+		b.getParserConfig().setConvertIllegalCodePoints(true);
+		b.getParserConfig().setPreserveSemiPreLeadingSpace(true);
+		WikiConfigImpl loaded = saveAndLoad(b);
+		assertEquals(b.getParserConfig(), loaded.getParserConfig());
+		assertEquals(b.getParserConfig().hashCode(), loaded.getParserConfig().hashCode());
+		assertEquals(b, loaded);
+	}
+
+	/** The settings of a namespace are part of the configuration (issue #133). */
+	@Test
+	public void testEqualsIncludesNamespaceSettings() throws Exception
+	{
+		WikiConfigImpl a = DefaultConfigEnWp.generate();
+		WikiConfigImpl b = DefaultConfigEnWp.generate();
+
+		b.getNamespace(0).setCase(NamespaceCase.CASE_SENSITIVE);
+		assertNotEquals(a, b);
+	}
+
+	@Test
+	public void testSaveWithoutDefaultNamespaceFailsWithConfigurationException() throws Exception
+	{
+		try
+		{
+			new WikiConfigImpl().save(new StringWriter());
+			fail("Expected a WikiConfigurationException");
+		}
+		catch (WikiConfigurationException e)
+		{
+			assertTrue(e.getMessage(), e.getMessage().contains("default namespace"));
+		}
+	}
+
+	@Test
+	public void testSaveWithoutTemplateNamespaceFailsWithConfigurationException() throws Exception
+	{
+		WikiConfigImpl config = new WikiConfigImpl();
+		NamespaceImpl main = new NamespaceImpl(0, "", "", false, false, Collections.<String> emptyList());
+		config.addNamespace(main);
+		config.setDefaultNamespace(main);
+
+		try
+		{
+			config.save(new StringWriter());
+			fail("Expected a WikiConfigurationException");
+		}
+		catch (WikiConfigurationException e)
+		{
+			assertTrue(e.getMessage(), e.getMessage().contains("template namespace"));
+		}
+	}
+
+	/**
+	 * The namespace prefix mapper and the formatted output are applied and
+	 * nothing is printed to stderr (issue #133).
+	 */
+	@Test
+	public void testSavedXmlIsFormattedAndUsesEnginePrefix() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+
+		PrintStream oldErr = System.err;
+		ByteArrayOutputStream err = new ByteArrayOutputStream();
+		StringWriter writer = new StringWriter();
+		System.setErr(new PrintStream(err, true, "UTF-8"));
+		try
+		{
+			config.save(writer);
+		}
+		finally
+		{
+			System.setErr(oldErr);
+		}
+
+		String saved = writer.toString();
+		assertTrue(saved, saved.contains("<swc-engine:WikiConfig "));
+		assertTrue(saved, saved.contains("xmlns:swc-engine=\"org.sweble.wikitext.engine\""));
+		assertFalse(saved, saved.contains("ns2:"));
+		assertTrue(saved, saved.contains("\n    <siteName>"));
+		assertEquals("", err.toString("UTF-8"));
+
+		assertNotNull(config.getAsJAXBSource());
 	}
 }

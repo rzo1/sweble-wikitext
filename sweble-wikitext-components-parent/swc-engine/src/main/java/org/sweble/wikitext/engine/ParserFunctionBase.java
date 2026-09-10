@@ -217,15 +217,22 @@ public abstract class ParserFunctionBase
 
 	// =========================================================================
 
+	/**
+	 * Parser functions are identified by their id and their class.
+	 */
 	@Override
 	public int hashCode()
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + getClass().getName().hashCode();
+		result = prime * result + id.hashCode();
 		return result;
 	}
 
+	/**
+	 * Parser functions are identified by their id and their class.
+	 */
 	@Override
 	public boolean equals(Object obj)
 	{
@@ -235,15 +242,23 @@ public abstract class ParserFunctionBase
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		return true;
+		ParserFunctionBase other = (ParserFunctionBase) obj;
+		return id.equals(other.id);
 	}
 
 	// =========================================================================
 
+	/**
+	 * Orders by id and then by class name, which makes the order consistent
+	 * with {@link #equals(Object)}.
+	 */
 	@Override
 	public int compareTo(ParserFunctionBase o)
 	{
-		return this.id.compareTo(o.getId());
+		int result = this.id.compareTo(o.getId());
+		if (result != 0)
+			return result;
+		return getClass().getName().compareTo(o.getClass().getName());
 	}
 
 	// =========================================================================

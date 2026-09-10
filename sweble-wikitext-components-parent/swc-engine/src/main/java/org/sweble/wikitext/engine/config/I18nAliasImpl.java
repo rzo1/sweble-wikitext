@@ -19,10 +19,10 @@ package org.sweble.wikitext.engine.config;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 
+import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlType;
@@ -106,7 +106,7 @@ public class I18nAliasImpl
 	public Set<String> getAliases()
 	{
 		if (aliases == null)
-			aliases = new TreeSet<String>();
+			aliases = newAliasSet();
 		// Cannot return immutable aliases set since de-serialization uses this
 		// method's return value to add aliases to the set.
 		return aliases;
@@ -119,18 +119,28 @@ public class I18nAliasImpl
 	{
 		if (aliases == null)
 			throw new IllegalArgumentException();
-		this.aliases = new TreeSet<String>(
-				new Comparator<String>()
-				{
-					@Override
-					public int compare(String o1, String o2)
-					{
-						return I18nAliasImpl.this.caseSensitive ?
-								o1.compareTo(o2) :
-								o1.compareToIgnoreCase(o2);
-					}
-				});
-		this.aliases.addAll(aliases);
+		Set<String> newAliases = newAliasSet();
+		newAliases.addAll(aliases);
+		this.aliases = newAliases;
+	}
+
+	/**
+	 * JAXB adds the aliases to the set returned by getAliases(), which might
+	 * have been created before the case sensitivity was known. Rebuild the
+	 * set with the matching comparator.
+	 */
+	@SuppressWarnings("unused")
+	private void afterUnmarshal(Unmarshaller unmarshaller, Object parent)
+	{
+		setAliases(getAliases());
+	}
+
+	private Set<String> newAliasSet()
+	{
+		// Both orders are serializable, unlike an anonymous comparator
+		if (caseSensitive != null && caseSensitive)
+			return new TreeSet<String>();
+		return new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 	}
 
 	@Override
@@ -162,12 +172,12 @@ public class I18nAliasImpl
 		if (getClass() != obj.getClass())
 			return false;
 		I18nAliasImpl other = (I18nAliasImpl) obj;
-		if (aliases == null)
+		if (id == null)
 		{
-			if (other.aliases != null)
+			if (other.id != null)
 				return false;
 		}
-		else if (!aliases.equals(other.aliases))
+		else if (!id.equals(other.id))
 			return false;
 		if (caseSensitive == null)
 		{
@@ -176,12 +186,14 @@ public class I18nAliasImpl
 		}
 		else if (!caseSensitive.equals(other.caseSensitive))
 			return false;
-		if (id == null)
+		// Compare the names exactly: A case-insensitive set considers
+		// "#REDIRECT" and "#redirect" equal although their hash codes differ.
+		if (aliases == null)
 		{
-			if (other.id != null)
+			if (other.aliases != null)
 				return false;
 		}
-		else if (!id.equals(other.id))
+		else if (other.aliases == null || ConfigComparisons.compare(aliases, other.aliases) != 0)
 			return false;
 		return true;
 	}
@@ -196,9 +208,20 @@ public class I18nAliasImpl
 
 	// =========================================================================
 
+	/**
+	 * Orders by id. Aliases with the same id are ordered by their case
+	 * sensitivity and names, which makes the order consistent with
+	 * {@link #equals(Object)}.
+	 */
 	@Override
 	public int compareTo(I18nAlias o)
 	{
-		return this.id.compareTo(o.getId());
+		int result = ConfigComparisons.compare(this.id, o.getId());
+		if (result != 0)
+			return result;
+		result = Boolean.compare(isCaseSensitive(), o.isCaseSensitive());
+		if (result != 0)
+			return result;
+		return ConfigComparisons.compare(this.aliases, o.getAliases());
 	}
 }

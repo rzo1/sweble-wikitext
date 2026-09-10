@@ -688,6 +688,7 @@ public class ParserConfigImpl
 		int result = 1;
 		result = prime * result + ((allowedUrlProtocols == null) ? 0 : allowedUrlProtocols.hashCode());
 		result = prime * result + (autoCorrect ? 1231 : 1237);
+		result = prime * result + (convertIllegalCodePoints ? 1231 : 1237);
 		result = prime * result + (fosterParenting ? 1231 : 1237);
 		result = prime * result + (fosterParentingForTransclusions ? 1231 : 1237);
 		result = prime * result + (gatherRtData ? 1231 : 1237);
@@ -698,6 +699,7 @@ public class ParserConfigImpl
 		result = prime * result + ((lctVariantMap == null) ? 0 : lctVariantMap.hashCode());
 		result = prime * result + ((minSeverity == null) ? 0 : minSeverity.hashCode());
 		result = prime * result + ((nonStandardElementBehavior == null) ? 0 : nonStandardElementBehavior.hashCode());
+		result = prime * result + (preserveSemiPreLeadingSpace ? 1231 : 1237);
 		result = prime * result + (warningsEnabled ? 1231 : 1237);
 		result = prime * result + ((xmlEntities == null) ? 0 : xmlEntities.hashCode());
 		return result;
@@ -721,6 +723,8 @@ public class ParserConfigImpl
 		else if (!allowedUrlProtocols.equals(other.allowedUrlProtocols))
 			return false;
 		if (autoCorrect != other.autoCorrect)
+			return false;
+		if (convertIllegalCodePoints != other.convertIllegalCodePoints)
 			return false;
 		if (fosterParenting != other.fosterParenting)
 			return false;
@@ -761,6 +765,8 @@ public class ParserConfigImpl
 		if (minSeverity != other.minSeverity)
 			return false;
 		if (nonStandardElementBehavior != other.nonStandardElementBehavior)
+			return false;
+		if (preserveSemiPreLeadingSpace != other.preserveSemiPreLeadingSpace)
 			return false;
 		if (warningsEnabled != other.warningsEnabled)
 			return false;
