@@ -20,8 +20,14 @@ package org.sweble.wikitext.engine.ext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -76,6 +82,185 @@ public class ParserFunctionSemanticsTest
 	public void testTagKeepsUnquotedAttributeValue() throws Exception
 	{
 		assertExpansion("<ref name=\"a\">x</ref>", "{{#tag:ref|x|name=a}}");
+	}
+
+	@Test
+	public void testTagWithoutBody() throws Exception
+	{
+		assertExpansion("<nowiki />", "{{#tag:nowiki}}");
+		assertExpansion("<nowiki />", "{{#tag: NoWiki }}");
+	}
+
+	@Test
+	public void testTagNameIsLowercased() throws Exception
+	{
+		assertExpansion("<ref>x</ref>", "{{#tag:REF|x}}");
+	}
+
+	@Test
+	public void testTagNameDoesNotDependOnDefaultLocale() throws Exception
+	{
+		Locale defaultLocale = Locale.getDefault();
+		try
+		{
+			Locale.setDefault(new Locale("tr"));
+
+			assertExpansion("<nowiki>x</nowiki>", "{{#tag:NOWIKI|x}}");
+		}
+		finally
+		{
+			Locale.setDefault(defaultLocale);
+		}
+	}
+
+	// =========================================================================
+	// == #iferror
+
+	@Test
+	public void testIferrorDetectsErrorClassOfSpanAndDiv() throws Exception
+	{
+		assertExpansion("y", "{{#iferror: <span class=\"error\">x</span> | y | n }}");
+		assertExpansion("y", "{{#iferror: <div class=\"error\">x</div> | y | n }}");
+		assertExpansion("y", "{{#iferror: <p class=\"error\">x</p> | y | n }}");
+		assertExpansion("y", "{{#iferror: <strong class=\"error\">x</strong> | y | n }}");
+		assertExpansion("y", "{{#iferror: <span id=\"a\" class=\"big error mw-x\">x</span> | y | n }}");
+	}
+
+	@Test
+	public void testIferrorIgnoresElementsWithoutErrorClass() throws Exception
+	{
+		assertExpansion("n", "{{#iferror: <strong>x</strong> | y | n }}");
+		assertExpansion("n", "{{#iferror: <strong>x</strong> class=\"error\" | y | n }}");
+		assertExpansion("n", "{{#iferror: <span class=\"errors\">x</span> | y | n }}");
+		assertExpansion("n", "{{#iferror: <b class=\"error\">x</b> | y | n }}");
+	}
+
+	@Test
+	public void testIferrorDetectsErrorsOfParserFunctions() throws Exception
+	{
+		assertExpansion("y", "{{#iferror: {{#expr: 1/0 }} | y | n }}");
+		assertExpansion("y", "{{#iferror: {{#ifexpr: 1/0 | a | b }} | y | n }}");
+		assertExpansion("y", "{{#iferror: {{#rel2abs: ../.. | Foo }} | y | n }}");
+	}
+
+	@Test
+	public void testIferrorReturnsTestStringIfThereIsNoElseBranch() throws Exception
+	{
+		assertExpansion("abc", "{{#iferror: abc | error }}");
+		assertExpansion("<strong>x</strong>", "{{#iferror: <strong>x</strong> }}");
+		assertExpansion("", "{{#iferror: {{#expr: 1/0 }} }}");
+	}
+
+	@Test
+	public void testIferrorCanBeUsedByConcurrentThreads() throws Exception
+	{
+		final int threads = 8;
+		final int iterations = 200;
+
+		ExecutorService executor = Executors.newFixedThreadPool(threads);
+		try
+		{
+			List<Future<Void>> results = new ArrayList<Future<Void>>();
+			for (int i = 0; i < threads; ++i)
+			{
+				final String value = "value" + i;
+				results.add(executor.submit(() -> {
+					for (int j = 0; j < iterations; ++j)
+						assertExpansion(value, "{{#iferror: " + value + " | error }}");
+					return null;
+				}));
+			}
+
+			for (Future<Void> result : results)
+				result.get();
+		}
+		finally
+		{
+			executor.shutdownNow();
+		}
+	}
+
+	// =========================================================================
+	// == #ifexpr
+
+	@Test
+	public void testIfexprReturnsExpressionError() throws Exception
+	{
+		assertExpansion(
+				"<strong class=\"error\">Expression error: Missing operand for +.</strong>",
+				"{{#ifexpr: 1 + | yes | no }}");
+		assertExpansion(
+				"<strong class=\"error\">Division by zero.</strong>",
+				"{{#ifexpr: 1/0 }}");
+	}
+
+	@Test
+	public void testIfexprChoosesBranch() throws Exception
+	{
+		assertExpansion("yes", "{{#ifexpr: 1 = 1 | yes | no }}");
+		assertExpansion("no", "{{#ifexpr: 1 = 2 | yes | no }}");
+		assertExpansion("no", "{{#ifexpr: | yes | no }}");
+		assertExpansion("", "{{#ifexpr: 1 = 2 | yes }}");
+	}
+
+	// =========================================================================
+	// == #rel2abs
+
+	@Test
+	public void testRel2absWithRelativePaths() throws Exception
+	{
+		assertExpansion("Help:Foo/bar/baz/quok", "{{#rel2abs: /quok | Help:Foo/bar/baz }}");
+		assertExpansion("Help:Foo/bar/baz/quok", "{{#rel2abs: ./quok | Help:Foo/bar/baz }}");
+		assertExpansion("Help:Foo/bar/quok", "{{#rel2abs: ../quok | Help:Foo/bar/baz }}");
+		assertExpansion("Help:Foo/bar", "{{#rel2abs: ../. | Help:Foo/bar/baz }}");
+		assertExpansion("Help:Foo/bar/quok", "{{#rel2abs: ../quok/. | Help:Foo/bar/baz }}");
+		assertExpansion("Help:Foo/quok", "{{#rel2abs: ../../quok | Help:Foo/bar/baz }}");
+		assertExpansion("quok", "{{#rel2abs: ../../../quok | Help:Foo/bar/baz }}");
+		assertExpansion("Help:Foo", "{{#rel2abs: .. | Help:Foo/bar }}");
+		assertExpansion("Help:Foo/bar/a/b", "{{#rel2abs: ./a//b/ | Help:Foo/bar }}");
+	}
+
+	@Test
+	public void testRel2absWithAbsolutePath() throws Exception
+	{
+		assertExpansion("quok", "{{#rel2abs: quok | Help:Foo/bar/baz }}");
+		assertExpansion("a/b", "{{#rel2abs: a/./b | Help:Foo }}");
+	}
+
+	@Test
+	public void testRel2absIsRelativeToCurrentPage() throws Exception
+	{
+		assertExpansion("Help:Foo/baz", "Help:Foo/bar", "{{#rel2abs: ../baz }}");
+		assertExpansion("Help:Foo/bar/baz", "Help:Foo/bar", "{{#rel2abs: /baz }}");
+		assertExpansion("Help:Foo/bar", "Help:Foo/bar", "{{#rel2abs: }}");
+		assertExpansion("Help:Foo/bar", "Help:Foo/bar", "{{#rel2abs: . }}");
+	}
+
+	@Test
+	public void testRel2absAboveRootNodeIsAnError() throws Exception
+	{
+		assertExpansion(
+				"<strong class=\"error\">Error: Invalid depth in path: \"Help:Foo/bar/baz/../../../../quok\" "
+						+ "(tried to access a node above the root node).</strong>",
+				"{{#rel2abs: ../../../../quok | Help:Foo/bar/baz }}");
+	}
+
+	// =========================================================================
+	// == #ifexist
+
+	@Test
+	public void testIfexistSpecialPagesExist() throws Exception
+	{
+		assertExpansion("y", "{{#ifexist:Special:RecentChanges|y|n}}");
+	}
+
+	@Test
+	public void testIfexistUsesCallback() throws Exception
+	{
+		callback.add("Foo", "x");
+
+		assertExpansion("y", "{{#ifexist:Foo|y|n}}");
+		assertExpansion("n", "{{#ifexist:Bar|y|n}}");
 	}
 
 	// =========================================================================
@@ -287,7 +472,12 @@ public class ParserFunctionSemanticsTest
 
 	private EngProcessedPage expand(String wikitext) throws Exception
 	{
-		PageId pageId = new PageId(PageTitle.make(config, "Test"), -1);
+		return expand("Test", wikitext);
+	}
+
+	private EngProcessedPage expand(String title, String wikitext) throws Exception
+	{
+		PageId pageId = new PageId(PageTitle.make(config, title), -1);
 
 		return engine.expand(pageId, wikitext, callback);
 	}
@@ -295,6 +485,11 @@ public class ParserFunctionSemanticsTest
 	private void assertExpansion(String expected, String wikitext) throws Exception
 	{
 		assertOutput(expected, expand(wikitext));
+	}
+
+	private void assertExpansion(String expected, String title, String wikitext) throws Exception
+	{
+		assertOutput(expected, expand(title, wikitext));
 	}
 
 	private static void assertOutput(String expected, EngProcessedPage page)

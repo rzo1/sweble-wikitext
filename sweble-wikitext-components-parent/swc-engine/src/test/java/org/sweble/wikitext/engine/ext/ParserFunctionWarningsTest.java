@@ -69,7 +69,10 @@ public class ParserFunctionWarningsTest
 		EngProcessedPage page = expand("{{#ifexpr: 1 + | yes | no }}");
 
 		assertHasWarning(page, IllegalArgumentsWarning.class, WarningSeverity.NORMAL);
-		assertOutput("no", page);
+		// Like MediaWiki, the expression error is returned
+		assertOutput(
+				"<strong class=\"error\">Expression error: Missing operand for +.</strong>",
+				page);
 	}
 
 	@Test

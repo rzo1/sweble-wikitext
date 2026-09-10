@@ -37,6 +37,7 @@ public class ParserFunctionsPfnExt
 		addParserFunction(new ParserFunctionIfError(wikiConfig));
 		addParserFunction(new ParserFunctionIfExist(wikiConfig));
 		addParserFunction(new ParserFunctionIfExpr(wikiConfig));
+		addParserFunction(new ParserFunctionRel2Abs(wikiConfig));
 		addParserFunction(new ParserFunctionSwitch(wikiConfig));
 		addParserFunction(new ParserFunctionTime(wikiConfig));
 		addParserFunction(new ParserFunctionTimeLocal(wikiConfig));

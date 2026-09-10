@@ -106,6 +106,38 @@ public class ParserFunctionTime
 		return false;
 	}
 
+	/**
+	 * Formats the current time of the wiki like <code>#time</code> does. Used
+	 * by the date and time variables like <code>{{CURRENTYEAR}}</code>. Names
+	 * of months and days are given in the content language of the wiki.
+	 *
+	 * @param wikiConfig
+	 *            The configuration of the wiki, which provides the current
+	 *            time, the local time zone and the content language.
+	 * @param format
+	 *            The format string, see
+	 *            {@link #format(String, ZonedDateTime, Locale)}.
+	 * @param local
+	 *            Whether the local time zone of the wiki is used instead of
+	 *            UTC.
+	 * @return The formated current time.
+	 */
+	public static String formatNow(
+			WikiConfig wikiConfig,
+			String format,
+			boolean local)
+	{
+		Locale locale = getLocale(wikiConfig.getContentLanguage());
+		if (locale == null)
+			locale = Locale.ENGLISH;
+
+		ZoneId zone = local ? wikiConfig.getTimezone().toZoneId() : UTC;
+
+		Instant now = wikiConfig.getRuntimeInfo().getDateAndTime().toInstant();
+
+		return format(format, now.atZone(zone), locale);
+	}
+
 	@Override
 	public WtNode invoke(
 			WtTemplate pfn,

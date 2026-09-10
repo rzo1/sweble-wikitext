@@ -22,14 +22,28 @@ import java.util.List;
 import org.sweble.wikitext.engine.ExpansionFrame;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.ext.parser_functions.ExprParser.ExprError;
+import org.sweble.wikitext.engine.nodes.EngineRtData;
 import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.utils.StringConversionException;
 
+/**
+ * <pre>
+ * {{#ifexpr:
+ *       expression
+ *     | value if true
+ *     | value if false
+ * }}
+ * </pre>
+ *
+ * Like MediaWiki's <code>ParserFunctions::ifexpr()</code>, an invalid
+ * expression results in the error of the expression instead of one of the
+ * branches.
+ */
 public class ParserFunctionIfExpr
 		extends
-			ParserFunctionsExtPfn.IfThenElseStmt
+			ParserFunctionsExtPfn.CtrlStmt
 {
 	private static final long serialVersionUID = 1L;
 
@@ -38,29 +52,23 @@ public class ParserFunctionIfExpr
 	 */
 	public ParserFunctionIfExpr()
 	{
-		super("ifexpr", 1 /* thenArgIndex */);
+		super("ifexpr");
 	}
 
-	/**
-	 * <pre>
-	 * {{#ifexpr: 
-	 *       expression 
-	 *     | value if true 
-	 *     | value if false
-	 * }}
-	 * </pre>
-	 */
 	public ParserFunctionIfExpr(WikiConfig wikiConfig)
 	{
-		super(wikiConfig, "ifexpr", 1 /* thenArgIndex */);
+		super(wikiConfig, "ifexpr");
 	}
 
 	@Override
-	protected boolean evaluateCondition(
+	protected WtNode evaluate(
 			WtTemplate pfn,
 			ExpansionFrame frame,
 			List<? extends WtNode> args)
 	{
+		if (args.size() < 1)
+			return null;
+
 		WtNode test = frame.expand(args.get(0));
 
 		String expr = null;
@@ -72,11 +80,11 @@ public class ParserFunctionIfExpr
 		{
 			// Invalid expressions evaluate to false
 			fileInvalidNameWarning(frame, WarningSeverity.NORMAL, test);
-			return false;
+			return getBranch(args, false);
 		}
 
 		if (expr.isEmpty())
-			return false;
+			return getBranch(args, false);
 
 		ExprParser p = new ExprParser();
 		String result;
@@ -86,15 +94,21 @@ public class ParserFunctionIfExpr
 		}
 		catch (ExprError e)
 		{
-			// Invalid expressions evaluate to false
 			fileIllegalArgumentsWarning(
 					frame,
 					WarningSeverity.NORMAL,
 					pfn,
 					"Invalid expression `" + expr + "': " + e.getMessage());
-			return false;
+
+			// Like MediaWiki, return the error
+			return EngineRtData.set(nf().softError(e.getMessage()));
 		}
 
+		return getBranch(args, isTrue(result));
+	}
+
+	private static boolean isTrue(String result)
+	{
 		if (result == null || result.isEmpty())
 			return false;
 
@@ -108,5 +122,15 @@ public class ParserFunctionIfExpr
 			// as non-empty strings, which are true
 			return true;
 		}
+	}
+
+	/**
+	 * @return The then or else branch or {@code null} if the branch is
+	 *         missing.
+	 */
+	private static WtNode getBranch(List<? extends WtNode> args, boolean cond)
+	{
+		int index = cond ? 1 : 2;
+		return (args.size() > index) ? args.get(index) : null;
 	}
 }

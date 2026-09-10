@@ -19,6 +19,7 @@ package org.sweble.wikitext.engine.ext.core;
 
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,7 @@ import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtNodeList;
 import org.sweble.wikitext.parser.nodes.WtTagExtension;
+import org.sweble.wikitext.parser.nodes.WtTagExtensionBody;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
 import org.sweble.wikitext.parser.nodes.WtTemplateArgument;
 import org.sweble.wikitext.parser.utils.StringConversionException;
@@ -108,7 +110,7 @@ public class CorePfnFunctionsMiscellaneous
 				ExpansionFrame frame,
 				List<? extends WtNode> argsValues)
 		{
-			if (argsValues.size() < 2)
+			if (argsValues.size() < 1)
 				return pfn;
 
 			WtTemplateArgument nameNode = (WtTemplateArgument) argsValues.get(0);
@@ -117,7 +119,8 @@ public class CorePfnFunctionsMiscellaneous
 			try
 			{
 				WtNode expNameNode = frame.expand(nameNode.getValue());
-				nameStr = tu().astToText(expNameNode).trim();
+				// Like MediaWiki, tag names are case-insensitive
+				nameStr = tu().astToText(expNameNode).trim().toLowerCase(Locale.ROOT);
 			}
 			catch (StringConversionException e)
 			{
@@ -125,12 +128,18 @@ public class CorePfnFunctionsMiscellaneous
 				return pfn;
 			}
 
-			// FIXME: Meld 'name=' part into value
-			// FIXME: Do something about the "remove comments" hack
-			WtTemplateArgument bodyNode = (WtTemplateArgument) argsValues.get(1);
-			WtNode expValueNode = frame.expand(bodyNode.getValue());
-			expValueNode = stripComments(expValueNode);
-			String bodyStr = WtRtDataPrinter.print(expValueNode);
+			// Like MediaWiki, a tag without content is created if there is
+			// no content argument (e.g. {{#tag:nowiki}})
+			WtTagExtensionBody body = null;
+			if (argsValues.size() >= 2)
+			{
+				// FIXME: Meld 'name=' part into value
+				// FIXME: Do something about the "remove comments" hack
+				WtTemplateArgument bodyNode = (WtTemplateArgument) argsValues.get(1);
+				WtNode expValueNode = frame.expand(bodyNode.getValue());
+				expValueNode = stripComments(expValueNode);
+				body = nf().tagExtBody(WtRtDataPrinter.print(expValueNode));
+			}
 
 			WtNodeList attrs = nf().list();
 			for (int i = 2; i < argsValues.size(); ++i)
@@ -171,10 +180,9 @@ public class CorePfnFunctionsMiscellaneous
 						nf().value(argValueList)));
 			}
 
-			WtTagExtension tagExt = EngineRtData.set(nf().tagExt(
-					nameStr,
-					nf().attrs(attrs),
-					nf().tagExtBody(bodyStr)));
+			WtTagExtension tagExt = EngineRtData.set((body != null) ?
+					nf().tagExt(nameStr, nf().attrs(attrs), body) :
+					nf().tagExt(nameStr, nf().attrs(attrs)));
 
 			return frame.expand(tagExt);
 		}

@@ -34,6 +34,8 @@ public class ParserFunctionIfExist
 {
 	private static final long serialVersionUID = 1L;
 
+	private static final int SPECIAL_NAMESPACE_ID = -1;
+
 	/**
 	 * For un-marshaling only.
 	 */
@@ -70,6 +72,12 @@ public class ParserFunctionIfExist
 			testStr = tu().astToText(test).trim();
 
 			PageTitle pageTitle = PageTitle.make(frame.getWikiConfig(), testStr);
+
+			// Like MediaWiki, special pages are not looked up. The special
+			// pages of the wiki are not known, so all of them exist.
+			if (pageTitle.getNamespace() != null
+					&& pageTitle.getNamespace().getId() == SPECIAL_NAMESPACE_ID)
+				return true;
 
 			return frame.existsPage(pageTitle);
 		}

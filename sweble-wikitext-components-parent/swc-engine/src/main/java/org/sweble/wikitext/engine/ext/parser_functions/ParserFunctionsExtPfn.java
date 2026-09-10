@@ -271,10 +271,6 @@ public abstract class ParserFunctionsExtPfn
 	{
 		private static final long serialVersionUID = 1L;
 
-		private final boolean hasDefault;
-
-		private WtNode defaultValue;
-
 		private final int thenArgIndex;
 
 		/**
@@ -285,20 +281,6 @@ public abstract class ParserFunctionsExtPfn
 				int thenArgIndex)
 		{
 			super(name);
-			this.hasDefault = false;
-			this.thenArgIndex = thenArgIndex;
-		}
-
-		/**
-		 * For un-marshaling only.
-		 */
-		protected IfThenElseStmt(
-				String name,
-				int thenArgIndex,
-				boolean hasDefault)
-		{
-			super(name);
-			this.hasDefault = hasDefault;
 			this.thenArgIndex = thenArgIndex;
 		}
 
@@ -308,18 +290,6 @@ public abstract class ParserFunctionsExtPfn
 				int thenArgIndex)
 		{
 			super(wikiConfig, name);
-			this.hasDefault = false;
-			this.thenArgIndex = thenArgIndex;
-		}
-
-		protected IfThenElseStmt(
-				WikiConfig wikiConfig,
-				String name,
-				int thenArgIndex,
-				boolean hasDefault)
-		{
-			super(wikiConfig, name);
-			this.hasDefault = hasDefault;
 			this.thenArgIndex = thenArgIndex;
 		}
 
@@ -329,33 +299,23 @@ public abstract class ParserFunctionsExtPfn
 				ExpansionFrame frame,
 				List<? extends WtNode> args)
 		{
-			if (args.size() <= (hasDefault ? thenArgIndex - 1 : thenArgIndex))
+			if (args.size() <= thenArgIndex)
 				return nf().text("");
 
 			boolean cond = evaluateCondition(pfn, frame, args);
 
-			WtNode result = defaultValue;
-			if (cond)
-			{
-				if (args.size() > thenArgIndex)
-					result = args.get(thenArgIndex);
-			}
-			else
-			{
-				int elseArgIndex = thenArgIndex + 1;
+			int resultArgIndex = cond ? thenArgIndex : thenArgIndex + 1;
 
-				if (args.size() > elseArgIndex)
-					result = args.get(elseArgIndex);
-			}
-
-			return result;
+			return (args.size() > resultArgIndex) ? args.get(resultArgIndex) : null;
 		}
 
-		protected void setDefault(WtNode defaultValue)
-		{
-			this.defaultValue = defaultValue;
-		}
-
+		/**
+		 * Evaluates the condition of the statement.
+		 *
+		 * The same instance is used by all (possibly concurrent) expansions.
+		 * Implementations must therefore not keep the state of an invocation
+		 * in fields.
+		 */
 		protected abstract boolean evaluateCondition(
 				WtTemplate pfn,
 				ExpansionFrame frame,

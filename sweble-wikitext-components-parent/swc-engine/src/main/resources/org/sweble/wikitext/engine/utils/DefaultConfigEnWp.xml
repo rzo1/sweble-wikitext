@@ -743,9 +743,42 @@
         <i18nAlias id="currentday" caseSensitive="true">
             <alias>CURRENTDAY</alias>
         </i18nAlias>
+        <i18nAlias id="currentday2" caseSensitive="true">
+            <alias>CURRENTDAY2</alias>
+        </i18nAlias>
+        <i18nAlias id="currentdayname" caseSensitive="true">
+            <alias>CURRENTDAYNAME</alias>
+        </i18nAlias>
+        <i18nAlias id="currentdow" caseSensitive="true">
+            <alias>CURRENTDOW</alias>
+        </i18nAlias>
+        <i18nAlias id="currenthour" caseSensitive="true">
+            <alias>CURRENTHOUR</alias>
+        </i18nAlias>
         <i18nAlias id="currentmonth" caseSensitive="true">
             <alias>CURRENTMONTH</alias>
             <alias>CURRENTMONTH2</alias>
+        </i18nAlias>
+        <i18nAlias id="currentmonth1" caseSensitive="true">
+            <alias>CURRENTMONTH1</alias>
+        </i18nAlias>
+        <i18nAlias id="currentmonthabbrev" caseSensitive="true">
+            <alias>CURRENTMONTHABBREV</alias>
+        </i18nAlias>
+        <i18nAlias id="currentmonthname" caseSensitive="true">
+            <alias>CURRENTMONTHNAME</alias>
+        </i18nAlias>
+        <i18nAlias id="currentmonthnamegen" caseSensitive="true">
+            <alias>CURRENTMONTHNAMEGEN</alias>
+        </i18nAlias>
+        <i18nAlias id="currenttime" caseSensitive="true">
+            <alias>CURRENTTIME</alias>
+        </i18nAlias>
+        <i18nAlias id="currenttimestamp" caseSensitive="true">
+            <alias>CURRENTTIMESTAMP</alias>
+        </i18nAlias>
+        <i18nAlias id="currentweek" caseSensitive="true">
+            <alias>CURRENTWEEK</alias>
         </i18nAlias>
         <i18nAlias id="currentyear" caseSensitive="true">
             <alias>CURRENTYEAR</alias>
@@ -808,11 +841,54 @@
         <i18nAlias id="lcfirst" caseSensitive="false">
             <alias>LCFIRST:</alias>
         </i18nAlias>
+        <i18nAlias id="localday" caseSensitive="true">
+            <alias>LOCALDAY</alias>
+        </i18nAlias>
+        <i18nAlias id="localday2" caseSensitive="true">
+            <alias>LOCALDAY2</alias>
+        </i18nAlias>
+        <i18nAlias id="localdayname" caseSensitive="true">
+            <alias>LOCALDAYNAME</alias>
+        </i18nAlias>
+        <i18nAlias id="localdow" caseSensitive="true">
+            <alias>LOCALDOW</alias>
+        </i18nAlias>
+        <i18nAlias id="localhour" caseSensitive="true">
+            <alias>LOCALHOUR</alias>
+        </i18nAlias>
+        <i18nAlias id="localmonth" caseSensitive="true">
+            <alias>LOCALMONTH</alias>
+            <alias>LOCALMONTH2</alias>
+        </i18nAlias>
+        <i18nAlias id="localmonth1" caseSensitive="true">
+            <alias>LOCALMONTH1</alias>
+        </i18nAlias>
+        <i18nAlias id="localmonthabbrev" caseSensitive="true">
+            <alias>LOCALMONTHABBREV</alias>
+        </i18nAlias>
+        <i18nAlias id="localmonthname" caseSensitive="true">
+            <alias>LOCALMONTHNAME</alias>
+        </i18nAlias>
+        <i18nAlias id="localmonthnamegen" caseSensitive="true">
+            <alias>LOCALMONTHNAMEGEN</alias>
+        </i18nAlias>
+        <i18nAlias id="localtime" caseSensitive="true">
+            <alias>LOCALTIME</alias>
+        </i18nAlias>
+        <i18nAlias id="localtimestamp" caseSensitive="true">
+            <alias>LOCALTIMESTAMP</alias>
+        </i18nAlias>
         <i18nAlias id="localurl" caseSensitive="false">
             <alias>LOCALURL:</alias>
         </i18nAlias>
         <i18nAlias id="localurle" caseSensitive="false">
             <alias>LOCALURLE:</alias>
+        </i18nAlias>
+        <i18nAlias id="localweek" caseSensitive="true">
+            <alias>LOCALWEEK</alias>
+        </i18nAlias>
+        <i18nAlias id="localyear" caseSensitive="true">
+            <alias>LOCALYEAR</alias>
         </i18nAlias>
         <i18nAlias id="msgnw" caseSensitive="false">
             <alias>MSGNW:</alias>
@@ -824,6 +900,10 @@
         <i18nAlias id="namespacee" caseSensitive="true">
             <alias>NAMESPACEE</alias>
             <alias>NAMESPACEE:</alias>
+        </i18nAlias>
+        <i18nAlias id="namespacenumber" caseSensitive="true">
+            <alias>NAMESPACENUMBER</alias>
+            <alias>NAMESPACENUMBER:</alias>
         </i18nAlias>
         <i18nAlias id="ns" caseSensitive="false">
             <alias>NS:</alias>
@@ -853,6 +933,9 @@
         </i18nAlias>
         <i18nAlias id="redirect" caseSensitive="false">
             <alias>#REDIRECT</alias>
+        </i18nAlias>
+        <i18nAlias id="rel2abs" caseSensitive="false">
+            <alias>#rel2abs:</alias>
         </i18nAlias>
         <i18nAlias id="rootpagename" caseSensitive="true">
             <alias>ROOTPAGENAME</alias>
@@ -891,7 +974,15 @@
         </i18nAlias>
         <i18nAlias id="subjectspace" caseSensitive="true">
             <alias>ARTICLESPACE</alias>
+            <alias>ARTICLESPACE:</alias>
             <alias>SUBJECTSPACE</alias>
+            <alias>SUBJECTSPACE:</alias>
+        </i18nAlias>
+        <i18nAlias id="subjectspacee" caseSensitive="true">
+            <alias>ARTICLESPACEE</alias>
+            <alias>ARTICLESPACEE:</alias>
+            <alias>SUBJECTSPACEE</alias>
+            <alias>SUBJECTSPACEE:</alias>
         </i18nAlias>
         <i18nAlias id="subpagename" caseSensitive="true">
             <alias>SUBPAGENAME</alias>
@@ -917,6 +1008,11 @@
         </i18nAlias>
         <i18nAlias id="talkspace" caseSensitive="true">
             <alias>TALKSPACE</alias>
+            <alias>TALKSPACE:</alias>
+        </i18nAlias>
+        <i18nAlias id="talkspacee" caseSensitive="true">
+            <alias>TALKSPACEE</alias>
+            <alias>TALKSPACEE:</alias>
         </i18nAlias>
         <i18nAlias id="time" caseSensitive="false">
             <alias>#time:</alias>
@@ -1058,15 +1154,43 @@
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnBehaviorSwitches$TocSwitch"/>
         </pfnGroup>
         <pfnGroup name="Core - Variables - Date and Time">
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentDay2Pfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentDayNamePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentDayPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentDowPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentHourPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentMonth1Pfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentMonthAbbrevPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentMonthNameGenPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentMonthNamePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentMonthPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentTimePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentTimestampPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentWeekPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$CurrentYearPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalDay2Pfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalDayNamePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalDayPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalDowPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalHourPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalMonth1Pfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalMonthAbbrevPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalMonthNameGenPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalMonthNamePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalMonthPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalTimePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalTimestampPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalWeekPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesDateAndTime$LocalYearPfn"/>
         </pfnGroup>
         <pfnGroup name="Core - Variables - Namespaces">
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$NamespacePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$NamespaceePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$NamespacenumberPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$SubjectspacePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$SubjectspaceePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$TalkspacePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$TalkspaceePfn"/>
         </pfnGroup>
         <pfnGroup name="Core - Variables - Page names">
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$BasePagenamePfn"/>
@@ -1105,6 +1229,7 @@
             <pfn class="org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionIfError"/>
             <pfn class="org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionIfExist"/>
             <pfn class="org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionIfExpr"/>
+            <pfn class="org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionRel2Abs"/>
             <pfn class="org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionSwitch"/>
             <pfn class="org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionTime"/>
             <pfn class="org.sweble.wikitext.engine.ext.parser_functions.ParserFunctionTimeLocal"/>

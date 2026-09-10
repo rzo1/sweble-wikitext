@@ -52,7 +52,8 @@ public class CorePfnFunctionsNamespaces
 	// =========================================================================
 
 	/**
-	 * Looks up a namespace by name, alias or index.
+	 * Looks up a namespace by name, alias or index. Like in MediaWiki,
+	 * underscores in names are treated like spaces (e.g. "User_talk").
 	 *
 	 * @return The namespace or {@code null} if the given index is unknown.
 	 * @throws NumberFormatException
@@ -60,7 +61,7 @@ public class CorePfnFunctionsNamespaces
 	 */
 	private static Namespace getNamespace(WikiConfig wikiConfig, String arg)
 	{
-		Namespace namespace = wikiConfig.getNamespace(arg);
+		Namespace namespace = wikiConfig.getNamespace(arg.replace('_', ' '));
 		if (namespace == null)
 			namespace = wikiConfig.getNamespace(Integer.parseInt(arg));
 		return namespace;

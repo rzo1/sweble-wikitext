@@ -4273,12 +4273,10 @@ public class DefaultConfigEnZhWp
 				"timel",
 				false,
 				Arrays.asList("#timel:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"rel2abs",
 				false,
-				Arrays.asList("rel2abs")));
-		*/
+				Arrays.asList("#rel2abs:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"titleparts",
 				false,
@@ -4431,7 +4429,6 @@ public class DefaultConfigEnZhWp
 				"currentmonth",
 				true,
 				Arrays.asList("CURRENTMONTH", "CURRENTMONTH2")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"currentmonth1",
 				true,
@@ -4448,12 +4445,10 @@ public class DefaultConfigEnZhWp
 				"currentmonthabbrev",
 				true,
 				Arrays.asList("CURRENTMONTHABBREV")));
-		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"currentday",
 				true,
 				Arrays.asList("CURRENTDAY")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"currentday2",
 				true,
@@ -4462,12 +4457,10 @@ public class DefaultConfigEnZhWp
 				"currentdayname",
 				true,
 				Arrays.asList("CURRENTDAYNAME")));
-		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"currentyear",
 				true,
 				Arrays.asList("CURRENTYEAR")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"currenttime",
 				true,
@@ -4520,6 +4513,7 @@ public class DefaultConfigEnZhWp
 				"localhour",
 				true,
 				Arrays.asList("LOCALHOUR")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"numberofpages",
 				true,
@@ -4565,32 +4559,26 @@ public class DefaultConfigEnZhWp
 				"namespacee",
 				true,
 				Arrays.asList("NAMESPACEE", "NAMESPACEE:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"namespacenumber",
 				true,
-				Arrays.asList("NAMESPACENUMBER")));
-		*/
+				Arrays.asList("NAMESPACENUMBER", "NAMESPACENUMBER:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"talkspace",
 				true,
-				Arrays.asList("TALKSPACE")));
-		/*
+				Arrays.asList("TALKSPACE", "TALKSPACE:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"talkspacee",
 				true,
-				Arrays.asList("TALKSPACEE")));
-		*/
+				Arrays.asList("TALKSPACEE", "TALKSPACEE:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"subjectspace",
 				true,
-				Arrays.asList("SUBJECTSPACE", "ARTICLESPACE")));
-		/*
+				Arrays.asList("SUBJECTSPACE", "SUBJECTSPACE:", "ARTICLESPACE", "ARTICLESPACE:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"subjectspacee",
 				true,
-				Arrays.asList("SUBJECTSPACEE", "ARTICLESPACEE")));
-		*/
+				Arrays.asList("SUBJECTSPACEE", "SUBJECTSPACEE:", "ARTICLESPACEE", "ARTICLESPACEE:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"fullpagename",
 				true,
@@ -4811,6 +4799,7 @@ public class DefaultConfigEnZhWp
 				"nocontentconvert",
 				false,
 				Arrays.asList("__NOCONTENTCONVERT__", "__NOCC__")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"currentweek",
 				true,
@@ -4827,6 +4816,7 @@ public class DefaultConfigEnZhWp
 				"localdow",
 				true,
 				Arrays.asList("LOCALDOW")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"revisionid",
 				true,
@@ -4932,7 +4922,6 @@ public class DefaultConfigEnZhWp
 				"anchorencode",
 				false,
 				Arrays.asList("ANCHORENCODE:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"currenttimestamp",
 				true,
@@ -4941,6 +4930,7 @@ public class DefaultConfigEnZhWp
 				"localtimestamp",
 				true,
 				Arrays.asList("LOCALTIMESTAMP")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"directionmark",
 				true,
