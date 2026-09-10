@@ -62,6 +62,15 @@ public class HtmlRendererBase
 		return HtmlSanitizer.escapeAttributeKeepingCharRefs(content);
 	}
 
+	/**
+	 * Escape a string for use as text content but keep existing character
+	 * references intact. Only a bare &amp; and angle brackets are escaped.
+	 */
+	protected static String escTextKeepCharRefs(String content)
+	{
+		return HtmlSanitizer.escapeTextKeepingCharRefs(content);
+	}
+
 	protected static String capitalize(String text)
 	{
 		return StringUtils.capitalize(text);

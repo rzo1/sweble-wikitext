@@ -191,4 +191,13 @@ public class HtmlSanitizerTest
 				HtmlSanitizer.escapeAttributeKeepingCharRefs("a&amp;b&c&#34;\"<>'"));
 		assertEquals("", HtmlSanitizer.escapeAttributeKeepingCharRefs(null));
 	}
+
+	@Test
+	public void testEscapeTextKeepingCharRefs()
+	{
+		assertEquals(
+				"a&amp;b&amp;c&#34;&#x3C;\"&lt;&gt;'",
+				HtmlSanitizer.escapeTextKeepingCharRefs("a&amp;b&c&#34;&#x3C;\"<>'"));
+		assertEquals("", HtmlSanitizer.escapeTextKeepingCharRefs(null));
+	}
 }
