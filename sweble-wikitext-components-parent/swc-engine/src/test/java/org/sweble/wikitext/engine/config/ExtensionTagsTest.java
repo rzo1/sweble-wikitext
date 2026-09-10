@@ -241,6 +241,71 @@ public class ExtensionTagsTest
 	}
 
 	@Test
+	public void testSyntaxhighlightIsRenderedAsEscapedPre() throws Exception
+	{
+		for (WikiConfigImpl config : configs())
+		{
+			String html = render(config, "<syntaxhighlight lang=\"c\">a < b && [[c]]</syntaxhighlight>");
+			assertTrue(html, html.contains("<pre class=\"mw-highlight lang-c\">a &lt; b &amp;&amp; [[c]]</pre>"));
+
+			html = render(config, "<source>x</source>");
+			assertTrue(html, html.contains("<pre class=\"mw-highlight\">x</pre>"));
+
+			html = render(config, "x <syntaxhighlight lang=\"c\" inline>a</syntaxhighlight> y");
+			assertTrue(html, html.contains("<code class=\"mw-highlight lang-c\">a</code>"));
+
+			// The language only contributes harmless characters to the class
+			html = render(config, "<syntaxhighlight lang=\"c onclick=x\">a</syntaxhighlight>");
+			assertFalse(html, html.contains("onclick="));
+			assertTrue(html, html.contains("<pre class=\"mw-highlight lang-conclickx\">a</pre>"));
+
+			// Like in MediaWiki the tag ends at the first '>'
+			html = render(config, "<syntaxhighlight lang='\"><script>'>a</syntaxhighlight>");
+			assertFalse(html, html.contains("<script"));
+			assertTrue(html, html.contains("<pre class=\"mw-highlight\">&lt;script&gt;"));
+		}
+	}
+
+	@Test
+	public void testPoemIsRenderedWithLineBreaks() throws Exception
+	{
+		for (WikiConfigImpl config : configs())
+		{
+			String html = render(config, "<poem>\nRoses & red\n<i>violets</i> [[blue]]\n</poem>");
+			assertTrue(html, html.contains("<div class=\"poem\">Roses &amp; red<br />"));
+			assertTrue(html, html.contains("&lt;i&gt;violets&lt;/i&gt; [[blue]]</div>"));
+			assertFalse(html, html.contains("<i>"));
+			assertFalse(html, html.contains("<a "));
+		}
+	}
+
+	@Test
+	public void testTemplatestylesIsNotRendered() throws Exception
+	{
+		for (WikiConfigImpl config : configs())
+		{
+			String html = render(config, "before <templatestyles src=\"a/styles.css\" /> after");
+			assertTrue(html, html.contains("before"));
+			assertTrue(html, html.contains("after"));
+			assertFalse(html, html.contains("templatestyles"));
+			assertFalse(html, html.contains("styles.css"));
+		}
+	}
+
+	@Test
+	public void testGalleryIsRenderedAsEscapedText() throws Exception
+	{
+		for (WikiConfigImpl config : configs())
+		{
+			String html = render(config, "<gallery>\nFile:A.jpg|<b>Caption</b> [[a]]\n</gallery>");
+			assertTrue(html, html.contains(
+					"<div class=\"mw-ext-gallery\">\nFile:A.jpg|&lt;b&gt;Caption&lt;/b&gt; [[a]]\n</div>"));
+			assertFalse(html, html.contains("<b>"));
+			assertFalse(html, html.contains("<a "));
+		}
+	}
+
+	@Test
 	public void testSaveAndLoadGeneratedConfig() throws Exception
 	{
 		WikiConfigImpl config = generateConfig();
@@ -270,6 +335,16 @@ public class ExtensionTagsTest
 				wikitext,
 				null);
 		return cp.getPage();
+	}
+
+	private static String render(WikiConfigImpl config, String wikitext) throws Exception
+	{
+		PageTitle pageTitle = PageTitle.make(config, "Example");
+		EngProcessedPage cp = new WtEngineImpl(config).postprocess(
+				new PageId(pageTitle, -1),
+				wikitext,
+				null);
+		return HtmlRenderer.print(new TestCallback(), config, pageTitle, cp.getPage());
 	}
 
 	private static <T extends WtNode> List<T> findAll(WtNode node, Class<T> clazz)

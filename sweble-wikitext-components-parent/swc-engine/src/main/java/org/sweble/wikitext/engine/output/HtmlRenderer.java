@@ -868,23 +868,127 @@ public class HtmlRenderer
 		iterate(n.getBody());
 	}
 
+	/**
+	 * Tag extensions which do not show up in the page output.
+	 */
+	private static final Set<String> INVISIBLE_TAG_EXTENSIONS = setOf(
+			"categorytree",
+			"indicator",
+			"section",
+			"templatedata",
+			"templatestyles");
+
+	/**
+	 * Tag extensions whose body is code and rendered as preformatted text.
+	 */
+	private static final Set<String> CODE_TAG_EXTENSIONS = setOf(
+			"graph",
+			"score",
+			"source",
+			"syntaxhighlight",
+			"timeline");
+
+	/**
+	 * Tag extensions which produce inline content.
+	 */
+	private static final Set<String> INLINE_TAG_EXTENSIONS = setOf(
+			"ce",
+			"charinsert",
+			"chem",
+			"hiero",
+			"langconvert",
+			"maplink",
+			"math");
+
 	public void visit(WtTagExtension n)
 	{
+		String name = n.getName().trim().toLowerCase();
+
 		// TODO: Should not get skipped!
-		if (n.getName().trim().equalsIgnoreCase("ref"))
-			return;
-		if (n.getName().trim().equalsIgnoreCase("references"))
+		if (name.equals("ref") || name.equals("references"))
 			return;
 
-		printAsWikitext(n);
+		// Tag extensions that were not expanded (e.g. because there is no
+		// implementation for them): Keep the body visible but never interpret
+		// it as wikitext or HTML.
+		if (!n.hasBody() || INVISIBLE_TAG_EXTENSIONS.contains(name))
+			return;
 
-		/*
-		pc("&lt;%s%!&gt;%=&lt;/%s&gt;",
-				n.getName(),
-				n.getXmlAttributes(),
-				n.getBody().getContent(),
-				n.getName());
-		*/
+		String body = esc(n.getBody().getContent());
+		if (CODE_TAG_EXTENSIONS.contains(name))
+		{
+			String cssClass = "mw-highlight";
+			String lang = toCssClassName(getTagExtensionAttribute(n, "lang"));
+			if (!lang.isEmpty())
+				cssClass += " lang-" + lang;
+
+			if (getTagExtensionAttribute(n, "inline") != null)
+			{
+				p.indentAtBol();
+				p.print("<code class=\"" + cssClass + "\">" + body + "</code>");
+			}
+			else
+			{
+				p.indent();
+				p.print("<pre class=\"" + cssClass + "\">" + body + "</pre>");
+				p.println();
+			}
+		}
+		else if (name.equals("poem"))
+		{
+			if (body.startsWith("\n"))
+				body = body.substring(1);
+			if (body.endsWith("\n"))
+				body = body.substring(0, body.length() - 1);
+
+			p.indent();
+			p.print("<div class=\"poem\">" + body.replace("\n", "<br />\n") + "</div>");
+			p.println();
+		}
+		else if (INLINE_TAG_EXTENSIONS.contains(name))
+		{
+			p.indentAtBol();
+			p.print("<span class=\"mw-ext-" + toCssClassName(name) + "\">" + body + "</span>");
+		}
+		else
+		{
+			p.indent();
+			p.print("<div class=\"mw-ext-" + toCssClassName(name) + "\">" + body + "</div>");
+			p.println();
+		}
+	}
+
+	/**
+	 * @return The value of the given attribute, an empty string if the
+	 *         attribute has no value or {@code null} if the attribute is not
+	 *         given.
+	 */
+	private String getTagExtensionAttribute(WtTagExtension n, String attrName)
+	{
+		for (WtNode a : n.getXmlAttributes())
+		{
+			if (!(a instanceof WtXmlAttribute))
+				continue;
+			WtXmlAttribute attr = (WtXmlAttribute) a;
+			if (attr.getName().isResolved() && attr.getName().getAsString().equalsIgnoreCase(attrName))
+				return attr.hasValue() ? cleanAttribValue(attr.getValue()) : "";
+		}
+		return null;
+	}
+
+	private static String toCssClassName(String name)
+	{
+		if (name == null)
+			return "";
+		return name.toLowerCase().replaceAll("[^a-z0-9_-]", "");
+	}
+
+	private static Set<String> setOf(String... names)
+	{
+		Set<String> set = new HashSet<String>();
+		for (String name : names)
+			set.add(name);
+		return set;
 	}
 
 	@Override
