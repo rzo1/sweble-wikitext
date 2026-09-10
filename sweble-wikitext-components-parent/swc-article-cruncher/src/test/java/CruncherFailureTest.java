@@ -252,6 +252,139 @@ public class CruncherFailureTest
 		assertTrue(nexus.getJobTraces().isEmpty());
 	}
 
+	@Test(timeout = 30000)
+	public void testShutdownBeforeEndOfJobGenerationStopsJobGenerators() throws Throwable
+	{
+		final CountDownLatch generatorStopped = new CountDownLatch(1);
+
+		nexus.addJobGenerator(new JobGeneratorFactory()
+		{
+			@Override
+			public WorkerBase create(
+					final AbortHandler abortHandler,
+					final BlockingQueue<Job> inTray,
+					final JobTraceSet jobTraces)
+			{
+				return new WorkerBase("JobGenerator", abortHandler)
+				{
+					@Override
+					protected void work() throws InterruptedException
+					{
+						// Never runs out of jobs
+						while (true)
+						{
+							Job job = new TestJob();
+							generated.incrementAndGet();
+
+							JobTrace trace = job.getTrace();
+							trace.signOff(getClass(), null);
+
+							jobTraces.add(trace);
+
+							inTray.put(job);
+						}
+					}
+
+					@Override
+					protected void after()
+					{
+						generatorStopped.countDown();
+					}
+				};
+			}
+		});
+		// Keeps the first job forever, so processing never completes
+		nexus.addProcessingNode(new ProcessingNodeFactory()
+		{
+			@Override
+			public WorkerBase create(
+					final AbortHandler abortHandler,
+					final BlockingQueue<Job> inTray,
+					final BlockingQueue<Job> processedJobs)
+			{
+				return new WorkerBase("ProcessingNode", abortHandler)
+				{
+					@Override
+					protected void work() throws InterruptedException
+					{
+						inTray.take();
+
+						while (true)
+						{
+							Job job = inTray.take();
+
+							job.signOff(getClass(), null);
+
+							job.processed((Object) null);
+
+							processedJobs.put(job);
+						}
+					}
+				};
+			}
+		});
+		nexus.addStorer(createStorerFactory());
+
+		Thread shutdown = new Thread()
+		{
+			@Override
+			public void run()
+			{
+				try
+				{
+					while (stored.get() < NUM_JOBS)
+						Thread.sleep(10);
+				}
+				catch (InterruptedException e)
+				{
+					throw new RuntimeException(e);
+				}
+				nexus.shutdown();
+			}
+		};
+		shutdown.setDaemon(true);
+		shutdown.start();
+
+		nexus.start();
+
+		assertEquals(0, generatorStopped.getCount());
+		assertTrue(stored.get() >= NUM_JOBS);
+	}
+
+	@Test(timeout = 30000)
+	public void testEmergencyShutdownAfterShutdownIsIgnored() throws Throwable
+	{
+		nexus.addJobGenerator(createJobFactory(4));
+		nexus.addProcessingNode(createPassThroughNodeFactory());
+		nexus.addStorer(createStorerFactory());
+
+		nexus.start();
+
+		// For example a worker that fails while it is being stopped
+		nexus.emergencyShutdown(new RuntimeException("Too late"));
+	}
+
+	@Test(timeout = 30000)
+	public void testSecondEmergencyShutdownAfterShutdownIsIgnored() throws Throwable
+	{
+		final AssertionError error = new AssertionError("Processor failed");
+
+		nexus.addJobGenerator(createJobFactory(NUM_JOBS));
+		nexus.addProcessingNode(createLpnFactory(createProcessorFactory(new Processor()
+		{
+			@Override
+			public Object process(Job job)
+			{
+				throw error;
+			}
+		})));
+		nexus.addStorer(createStorerFactory());
+
+		assertSame(error, startAndGetCause());
+
+		nexus.emergencyShutdown(new RuntimeException("Second"));
+	}
+
 	// =========================================================================
 
 	private Throwable startAndGetCause()

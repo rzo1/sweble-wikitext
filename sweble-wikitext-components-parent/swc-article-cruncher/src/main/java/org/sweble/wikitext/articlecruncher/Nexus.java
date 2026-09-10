@@ -49,6 +49,8 @@ public class Nexus
 
 	private static final int COMPLETION_TIMEOUT_IN_SECONDS = 60 * 5;
 
+	private static final int GENERATOR_STOP_TIMEOUT_IN_SECONDS = 60;
+
 	// =========================================================================
 
 	private BlockingQueue<Job> inTray;
@@ -62,6 +64,11 @@ public class Nexus
 	private MyExecutorService executor;
 
 	private volatile Throwable emergencyCause;
+
+	/**
+	 * Set by an orderly shutdown before job generation has finished.
+	 */
+	private boolean jobGenerationStopped = false;
 
 	private WorkerLauncher gatherer;
 
@@ -168,7 +175,19 @@ public class Nexus
 				}
 			}
 
-			if (emergencyCause == null)
+			boolean stopped;
+			synchronized (synchronizer.getMonitor())
+			{
+				stopped = jobGenerationStopped;
+			}
+
+			if (stopped)
+			{
+				// The job generators still run, their jobs would never
+				// complete; stopAll() stops the generators first.
+				logger.info("Nexus stopping job generation");
+			}
+			else if (emergencyCause == null)
 			{
 				logger.info("Nexus waiting for processing to finish");
 				if (!jobTraces.awaitCompletion(COMPLETION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS))
@@ -356,12 +375,24 @@ public class Nexus
 					if (!sync.isSynchronized() && !sync.isAborted())
 					{
 						if (t == null)
+						{
 							logger.info("Nexus performing orderly shutdown");
+							jobGenerationStopped = true;
+						}
 
 						sync.abort();
 					}
 					break;
 				}
+
+				case SHUTDOWN:
+					// Workers can still fail while they are being stopped
+					if (t != null)
+					{
+						logger.warn("Nexus already shut down, ignoring emergency shutdown", t);
+						break;
+					}
+					// fall through
 
 				default:
 					throw new IllegalStateException("Can only shutdown running Nexus");
@@ -382,13 +413,28 @@ public class Nexus
 		{
 			MyExecutorService exec = null;
 
-			// TODO: We should wait for them to complete their work ... 
-			// if it's not an emergency shutdown
-
 			logger.info("Stopping workers");
 
 			for (WorkerLauncher jg : jobGenerators)
 				jg.stop();
+
+			if (emergencyCause == null)
+			{
+				// Orderly shutdown: The job generators finish before the
+				// workers that process their jobs are stopped. Waiting
+				// releases the monitor, so the generators can sign off.
+				try
+				{
+					if (!synchronizer.waitForStopped(GENERATOR_STOP_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS))
+						logger.warn("Job generators did not stop within " +
+								GENERATOR_STOP_TIMEOUT_IN_SECONDS + " seconds");
+				}
+				catch (InterruptedException e)
+				{
+					logger.error("Nexus interrupted while waiting for job generators to stop", e);
+					setEmergencyCause(e);
+				}
+			}
 
 			for (WorkerLauncher pn : processingNodes)
 				pn.stop();

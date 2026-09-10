@@ -17,6 +17,8 @@
 
 package org.sweble.wikitext.articlecruncher.utils;
 
+import java.util.concurrent.TimeUnit;
+
 public class WorkerSynchronizer
 {
 	private final Object lock = new Object();
@@ -115,6 +117,27 @@ public class WorkerSynchronizer
 				lock.wait();
 
 			isSync = true;
+		}
+	}
+
+	/**
+	 * Waits until none of the started workers is running any more.
+	 *
+	 * @return Whether all workers stopped before the timeout elapsed.
+	 */
+	public boolean waitForStopped(long timeout, TimeUnit unit) throws InterruptedException
+	{
+		synchronized (lock)
+		{
+			long deadline = System.nanoTime() + unit.toNanos(timeout);
+			while (running > 0)
+			{
+				long remaining = deadline - System.nanoTime();
+				if (remaining <= 0)
+					return false;
+				TimeUnit.NANOSECONDS.timedWait(lock, remaining);
+			}
+			return true;
 		}
 	}
 
