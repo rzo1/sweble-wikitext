@@ -32,6 +32,7 @@ import java.util.Collections;
 
 import org.junit.Test;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
+import org.sweble.wikitext.parser.ParserConfig;
 
 public class WikiConfigTest
 {
@@ -127,6 +128,52 @@ public class WikiConfigTest
 		StringWriter writer = new StringWriter();
 		config.save(writer);
 		return WikiConfigImpl.load(new StringReader(writer.toString()));
+	}
+
+	/** The nesting depth limit can be configured and persisted (issue #167). */
+	@Test
+	public void testMaxNestingDepthIsSavedAndLoaded() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+		ParserConfigImpl parserConfig = config.getParserConfig();
+		assertEquals(ParserConfig.DEFAULT_MAX_NESTING_DEPTH, parserConfig.getMaxNestingDepth());
+
+		parserConfig.setMaxNestingDepth(42);
+		assertEquals(42, parserConfig.getMaxNestingDepth());
+		assertNotEquals(DefaultConfigEnWp.generate(), config);
+
+		StringWriter writer = new StringWriter();
+		config.save(writer);
+		String saved = writer.toString();
+		assertTrue(saved, saved.contains("<maxNestingDepth>42</maxNestingDepth>"));
+
+		WikiConfigImpl loaded = WikiConfigImpl.load(new StringReader(saved));
+		assertEquals(42, loaded.getParserConfig().getMaxNestingDepth());
+		assertEquals(config, loaded);
+
+		try
+		{
+			parserConfig.setMaxNestingDepth(0);
+			fail("Expected IllegalArgumentException");
+		}
+		catch (IllegalArgumentException e)
+		{
+			// Expected
+		}
+	}
+
+	/** Configurations without the element get the default (issue #167). */
+	@Test
+	public void testConfigWithoutMaxNestingDepthGetsTheDefault() throws Exception
+	{
+		StringWriter writer = new StringWriter();
+		DefaultConfigEnWp.generate().save(writer);
+		String saved = writer.toString().replaceAll("\\s*<maxNestingDepth>[0-9]+</maxNestingDepth>", "");
+		assertFalse(saved, saved.contains("maxNestingDepth"));
+
+		WikiConfigImpl loaded = WikiConfigImpl.load(new StringReader(saved));
+		assertEquals(ParserConfig.DEFAULT_MAX_NESTING_DEPTH, loaded.getParserConfig().getMaxNestingDepth());
+		assertEquals(DefaultConfigEnWp.generate(), loaded);
 	}
 
 	/** Case-insensitive aliases stay case-insensitive after loading (issue #133). */
