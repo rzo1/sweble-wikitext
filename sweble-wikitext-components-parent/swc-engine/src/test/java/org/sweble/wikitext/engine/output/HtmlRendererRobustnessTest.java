@@ -239,6 +239,26 @@ public class HtmlRendererRobustnessTest
 	}
 
 	// =========================================================================
+	// Character references
+	// =========================================================================
+
+	@Test
+	public void testInvalidCharRefInAttributeValue() throws Exception
+	{
+		String html = render("<span title=\"&#x110000;\">x</span>");
+
+		assertContains(html, "title=\"&amp;#x110000;\"");
+	}
+
+	@Test
+	public void testInvalidCharRefInText() throws Exception
+	{
+		String html = render("a &#x110000; &#0; &#99999999999; b");
+
+		assertContains(html, "a &amp;#x110000; &amp;#0; &amp;#99999999999; b");
+	}
+
+	// =========================================================================
 
 	private static void assertContains(String html, String expected)
 	{

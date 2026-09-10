@@ -226,7 +226,11 @@ public class AstTextUtilsImpl
 
 		protected void visit(WtXmlCharRef node)
 		{
-			b.append(Character.toChars(node.getCodePoint()));
+			int codePoint = node.getCodePoint();
+			if (XmlCharRefUtils.isValidCodePoint(codePoint))
+				b.appendCodePoint(codePoint);
+			else
+				b.append('\uFFFD');
 		}
 
 		protected void visit(WtText node)

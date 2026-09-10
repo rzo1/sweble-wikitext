@@ -5,17 +5,7 @@
          title="Xml-char-ref">
    <body>
       <p topgap="0" bottomgap="0">
-         <subst>
-            <repl>
-               <text>&amp;#20;</text>
-            </repl>
-            <for>
-               <mww:xml-char-ref code="20">
-                  <rtd>&amp;#20;</rtd>
-               </mww:xml-char-ref>
-            </for>
-         </subst>
-         <text>
+         <text>&amp;#20;
 </text>
          <subst>
             <repl>

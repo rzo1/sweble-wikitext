@@ -40,6 +40,33 @@ import org.sweble.wikitext.parser.utils.XmlName;
 
 
 
+// -- Header & Body ------------------------------------------------------------
+
+body
+{
+  /**
+   * Like MediaWiki only references to valid code points become characters,
+   * all others (including numbers too large for a code point) are kept as
+   * literal text.
+   */
+  private WtNode makeCharRef(String prefix, String digits, int radix)
+  {
+    long codePoint = org.sweble.wikitext.parser.utils.XmlCharRefUtils
+        .parseCodePoint(digits, radix);
+
+    if (!org.sweble.wikitext.parser.utils.XmlCharRefUtils
+        .isValidCodePoint(codePoint))
+      return nf.text(prefix + digits + ";");
+
+    return setRtd(
+        nf.charRef((int) codePoint),
+        prefix, digits, ';');
+  }
+}
+
+
+
+
 // -- References ---------------------------------------------------------------
 
 WtNode XmlReference =
@@ -74,21 +101,13 @@ private inline WtNode XmlReferenceAutoCorrect =
 private inline WtNode XmlCharRefChoice =
     'x' ch:HexDigitPlus ';'
     {
-      // TODO: check if valid char ref
       // TODO: add warnings for incomplete syntax
-      // TODO: make sure only valid characters are "generated" (encval)
-      yyValue = setRtd(
-        nf.charRef(Integer.parseInt(ch, 16)),
-        "&#x", ch, ';');
+      yyValue = makeCharRef("&#x", ch, 16);
     }
   / ch:DigitPlus ';'
     {
-      // TODO: check if valid char ref
       // TODO: add warnings for incomplete syntax
-      // TODO: make sure only valid characters are "generated" (encval)
-      yyValue = setRtd(
-        nf.charRef(Integer.parseInt(ch)),
-        "&#", ch, ';');
+      yyValue = makeCharRef("&#", ch, 10);
     }
 /// &{ isWarningsEnabled() } XmlCharRefAutoCorrect
 ;

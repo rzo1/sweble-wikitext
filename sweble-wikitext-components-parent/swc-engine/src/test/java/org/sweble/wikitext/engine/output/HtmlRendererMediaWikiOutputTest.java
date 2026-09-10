@@ -198,7 +198,7 @@ public class HtmlRendererMediaWikiOutputTest
 	{
 		String html = render("a &#0; &#x1; &#128; &foo; &amp; &#65; &nbsp; b");
 
-		assertContains(html, "a &amp;#0; &amp;#1; &amp;#128; &amp;foo; &amp; &#65; &nbsp; b");
+		assertContains(html, "a &amp;#0; &amp;#x1; &amp;#128; &amp;foo; &amp; &#65; &nbsp; b");
 	}
 
 	@Test
