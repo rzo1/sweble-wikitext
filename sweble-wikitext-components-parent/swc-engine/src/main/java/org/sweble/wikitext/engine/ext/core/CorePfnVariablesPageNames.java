@@ -26,11 +26,8 @@ import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.utils.UrlEncoding;
-import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
-import org.sweble.wikitext.parser.parser.LinkTargetException;
-import org.sweble.wikitext.parser.utils.StringConversionException;
 
 public class CorePfnVariablesPageNames
 		extends
@@ -47,14 +44,121 @@ public class CorePfnVariablesPageNames
 		addParserFunction(new FullPagenameePfn(wikiConfig));
 		addParserFunction(new PagenamePfn(wikiConfig));
 		addParserFunction(new PagenameePfn(wikiConfig));
+		addParserFunction(new SubPagenamePfn(wikiConfig));
+		addParserFunction(new SubPagenameePfn(wikiConfig));
+		addParserFunction(new RootPagenamePfn(wikiConfig));
+		addParserFunction(new RootPagenameePfn(wikiConfig));
 		addParserFunction(new BasePagenamePfn(wikiConfig));
+		addParserFunction(new BasePagenameePfn(wikiConfig));
 		addParserFunction(new SubjectPagenamePfn(wikiConfig));
+		addParserFunction(new SubjectPagenameePfn(wikiConfig));
 		addParserFunction(new TalkPagenamePfn(wikiConfig));
+		addParserFunction(new TalkPagenameePfn(wikiConfig));
 	}
 
 	public static CorePfnVariablesPageNames group(WikiConfig wikiConfig)
 	{
 		return new CorePfnVariablesPageNames(wikiConfig);
+	}
+
+	// =========================================================================
+
+	/**
+	 * Base class of the page name variables.
+	 *
+	 * A page name variable refers to the page that is being rendered (e.g.
+	 * {@code {{PAGENAME}}}) or to the page given as argument (e.g.
+	 * {@code {{PAGENAME:Foo}}}).
+	 *
+	 * Unlike MediaWiki (wfEscapeWikiText()) the name is not escaped with
+	 * character references: Link targets, link texts and category names are
+	 * not entity-decoded, so {@code [[{{PAGENAME}}]]} would show
+	 * {@code A&#39;s} instead of {@code A's}. The HTML renderer escapes the
+	 * resulting text instead.
+	 */
+	public static abstract class PageNameVariablePfn
+			extends
+				CorePfnVariable
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		protected PageNameVariablePfn(String name)
+		{
+			super(PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, name);
+		}
+
+		protected PageNameVariablePfn(WikiConfig wikiConfig, String name)
+		{
+			super(wikiConfig, PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, name);
+		}
+
+		@Override
+		public final WtNode invoke(
+				WtTemplate var,
+				ExpansionFrame frame,
+				List<? extends WtNode> argsValues)
+		{
+			PageTitle title = getTitleArgument(var, frame, argsValues);
+			if (title == null)
+				return var;
+
+			return nf().text(getPageName(frame.getWikiConfig(), title));
+		}
+
+		/**
+		 * Returns the name this variable produces for the given page.
+		 */
+		protected abstract String getPageName(WikiConfig config, PageTitle title);
+	}
+
+	// =========================================================================
+
+	/**
+	 * Like MediaWiki's wfUrlencode().
+	 */
+	private static String urlEncode(String text)
+	{
+		return UrlEncoding.WIKI.encode(text);
+	}
+
+	/**
+	 * Returns the talk page of the given page or {@code null} if the page
+	 * cannot have a talk page.
+	 */
+	private static PageTitle getTalkPage(WikiConfig config, PageTitle title)
+	{
+		Namespace ns = title.getNamespace();
+
+		// Special pages, media and pages on other wikis have no talk page.
+		if (title.isInterwiki() || ns.getId() < 0)
+			return null;
+
+		Namespace talkNs = config.getTalkNamespaceFor(ns);
+		if (talkNs == null)
+			return null;
+
+		return talkNs.equals(ns) ? title : title.newWithNamespace(talkNs);
+	}
+
+	/**
+	 * Returns the subject page of the given page.
+	 */
+	private static PageTitle getSubjectPage(WikiConfig config, PageTitle title)
+	{
+		Namespace ns = title.getNamespace();
+
+		// Special pages and media are their own subject pages.
+		if (ns.getId() < 0)
+			return title;
+
+		Namespace subjectNs = config.getSubjectNamespaceFor(ns);
+		if (subjectNs == null || subjectNs.equals(ns))
+			return title;
+
+		return title.newWithNamespace(subjectNs);
 	}
 
 	// =========================================================================
@@ -65,7 +169,7 @@ public class CorePfnVariablesPageNames
 
 	public static final class FullPagenamePfn
 			extends
-				CorePfnVariable
+				PageNameVariablePfn
 	{
 		private static final long serialVersionUID = 1L;
 
@@ -83,9 +187,9 @@ public class CorePfnVariablesPageNames
 		}
 
 		@Override
-		protected final WtNode invoke(WtTemplate var, ExpansionFrame frame)
+		protected String getPageName(WikiConfig config, PageTitle title)
 		{
-			return nf().text(frame.getRootFrame().getTitle().getDenormalizedFullTitle());
+			return title.getPrefixedText();
 		}
 	}
 
@@ -97,7 +201,7 @@ public class CorePfnVariablesPageNames
 
 	public static final class FullPagenameePfn
 			extends
-				CorePfnVariable
+				PageNameVariablePfn
 	{
 		private static final long serialVersionUID = 1L;
 
@@ -115,9 +219,9 @@ public class CorePfnVariablesPageNames
 		}
 
 		@Override
-		protected final WtNode invoke(WtTemplate var, ExpansionFrame frame)
+		protected String getPageName(WikiConfig config, PageTitle title)
 		{
-			return nf().text(UrlEncoding.WIKI.encode(frame.getRootFrame().getTitle().getNormalizedFullTitle()));
+			return urlEncode(title.getPrefixedText());
 		}
 	}
 
@@ -129,7 +233,7 @@ public class CorePfnVariablesPageNames
 
 	public static final class PagenamePfn
 			extends
-				CorePfnVariable
+				PageNameVariablePfn
 	{
 		private static final long serialVersionUID = 1L;
 
@@ -147,9 +251,9 @@ public class CorePfnVariablesPageNames
 		}
 
 		@Override
-		protected final WtNode invoke(WtTemplate var, ExpansionFrame frame)
+		protected String getPageName(WikiConfig config, PageTitle title)
 		{
-			return nf().text(frame.getRootFrame().getTitle().getDenormalizedTitle());
+			return title.getDenormalizedTitle();
 		}
 	}
 
@@ -161,7 +265,7 @@ public class CorePfnVariablesPageNames
 
 	public static final class PagenameePfn
 			extends
-				CorePfnVariable
+				PageNameVariablePfn
 	{
 		private static final long serialVersionUID = 1L;
 
@@ -170,49 +274,146 @@ public class CorePfnVariablesPageNames
 		 */
 		public PagenameePfn()
 		{
-			// FIXME: DIESEN FIX FUER ALLE!
-			super(PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "pagenamee");
+			super("pagenamee");
 		}
 
 		public PagenameePfn(WikiConfig wikiConfig)
 		{
-			// FIXME: DIESEN FIX FUER ALLE!
-			super(wikiConfig, PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "pagenamee");
+			super(wikiConfig, "pagenamee");
 		}
 
 		@Override
-		public WtNode invoke(
-				WtTemplate var,
-				ExpansionFrame frame,
-				List<? extends WtNode> argsValues)
+		protected String getPageName(WikiConfig config, PageTitle title)
 		{
-			PageTitle title = frame.getRootFrame().getTitle();
+			return urlEncode(title.getTitle());
+		}
+	}
 
-			if (!argsValues.isEmpty())
-			{
-				WtNode titleNode = argsValues.get(0);
+	// =========================================================================
+	// ==
+	// == {{SUBPAGENAME}}
+	// ==
+	// =========================================================================
 
-				String titleStr = null;
-				try
-				{
-					titleStr = tu().astToText(titleNode).trim();
+	public static final class SubPagenamePfn
+			extends
+				PageNameVariablePfn
+	{
+		private static final long serialVersionUID = 1L;
 
-					title = PageTitle.make(frame.getWikiConfig(), titleStr);
-				}
-				catch (StringConversionException e)
-				{
-					fileInvalidNameWarning(frame, WarningSeverity.NORMAL, titleNode);
-					return var;
-				}
-				catch (LinkTargetException e)
-				{
-					fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, titleNode, titleStr);
-					return var;
-				}
-			}
+		/**
+		 * For un-marshaling only.
+		 */
+		public SubPagenamePfn()
+		{
+			super("subpagename");
+		}
 
-			String link = title.getTitle();
-			return nf().text(UrlEncoding.WIKI.encode(link));
+		public SubPagenamePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "subpagename");
+		}
+
+		@Override
+		protected String getPageName(WikiConfig config, PageTitle title)
+		{
+			return title.getSubpageTitle().getDenormalizedTitle();
+		}
+	}
+
+	// =========================================================================
+	// ==
+	// == {{SUBPAGENAMEE}}
+	// ==
+	// =========================================================================
+
+	public static final class SubPagenameePfn
+			extends
+				PageNameVariablePfn
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public SubPagenameePfn()
+		{
+			super("subpagenamee");
+		}
+
+		public SubPagenameePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "subpagenamee");
+		}
+
+		@Override
+		protected String getPageName(WikiConfig config, PageTitle title)
+		{
+			return urlEncode(title.getSubpageTitle().getTitle());
+		}
+	}
+
+	// =========================================================================
+	// ==
+	// == {{ROOTPAGENAME}}
+	// ==
+	// =========================================================================
+
+	public static final class RootPagenamePfn
+			extends
+				PageNameVariablePfn
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public RootPagenamePfn()
+		{
+			super("rootpagename");
+		}
+
+		public RootPagenamePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "rootpagename");
+		}
+
+		@Override
+		protected String getPageName(WikiConfig config, PageTitle title)
+		{
+			return title.getRootTitle().getDenormalizedTitle();
+		}
+	}
+
+	// =========================================================================
+	// ==
+	// == {{ROOTPAGENAMEE}}
+	// ==
+	// =========================================================================
+
+	public static final class RootPagenameePfn
+			extends
+				PageNameVariablePfn
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public RootPagenameePfn()
+		{
+			super("rootpagenamee");
+		}
+
+		public RootPagenameePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "rootpagenamee");
+		}
+
+		@Override
+		protected String getPageName(WikiConfig config, PageTitle title)
+		{
+			return urlEncode(title.getRootTitle().getTitle());
 		}
 	}
 
@@ -224,7 +425,7 @@ public class CorePfnVariablesPageNames
 
 	public static final class BasePagenamePfn
 			extends
-				CorePfnVariable
+				PageNameVariablePfn
 	{
 		private static final long serialVersionUID = 1L;
 
@@ -242,19 +443,43 @@ public class CorePfnVariablesPageNames
 		}
 
 		@Override
-		protected final WtNode invoke(WtTemplate var, ExpansionFrame frame)
+		protected String getPageName(WikiConfig config, PageTitle title)
 		{
-			return nf().text(frame.getRootFrame().getTitle().getBaseTitle().getDenormalizedFullTitle());
+			return title.getBaseTitle().getDenormalizedTitle();
 		}
 	}
 
 	// =========================================================================
 	// ==
-	// == TODO: {{BASEPAGENAMEE}}
-	// == TODO: {{SUBPAGENAME}}
-	// == TODO: {{SUBPAGENAMEE}}
+	// == {{BASEPAGENAMEE}}
 	// ==
 	// =========================================================================
+
+	public static final class BasePagenameePfn
+			extends
+				PageNameVariablePfn
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public BasePagenameePfn()
+		{
+			super("basepagenamee");
+		}
+
+		public BasePagenameePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "basepagenamee");
+		}
+
+		@Override
+		protected String getPageName(WikiConfig config, PageTitle title)
+		{
+			return urlEncode(title.getBaseTitle().getTitle());
+		}
+	}
 
 	// =========================================================================
 	// ==
@@ -264,7 +489,7 @@ public class CorePfnVariablesPageNames
 
 	public static final class SubjectPagenamePfn
 			extends
-				CorePfnVariable
+				PageNameVariablePfn
 	{
 		private static final long serialVersionUID = 1L;
 
@@ -282,31 +507,43 @@ public class CorePfnVariablesPageNames
 		}
 
 		@Override
-		protected final WtNode invoke(WtTemplate var, ExpansionFrame frame)
+		protected String getPageName(WikiConfig config, PageTitle title)
 		{
-			return invokeStatic(frame);
-		}
-
-		protected WtNode invokeStatic(ExpansionFrame frame)
-		{
-			WikiConfig config = frame.getWikiConfig();
-
-			PageTitle title = frame.getRootFrame().getTitle();
-
-			Namespace ns = title.getNamespace();
-			Namespace subjectNs = config.getSubjectNamespaceFor(ns);
-			if (subjectNs != ns)
-				title = title.newWithNamespace(subjectNs);
-
-			return nf().text(title.getDenormalizedFullTitle());
+			return getSubjectPage(config, title).getPrefixedText();
 		}
 	}
 
 	// =========================================================================
 	// ==
-	// == TODO: {{SUBJECTPAGENAMEE}}, {{ARTICLEPAGENAMEE}}
+	// == {{SUBJECTPAGENAMEE}}, {{ARTICLEPAGENAMEE}}
 	// ==
 	// =========================================================================
+
+	public static final class SubjectPagenameePfn
+			extends
+				PageNameVariablePfn
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public SubjectPagenameePfn()
+		{
+			super("subjectpagenamee");
+		}
+
+		public SubjectPagenameePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "subjectpagenamee");
+		}
+
+		@Override
+		protected String getPageName(WikiConfig config, PageTitle title)
+		{
+			return urlEncode(getSubjectPage(config, title).getPrefixedText());
+		}
+	}
 
 	// =========================================================================
 	// ==
@@ -316,7 +553,7 @@ public class CorePfnVariablesPageNames
 
 	public static final class TalkPagenamePfn
 			extends
-				CorePfnVariable
+				PageNameVariablePfn
 	{
 		private static final long serialVersionUID = 1L;
 
@@ -325,79 +562,52 @@ public class CorePfnVariablesPageNames
 		 */
 		public TalkPagenamePfn()
 		{
-			super(PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "talkpagename");
+			super("talkpagename");
 		}
 
 		public TalkPagenamePfn(WikiConfig wikiConfig)
 		{
-			super(wikiConfig, PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "talkpagename");
+			super(wikiConfig, "talkpagename");
 		}
 
-		/*
 		@Override
-		protected final WtNode invoke(WtTemplate var, ExpansionFrame frame)
+		protected String getPageName(WikiConfig config, PageTitle title)
 		{
-			WikiConfig config = frame.getWikiConfig();
-			
-			PageTitle title = frame.getRootFrame().getTitle();
-			
-			Namespace ns = title.getNamespace();
-			Namespace talkNs = config.getTalkNamespaceFor(ns);
-			if (talkNs != ns)
-				title = title.newWithNamespace(talkNs);
-			
-			return nf().text(title.getDenormalizedFullTitle());
-		}
-		*/
-
-		@Override
-		public WtNode invoke(
-				WtTemplate var,
-				ExpansionFrame frame,
-				List<? extends WtNode> argsValues)
-		{
-			PageTitle title = frame.getRootFrame().getTitle();
-
-			if (!argsValues.isEmpty())
-			{
-				WtNode titleNode = argsValues.get(0);
-
-				String titleStr = null;
-				try
-				{
-					titleStr = tu().astToText(titleNode).trim();
-
-					title = PageTitle.make(frame.getWikiConfig(), titleStr);
-				}
-				catch (StringConversionException e)
-				{
-					fileInvalidNameWarning(frame, WarningSeverity.NORMAL, titleNode);
-					return var;
-				}
-				catch (LinkTargetException e)
-				{
-					fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, titleNode, titleStr);
-					return var;
-				}
-			}
-
-			//String link = title.getTitle();
-			//return nf().text(UrlEncoding.WIKI.encode(link));
-
-			WikiConfig config = frame.getWikiConfig();
-
-			Namespace ns = title.getNamespace();
-			Namespace talkNs = config.getTalkNamespaceFor(ns);
-			if (talkNs != ns)
-				title = title.newWithNamespace(talkNs);
-
-			return nf().text(title.getDenormalizedFullTitle());
+			PageTitle talkPage = getTalkPage(config, title);
+			return (talkPage != null) ? talkPage.getPrefixedText() : "";
 		}
 	}
 
 	// =========================================================================
 	// ==
-	// == TODO: {{TALKPAGENAMEE}}
+	// == {{TALKPAGENAMEE}}
 	// ==
 	// =========================================================================
+
+	public static final class TalkPagenameePfn
+			extends
+				PageNameVariablePfn
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public TalkPagenameePfn()
+		{
+			super("talkpagenamee");
+		}
+
+		public TalkPagenameePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "talkpagenamee");
+		}
+
+		@Override
+		protected String getPageName(WikiConfig config, PageTitle title)
+		{
+			PageTitle talkPage = getTalkPage(config, title);
+			return (talkPage != null) ? urlEncode(talkPage.getPrefixedText()) : "";
+		}
+	}
 }

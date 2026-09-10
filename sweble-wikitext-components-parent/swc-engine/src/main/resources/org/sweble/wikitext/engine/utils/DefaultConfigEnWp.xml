@@ -26,33 +26,33 @@
         <namespace id="-2" name="Media" canonical="Media" canHaveSubpages="false" fileNs="false"/>
         <namespace id="-1" name="Special" canonical="Special" canHaveSubpages="false" fileNs="false"/>
         <namespace id="0" name="" canonical="" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="1" name="Talk" canonical="Talk" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="2" name="User" canonical="User" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="3" name="User talk" canonical="User talk" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="4" name="Wikipedia" canonical="Project" canHaveSubpages="false" fileNs="false">
+        <namespace id="1" name="Talk" canonical="Talk" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="2" name="User" canonical="User" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="3" name="User talk" canonical="User talk" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="4" name="Wikipedia" canonical="Project" canHaveSubpages="true" fileNs="false">
             <alias>WP</alias>
         </namespace>
-        <namespace id="5" name="Wikipedia talk" canonical="Project talk" canHaveSubpages="false" fileNs="false">
+        <namespace id="5" name="Wikipedia talk" canonical="Project talk" canHaveSubpages="true" fileNs="false">
             <alias>WT</alias>
         </namespace>
         <namespace id="6" name="File" canonical="File" canHaveSubpages="false" fileNs="true">
             <alias>Image</alias>
         </namespace>
-        <namespace id="7" name="File talk" canonical="File talk" canHaveSubpages="false" fileNs="false">
+        <namespace id="7" name="File talk" canonical="File talk" canHaveSubpages="true" fileNs="false">
             <alias>Image talk</alias>
         </namespace>
         <namespace id="8" name="MediaWiki" canonical="MediaWiki" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="9" name="MediaWiki talk" canonical="MediaWiki talk" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="10" name="Template" canonical="Template" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="11" name="Template talk" canonical="Template talk" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="12" name="Help" canonical="Help" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="13" name="Help talk" canonical="Help talk" canHaveSubpages="false" fileNs="false"/>
+        <namespace id="9" name="MediaWiki talk" canonical="MediaWiki talk" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="10" name="Template" canonical="Template" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="11" name="Template talk" canonical="Template talk" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="12" name="Help" canonical="Help" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="13" name="Help talk" canonical="Help talk" canHaveSubpages="true" fileNs="false"/>
         <namespace id="14" name="Category" canonical="Category" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="15" name="Category talk" canonical="Category talk" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="100" name="Portal" canonical="Portal" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="101" name="Portal talk" canonical="Portal talk" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="108" name="Book" canonical="Book" canHaveSubpages="false" fileNs="false"/>
-        <namespace id="109" name="Book talk" canonical="Book talk" canHaveSubpages="false" fileNs="false"/>
+        <namespace id="15" name="Category talk" canonical="Category talk" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="100" name="Portal" canonical="Portal" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="101" name="Portal talk" canonical="Portal talk" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="108" name="Book" canonical="Book" canHaveSubpages="true" fileNs="false"/>
+        <namespace id="109" name="Book talk" canonical="Book talk" canHaveSubpages="true" fileNs="false"/>
     </namespaces>
     <interwikis>
         <interwiki prefix="aa" local="true" trans="false" url="http://aa.wikipedia.org/wiki/$1"/>
@@ -721,6 +721,11 @@
     <i18nAliases>
         <i18nAlias id="basepagename" caseSensitive="true">
             <alias>BASEPAGENAME</alias>
+            <alias>BASEPAGENAME:</alias>
+        </i18nAlias>
+        <i18nAlias id="basepagenamee" caseSensitive="true">
+            <alias>BASEPAGENAMEE</alias>
+            <alias>BASEPAGENAMEE:</alias>
         </i18nAlias>
         <i18nAlias id="contentlanguage" caseSensitive="true">
             <alias>CONTENTLANG</alias>
@@ -749,9 +754,11 @@
         </i18nAlias>
         <i18nAlias id="fullpagename" caseSensitive="true">
             <alias>FULLPAGENAME</alias>
+            <alias>FULLPAGENAME:</alias>
         </i18nAlias>
         <i18nAlias id="fullpagenamee" caseSensitive="true">
             <alias>FULLPAGENAMEE</alias>
+            <alias>FULLPAGENAMEE:</alias>
         </i18nAlias>
         <i18nAlias id="fullurl" caseSensitive="false">
             <alias>FULLURL:</alias>
@@ -781,6 +788,10 @@
             <alias>NAMESPACE</alias>
             <alias>NAMESPACE:</alias>
         </i18nAlias>
+        <i18nAlias id="namespacee" caseSensitive="true">
+            <alias>NAMESPACEE</alias>
+            <alias>NAMESPACEE:</alias>
+        </i18nAlias>
         <i18nAlias id="ns" caseSensitive="false">
             <alias>NS:</alias>
         </i18nAlias>
@@ -801,6 +812,14 @@
         <i18nAlias id="redirect" caseSensitive="false">
             <alias>#REDIRECT</alias>
         </i18nAlias>
+        <i18nAlias id="rootpagename" caseSensitive="true">
+            <alias>ROOTPAGENAME</alias>
+            <alias>ROOTPAGENAME:</alias>
+        </i18nAlias>
+        <i18nAlias id="rootpagenamee" caseSensitive="true">
+            <alias>ROOTPAGENAMEE</alias>
+            <alias>ROOTPAGENAMEE:</alias>
+        </i18nAlias>
         <i18nAlias id="safesubst" caseSensitive="false">
             <alias>SAFESUBST:</alias>
         </i18nAlias>
@@ -809,11 +828,27 @@
         </i18nAlias>
         <i18nAlias id="subjectpagename" caseSensitive="true">
             <alias>ARTICLEPAGENAME</alias>
+            <alias>ARTICLEPAGENAME:</alias>
             <alias>SUBJECTPAGENAME</alias>
+            <alias>SUBJECTPAGENAME:</alias>
+        </i18nAlias>
+        <i18nAlias id="subjectpagenamee" caseSensitive="true">
+            <alias>ARTICLEPAGENAMEE</alias>
+            <alias>ARTICLEPAGENAMEE:</alias>
+            <alias>SUBJECTPAGENAMEE</alias>
+            <alias>SUBJECTPAGENAMEE:</alias>
         </i18nAlias>
         <i18nAlias id="subjectspace" caseSensitive="true">
             <alias>ARTICLESPACE</alias>
             <alias>SUBJECTSPACE</alias>
+        </i18nAlias>
+        <i18nAlias id="subpagename" caseSensitive="true">
+            <alias>SUBPAGENAME</alias>
+            <alias>SUBPAGENAME:</alias>
+        </i18nAlias>
+        <i18nAlias id="subpagenamee" caseSensitive="true">
+            <alias>SUBPAGENAMEE</alias>
+            <alias>SUBPAGENAMEE:</alias>
         </i18nAlias>
         <i18nAlias id="switch" caseSensitive="false">
             <alias>#switch:</alias>
@@ -824,6 +859,10 @@
         <i18nAlias id="talkpagename" caseSensitive="true">
             <alias>TALKPAGENAME</alias>
             <alias>TALKPAGENAME:</alias>
+        </i18nAlias>
+        <i18nAlias id="talkpagenamee" caseSensitive="true">
+            <alias>TALKPAGENAMEE</alias>
+            <alias>TALKPAGENAMEE:</alias>
         </i18nAlias>
         <i18nAlias id="talkspace" caseSensitive="true">
             <alias>TALKSPACE</alias>
@@ -960,17 +999,25 @@
         </pfnGroup>
         <pfnGroup name="Core - Variables - Namespaces">
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$NamespacePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$NamespaceePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$SubjectspacePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesNamespaces$TalkspacePfn"/>
         </pfnGroup>
         <pfnGroup name="Core - Variables - Page names">
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$BasePagenamePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$BasePagenameePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$FullPagenamePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$FullPagenameePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$PagenamePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$PagenameePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$RootPagenamePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$RootPagenameePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$SubjectPagenamePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$SubjectPagenameePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$SubPagenamePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$SubPagenameePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$TalkPagenamePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesPageNames$TalkPagenameePfn"/>
         </pfnGroup>
         <pfnGroup name="Core - Variables - Statistics"/>
         <pfnGroup name="Core - Variables - Technical Metadata">

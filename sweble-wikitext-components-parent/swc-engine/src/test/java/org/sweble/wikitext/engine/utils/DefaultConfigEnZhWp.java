@@ -95,7 +95,7 @@ public class DefaultConfigEnZhWp
 				1,
 				"Talk",
 				"Talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -103,7 +103,7 @@ public class DefaultConfigEnZhWp
 				2,
 				"User",
 				"User",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -111,7 +111,7 @@ public class DefaultConfigEnZhWp
 				3,
 				"User talk",
 				"User talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -119,7 +119,7 @@ public class DefaultConfigEnZhWp
 				4,
 				"Wikipedia",
 				"Project",
-				false,
+				true,
 				false,
 				Arrays.asList("WP")));
 
@@ -127,7 +127,7 @@ public class DefaultConfigEnZhWp
 				5,
 				"Wikipedia talk",
 				"Project talk",
-				false,
+				true,
 				false,
 				Arrays.asList("WT")));
 
@@ -143,7 +143,7 @@ public class DefaultConfigEnZhWp
 				7,
 				"File talk",
 				"File talk",
-				false,
+				true,
 				false,
 				Arrays.asList("Image talk")));
 
@@ -159,7 +159,7 @@ public class DefaultConfigEnZhWp
 				9,
 				"MediaWiki talk",
 				"MediaWiki talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -167,7 +167,7 @@ public class DefaultConfigEnZhWp
 				10,
 				"Template",
 				"Template",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -175,7 +175,7 @@ public class DefaultConfigEnZhWp
 				11,
 				"Template talk",
 				"Template talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -183,7 +183,7 @@ public class DefaultConfigEnZhWp
 				12,
 				"Help",
 				"Help",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -191,7 +191,7 @@ public class DefaultConfigEnZhWp
 				13,
 				"Help talk",
 				"Help talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -207,7 +207,7 @@ public class DefaultConfigEnZhWp
 				15,
 				"Category talk",
 				"Category talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -215,7 +215,7 @@ public class DefaultConfigEnZhWp
 				100,
 				"Portal",
 				"Portal",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -223,7 +223,7 @@ public class DefaultConfigEnZhWp
 				101,
 				"Portal talk",
 				"Portal talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -231,7 +231,7 @@ public class DefaultConfigEnZhWp
 				108,
 				"Book",
 				"Book",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -239,7 +239,7 @@ public class DefaultConfigEnZhWp
 				109,
 				"Book talk",
 				"Book talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -4561,11 +4561,11 @@ public class DefaultConfigEnZhWp
 				"namespace",
 				true,
 				Arrays.asList("NAMESPACE", "NAMESPACE:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"namespacee",
 				true,
-				Arrays.asList("NAMESPACEE")));
+				Arrays.asList("NAMESPACEE", "NAMESPACEE:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"namespacenumber",
 				true,
@@ -4594,50 +4594,52 @@ public class DefaultConfigEnZhWp
 		c.addI18nAlias(new I18nAliasImpl(
 				"fullpagename",
 				true,
-				Arrays.asList("FULLPAGENAME")));
+				Arrays.asList("FULLPAGENAME", "FULLPAGENAME:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"fullpagenamee",
 				true,
-				Arrays.asList("FULLPAGENAMEE")));
-		/*
+				Arrays.asList("FULLPAGENAMEE", "FULLPAGENAMEE:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"subpagename",
 				true,
-				Arrays.asList("SUBPAGENAME")));
+				Arrays.asList("SUBPAGENAME", "SUBPAGENAME:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"subpagenamee",
 				true,
-				Arrays.asList("SUBPAGENAMEE")));
-		*/
+				Arrays.asList("SUBPAGENAMEE", "SUBPAGENAMEE:")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"rootpagename",
+				true,
+				Arrays.asList("ROOTPAGENAME", "ROOTPAGENAME:")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"rootpagenamee",
+				true,
+				Arrays.asList("ROOTPAGENAMEE", "ROOTPAGENAMEE:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"basepagename",
 				true,
-				Arrays.asList("BASEPAGENAME")));
-		/*
+				Arrays.asList("BASEPAGENAME", "BASEPAGENAME:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"basepagenamee",
 				true,
-				Arrays.asList("BASEPAGENAMEE")));
-		*/
+				Arrays.asList("BASEPAGENAMEE", "BASEPAGENAMEE:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"talkpagename",
 				true,
 				Arrays.asList("TALKPAGENAME", "TALKPAGENAME:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"talkpagenamee",
 				true,
-				Arrays.asList("TALKPAGENAMEE")));
-		*/
+				Arrays.asList("TALKPAGENAMEE", "TALKPAGENAMEE:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"subjectpagename",
 				true,
-				Arrays.asList("SUBJECTPAGENAME", "ARTICLEPAGENAME")));
-		/*
+				Arrays.asList("SUBJECTPAGENAME", "SUBJECTPAGENAME:", "ARTICLEPAGENAME", "ARTICLEPAGENAME:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"subjectpagenamee",
 				true,
-				Arrays.asList("SUBJECTPAGENAMEE", "ARTICLEPAGENAMEE")));
+				Arrays.asList("SUBJECTPAGENAMEE", "SUBJECTPAGENAMEE:", "ARTICLEPAGENAMEE", "ARTICLEPAGENAMEE:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"msg",
 				false,
