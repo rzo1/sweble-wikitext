@@ -301,6 +301,53 @@ public enum ExportSchemaVersion
 		{
 			return org.sweble.wikitext.dumpreader.export_0_10.RevisionType.class;
 		}
+	},
+
+	// =========================================================================
+
+	V0_11
+	{
+		@Override
+		public String getSchema()
+		{
+			return "/export-0.11.xsd";
+		}
+
+		@Override
+		public String getFragmentsSchema()
+		{
+			return "/export-0.11-fragments.xsd";
+		}
+
+		@Override
+		public String getContextPath()
+		{
+			return "org.sweble.wikitext.dumpreader.export_0_11";
+		}
+
+		@Override
+		public String getMediaWikiNamespace()
+		{
+			return "http://www.mediawiki.org/xml/export-0.11/";
+		}
+
+		@Override
+		public Class<?> getMediaWikiType()
+		{
+			return org.sweble.wikitext.dumpreader.export_0_11.MediaWikiType.class;
+		}
+
+		@Override
+		public Class<?> getPageType()
+		{
+			return org.sweble.wikitext.dumpreader.export_0_11.PageType.class;
+		}
+
+		@Override
+		public Class<?> getRevisionType()
+		{
+			return org.sweble.wikitext.dumpreader.export_0_11.RevisionType.class;
+		}
 	};
 
 	// =========================================================================
