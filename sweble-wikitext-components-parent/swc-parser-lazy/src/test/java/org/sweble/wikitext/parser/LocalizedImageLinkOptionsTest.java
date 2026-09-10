@@ -124,6 +124,81 @@ public class LocalizedImageLinkOptionsTest
 	}
 
 	@Test
+	public void testOptionsContainingUnderscoresAreRecognized() throws Exception
+	{
+		ParserConfig config = new LocalizedParserConfig();
+
+		WtImageLink img = parseImageLink(
+				config,
+				"[[File:Exemple.jpg|sans_cadre|légende]]");
+
+		assertEquals(ImageViewFormat.FRAMELESS, img.getFormat());
+		assertEquals("légende", toText(config, img.getTitle()));
+
+		img = parseImageLink(
+				config,
+				"[[File:Przyklad.jpg| bez_ramki |podpis]]");
+
+		assertEquals(ImageViewFormat.FRAMELESS, img.getFormat());
+		assertEquals("podpis", toText(config, img.getTitle()));
+
+		img = parseImageLink(
+				config,
+				"[[File:Exemple.jpg|non_encadré|légende]]");
+
+		assertEquals(ImageViewFormat.FRAMELESS, img.getFormat());
+		assertEquals("légende", toText(config, img.getTitle()));
+	}
+
+	@Test
+	public void testNonLatinOptionsContainingUnderscoresAreRecognized() throws Exception
+	{
+		ParserConfig config = new LocalizedParserConfig();
+
+		WtImageLink img = parseImageLink(
+				config,
+				"[[File:Example.jpg|خط_أساسي|تعليق]]");
+		assertEquals(ImageVertAlign.BASELINE, img.getVAlign());
+		assertEquals("تعليق", toText(config, img.getTitle()));
+
+		img = parseImageLink(config, "[[File:Example.jpg|نص_أعلى]]");
+		assertEquals(ImageVertAlign.TEXT_TOP, img.getVAlign());
+
+		img = parseImageLink(config, "[[File:Example.jpg|نص_أسفل]]");
+		assertEquals(ImageVertAlign.TEXT_BOTTOM, img.getVAlign());
+	}
+
+	@Test
+	public void testCaptionsContainingUnderscoresAreNotOptions() throws Exception
+	{
+		ParserConfig config = new LocalizedParserConfig();
+
+		WtImageLink img = parseImageLink(
+				config,
+				"[[File:Exemple.jpg|sans_cadre|sans_cadre_du_tout]]");
+
+		assertEquals(ImageViewFormat.FRAMELESS, img.getFormat());
+		assertEquals("sans_cadre_du_tout", toText(config, img.getTitle()));
+
+		// Underscores are not normalized: only the exact alias is an option
+		img = parseImageLink(config, "[[File:Exemple.jpg|sans cadre]]");
+
+		assertEquals(ImageViewFormat.UNRESTRAINED, img.getFormat());
+		assertEquals("sans cadre", toText(config, img.getTitle()));
+
+		// English has no aliases containing '_'
+		ParserConfig defaultConfig = new SimpleParserConfig();
+
+		img = parseImageLink(
+				defaultConfig,
+				"[[File:Example.jpg|thumb|text_top|a_caption]]");
+
+		assertEquals(ImageViewFormat.THUMBNAIL, img.getFormat());
+		assertEquals(ImageVertAlign.MIDDLE, img.getVAlign());
+		assertEquals("a_caption", toText(defaultConfig, img.getTitle()));
+	}
+
+	@Test
 	public void testLocalizedOptionsAreNotRecognizedWithDefaultConfig() throws Exception
 	{
 		ParserConfig config = new SimpleParserConfig();
@@ -169,8 +244,8 @@ public class LocalizedImageLinkOptionsTest
 	// =========================================================================
 
 	/**
-	 * A test configuration with some of the German and Russian aliases of the
-	 * MediaWiki image option magic words.
+	 * A test configuration with some of the German, Russian, French, Polish
+	 * and Arabic aliases of the MediaWiki image option magic words.
 	 */
 	private static final class LocalizedParserConfig
 			extends
@@ -181,7 +256,7 @@ public class LocalizedImageLinkOptionsTest
 		public LocalizedParserConfig()
 		{
 			addAliases(ImageLinkOptionAliases.IMG_THUMBNAIL, "mini", "miniatur", "мини");
-			addAliases(ImageLinkOptionAliases.IMG_FRAMELESS, "rahmenlos");
+			addAliases(ImageLinkOptionAliases.IMG_FRAMELESS, "rahmenlos", "sans_cadre", "non_encadré", "bez_ramki");
 			addAliases(ImageLinkOptionAliases.IMG_FRAMED, "gerahmt", "rahmen");
 			addAliases(ImageLinkOptionAliases.IMG_LEFT, "links");
 			addAliases(ImageLinkOptionAliases.IMG_RIGHT, "rechts", "справа");
@@ -189,7 +264,9 @@ public class LocalizedImageLinkOptionsTest
 			addAliases(ImageLinkOptionAliases.IMG_NONE, "ohne");
 			addAliases(ImageLinkOptionAliases.IMG_UPRIGHT, "hochkant", "hochkant=$1");
 			addAliases(ImageLinkOptionAliases.IMG_BORDER, "rand");
-			addAliases(ImageLinkOptionAliases.IMG_BASELINE, "grundlinie");
+			addAliases(ImageLinkOptionAliases.IMG_BASELINE, "grundlinie", "خط_أساسي");
+			addAliases(ImageLinkOptionAliases.IMG_TEXT_TOP, "نص_أعلى");
+			addAliases(ImageLinkOptionAliases.IMG_TEXT_BOTTOM, "نص_أسفل");
 			addAliases(ImageLinkOptionAliases.IMG_WIDTH, "$1px", "$1пкс");
 			addAliases(ImageLinkOptionAliases.IMG_LINK, "verweis=$1");
 			addAliases(ImageLinkOptionAliases.IMG_ALT, "alternativtext=$1");

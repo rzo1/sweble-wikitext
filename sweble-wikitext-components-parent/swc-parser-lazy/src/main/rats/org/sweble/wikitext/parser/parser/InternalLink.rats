@@ -459,9 +459,13 @@ private WtLinkOptionKeyword LinkOptionKeyword =
  * accept non-ASCII letters for non-latin wikis. The ranges deliberately
  * exclude whitespace (U+0085, U+00A0, U+2028, U+2029, ...) and the private
  * use area which holds the parser entity markers (U+E000, U+E001).
+ *
+ * Localized aliases may contain underscores (e.g. "sans_cadre" in French,
+ * "bez_ramki" in Polish). MediaWiki matches the trimmed option literally
+ * and does not normalize underscores or spaces, so neither do we.
  */
 private transient String LinkOptionKeywordString =
-  [A-Za-z\-\u00C0-\u1FFF\u2C00-\uD7FF\uF900-\uFFEF]+
+  [A-Za-z_\-\u00C0-\u1FFF\u2C00-\uD7FF\uF900-\uFFEF]+
 ;
 
 
