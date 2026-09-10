@@ -483,7 +483,7 @@ public enum ElementType
 	{
 		return !name.isEmpty() &&
 				(name.charAt(0) != '#') &&
-				(xmlElementTypeMap.get(name.toLowerCase()) != null);
+				(xmlElementTypeMap.get(name.toLowerCase(Locale.ROOT)) != null);
 	}
 
 	public static ElementType getType(WtNamedXmlElement e)

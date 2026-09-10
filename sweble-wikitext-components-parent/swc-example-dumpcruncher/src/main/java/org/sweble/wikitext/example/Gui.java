@@ -511,11 +511,12 @@ final class Gui
 			{
 				float eta = speedMeter.getEta();
 				this.progress.setText(String.format(
+						Locale.getDefault(),
 						"%5.1f %%, ETA %s",
 						speedMeter.getCurrentProgress(),
 						Float.isInfinite(eta) || Float.isNaN(eta) ?
 								"unknown" :
-								String.format("%.0f min", eta)));
+								String.format(Locale.getDefault(), "%.0f min", eta)));
 			}
 			else
 			{
