@@ -17,7 +17,10 @@
 package org.sweble.wikitext.parser.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
@@ -27,8 +30,9 @@ import org.sweble.wikitext.parser.utils.NonExpandingParser;
 import org.sweble.wikitext.parser.utils.SimpleParserConfig;
 
 /**
- * Tests the percent decoding of link targets, see upstream
- * sweble/sweble-wikitext#69.
+ * Tests the percent decoding of link targets (see upstream
+ * sweble/sweble-wikitext#69), the namespace separator, the decoding of
+ * character references and the reuse of the parser.
  */
 public class LinkTargetParserTest
 {
@@ -104,6 +108,120 @@ public class LinkTargetParserTest
 		{
 			// Expected
 		}
+	}
+
+	@Test
+	public void testSpacesAroundNamespaceColon() throws Exception
+	{
+		String[] targets = {
+				"File : A.png",
+				"File  :  A.png",
+				"File_:_A.png",
+				"File\u00A0:\u3000A.png",
+				" File : A.png " };
+
+		for (String target : targets)
+		{
+			LinkTargetParser ltp = new LinkTargetParser();
+			ltp.parse(new SimpleParserConfig(), target);
+
+			assertEquals(target, "File", ltp.getNamespace());
+			assertEquals(target, "A.png", ltp.getTitle());
+		}
+	}
+
+	@Test
+	public void testSpacesAfterInitialColon() throws Exception
+	{
+		LinkTargetParser ltp = new LinkTargetParser();
+		ltp.parse(new SimpleParserConfig(), ": File : A.png");
+
+		assertTrue(ltp.isInitialColon());
+		assertEquals("File", ltp.getNamespace());
+		assertEquals("A.png", ltp.getTitle());
+	}
+
+	@Test
+	public void testImageLinkWithSpacesAroundNamespaceColonIsRecognized() throws Exception
+	{
+		NonExpandingParser parser = new NonExpandingParser();
+
+		assertNotNull(scanForImageLink(parser.parseArticle("[[File : A.png|thumb]]", "title")));
+		assertNotNull(scanForImageLink(parser.parseArticle("[[File_: A.png|thumb]]", "title")));
+	}
+
+	@Test
+	public void testParseResetsState() throws Exception
+	{
+		SimpleParserConfig config = new SimpleParserConfig();
+		LinkTargetParser ltp = new LinkTargetParser();
+
+		ltp.parse(config, ":File:A.png#Section");
+		assertEquals("File", ltp.getNamespace());
+		assertEquals("Section", ltp.getFragment());
+		assertTrue(ltp.isInitialColon());
+
+		ltp.parse(config, "B");
+		assertEquals("B", ltp.getTitle());
+		assertNull(ltp.getNamespace());
+		assertNull(ltp.getFragment());
+		assertNull(ltp.getInterwiki());
+		assertFalse(ltp.isInitialColon());
+
+		try
+		{
+			ltp.parse(config, "File:");
+			fail("Expected LinkTargetException");
+		}
+		catch (LinkTargetException e)
+		{
+			// Expected
+		}
+
+		ltp.parse(config, "C");
+		assertEquals("C", ltp.getTitle());
+		assertNull(ltp.getNamespace());
+	}
+
+	@Test
+	public void testInvalidCharReferencesMakeTitleInvalid() throws Exception
+	{
+		String[] targets = {
+				"A&#99999999999;",
+				"A&#xD800;",
+				"A&#xDFFF;B",
+				"A&#x110041;",
+				"A&#1114177;",
+				"A&#xFFFE;",
+				"A&#x80;" };
+
+		for (String target : targets)
+		{
+			try
+			{
+				new LinkTargetParser().parse(new SimpleParserConfig(), target);
+				fail("Expected LinkTargetException for " + target);
+			}
+			catch (LinkTargetException e)
+			{
+				// Expected
+			}
+		}
+	}
+
+	@Test
+	public void testValidCharReferencesAreDecoded() throws Exception
+	{
+		LinkTargetParser ltp = new LinkTargetParser();
+
+		ltp.parse(new SimpleParserConfig(), "A&#66;&#x43;&#X44;");
+		assertEquals("ABCD", ltp.getTitle());
+
+		ltp.parse(new SimpleParserConfig(), "A&#x1F600;");
+		assertEquals("A\uD83D\uDE00", ltp.getTitle());
+
+		ltp.parse(new SimpleParserConfig(), "A&amp;B");
+		assertEquals("A&B", ltp.getTitle());
 	}
 
 	@Test
