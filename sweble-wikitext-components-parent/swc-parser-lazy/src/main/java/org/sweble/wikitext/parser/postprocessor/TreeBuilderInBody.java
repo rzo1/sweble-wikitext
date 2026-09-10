@@ -41,6 +41,20 @@ public final class TreeBuilderInBody
 
 	// =====================================================================
 
+	/**
+	 * If a framed image interrupted a paragraph, this is the node into which
+	 * the paragraph will be re-opened. Only valid until the paragraph ends.
+	 */
+	private WtNode interruptedParagraphParent = null;
+
+	/**
+	 * Whether a newline was encountered after the framed image that
+	 * interrupted a paragraph.
+	 */
+	private boolean interruptedParagraphAtNextLine = false;
+
+	// =====================================================================
+
 	public void visit(WtImStartTag n)
 	{
 		switch (getNodeType(n))
@@ -50,6 +64,7 @@ public final class TreeBuilderInBody
 				startTagR28(n);
 				break;
 			case P:
+				interruptedParagraphParent = null;
 				startTagR12(n);
 				break;
 			default:
@@ -67,6 +82,8 @@ public final class TreeBuilderInBody
 				break;
 
 			case P:
+				interruptedParagraphParent = null;
+
 				/**
 				 * Synthetic paragraph closing tags can be ignored if they don't
 				 * have a proper opening tag
@@ -668,12 +685,26 @@ public final class TreeBuilderInBody
 		}
 		else
 		{
+			WtNode p = tb.isElementTypeInButtonScope(P) ? tb.getFromStack(P) : null;
+			boolean interruptsParagraph = (p != null) && p.isNodeType(NT_PARAGRAPH);
+
 			startTagR12(n);
 
 			if (n.hasTitle())
 				dispatch(n.getTitle());
 
 			dispatch(getFactory().createSyntheticEndTag(n, FRAMED_IMG));
+
+			if (interruptsParagraph || (interruptedParagraphParent != null))
+			{
+				/* A framed image is a block element and closes the paragraph
+				 * it appears in. MediaWiki leaves the rest of the image's line
+				 * unwrapped but starts a new paragraph for inline content on
+				 * the following lines. Remember where to re-open it.
+				 */
+				interruptedParagraphParent = tb.getCurrentNode();
+				interruptedParagraphAtNextLine = false;
+			}
 		}
 	}
 
@@ -927,13 +958,52 @@ public final class TreeBuilderInBody
 	 */
 	private void tokenR01andR02(WtText text)
 	{
-		tb.reconstructActiveFormattingElements();
+		if ((interruptedParagraphParent != null)
+				&& !interruptedParagraphAtNextLine
+				&& (tb.getCurrentNode() == interruptedParagraphParent))
+		{
+			String content = text.getContent();
+			int i = content.indexOf('\n');
+			if (i >= 0)
+			{
+				// The rest of the framed image's line is not put into a paragraph
+				tb.reconstructActiveFormattingElements();
+				tb.insertText(getFactory().text(content.substring(0, i + 1)));
+				interruptedParagraphAtNextLine = true;
+
+				if (i + 1 == content.length())
+					return;
+
+				text = getFactory().text(content.substring(i + 1));
+			}
+		}
+
+		reconstructActiveFormattingElements();
 		tb.insertText(text);
+	}
+
+	/**
+	 * Re-opens a paragraph that was interrupted by a framed image as soon as
+	 * inline content shows up on a line following the image. Afterwards the
+	 * list of active formatting elements is reconstructed.
+	 */
+	private void reconstructActiveFormattingElements()
+	{
+		if (interruptedParagraphAtNextLine
+				&& (interruptedParagraphParent != null)
+				&& (tb.getCurrentNode() == interruptedParagraphParent))
+		{
+			interruptedParagraphAtNextLine = false;
+			dispatch(IntermediateTags.PARAGRAPH.createOpen(
+					tb.getConfig().getNodeFactory(), false));
+		}
+
+		tb.reconstructActiveFormattingElements();
 	}
 
 	private void tokenR01andR02(WtNode n)
 	{
-		tb.reconstructActiveFormattingElements();
+		reconstructActiveFormattingElements();
 		tb.appendToCurrentNode(n);
 	}
 
@@ -1281,7 +1351,7 @@ public final class TreeBuilderInBody
 				forceCloseLink(n, URL))
 			/* do nothing */;
 
-		tb.reconstructActiveFormattingElements();
+		reconstructActiveFormattingElements();
 
 		WtNode a = tb.insertAnHtmlElement(n);
 		tb.pushActiveFormattingElements(a);
@@ -1317,7 +1387,7 @@ public final class TreeBuilderInBody
 	 */
 	private void startTagR28(WtNode n)
 	{
-		tb.reconstructActiveFormattingElements();
+		reconstructActiveFormattingElements();
 
 		WtNode e = tb.insertAnHtmlElement(n);
 		tb.pushActiveFormattingElements(e);
@@ -1503,7 +1573,7 @@ public final class TreeBuilderInBody
 	 */
 	private void startTagR34(WtNode n)
 	{
-		tb.reconstructActiveFormattingElements();
+		reconstructActiveFormattingElements();
 
 		tb.insertAnHtmlElement(n);
 
@@ -1548,7 +1618,7 @@ public final class TreeBuilderInBody
 	 */
 	private void startTagR51(WtNode n)
 	{
-		tb.reconstructActiveFormattingElements();
+		reconstructActiveFormattingElements();
 
 		tb.insertAnHtmlElement(n);
 

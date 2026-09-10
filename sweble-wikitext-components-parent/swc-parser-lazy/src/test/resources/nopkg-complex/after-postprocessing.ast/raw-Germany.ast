@@ -5889,127 +5889,130 @@ WtParsedWikitextPage(
 							)
 						]
 					),
-					[4] = "\nThe ",
-					[5] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "ethnogenesis" ],
-						title = -
-					),
-					[6] = " of the ",
-					[7] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Germanic peoples" ],
-						title = WtLinkTitle(
-							{P} rtd = RTD[ "|" <o> "" ]
-							[0] = "Germanic tribes"
-						)
-					),
-					[8] = " is assumed to have occurred during the ",
-					[9] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Nordic Bronze Age" ],
-						title = -
-					),
-					[10] = ", or at the latest during the ",
-					[11] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Pre-Roman Iron Age" ],
-						title = -
-					),
-					[12] = ". From southern Scandinavia and northern Germany, the tribes began expanding south, east and west in the 1st century",
-					[13] = WtXmlEntityRef(
-						{P} name = "nbsp"
-						{P} resolved = "\u00A0"
-						{P} rtd = RTD[ "&nbsp;" ]
-					),
-					[14] = "BC, coming into contact with the ",
-					[15] = WtInternalLink(
-						{P} postfix = "ic"
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]ic" ]
-						target = WtPageName[ [0] = "Celt" ],
-						title = -
-					),
-					[16] = " tribes of ",
-					[17] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Gaul" ],
-						title = -
-					),
-					[18] = " as well as ",
-					[19] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Iranian peoples" ],
-						title = WtLinkTitle(
-							{P} rtd = RTD[ "|" <o> "" ]
-							[0] = "Iranian"
-						)
-					),
-					[20] = ", ",
-					[21] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Balts" ],
-						title = WtLinkTitle(
-							{P} rtd = RTD[ "|" <o> "" ]
-							[0] = "Baltic"
-						)
-					),
-					[22] = ", and ",
-					[23] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Slavic peoples" ],
-						title = WtLinkTitle(
-							{P} rtd = RTD[ "|" <o> "" ]
-							[0] = "Slavic"
-						)
-					),
-					[24] = " tribes in ",
-					[25] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Eastern Europe" ],
-						title = -
-					),
-					[26] = ". Little is known about early Germanic history, except through their recorded interactions with the ",
-					[27] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Roman Empire" ],
-						title = -
-					),
-					[28] = ", etymological research and archaeological finds.",
-					[29] = WtTagExtension(
-						{P} name = "ref"
-						{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
-						xmlAttributes = WtXmlAttributes[
-							[0] = WtXmlAttribute(
-								{P} rtd = RTD[ " " <o> "=\"" <o> "\"" ]
-								name = WtName[ [0] = "name" ],
-								value = WtValue[ [0] = "Claster" ]
+					[4] = "\n",
+					[5] = WtParagraph[
+						[0] = "The ",
+						[1] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "ethnogenesis" ],
+							title = -
+						),
+						[2] = " of the ",
+						[3] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Germanic peoples" ],
+							title = WtLinkTitle(
+								{P} rtd = RTD[ "|" <o> "" ]
+								[0] = "Germanic tribes"
 							)
-						],
-						body = WtTagExtensionBody("{{cite book | first = Jill N. | last = Claster | title = Medieval Experience: 300\u20131400 | publisher = [[New York University Press]] | year = 1982 | page = 35 | isbn=0-8147-1381-5 }}")
-					),
-					[30] = "\n\n",
-					[31] = WtParagraph[
+						),
+						[4] = " is assumed to have occurred during the ",
+						[5] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Nordic Bronze Age" ],
+							title = -
+						),
+						[6] = ", or at the latest during the ",
+						[7] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Pre-Roman Iron Age" ],
+							title = -
+						),
+						[8] = ". From southern Scandinavia and northern Germany, the tribes began expanding south, east and west in the 1st century",
+						[9] = WtXmlEntityRef(
+							{P} name = "nbsp"
+							{P} resolved = "\u00A0"
+							{P} rtd = RTD[ "&nbsp;" ]
+						),
+						[10] = "BC, coming into contact with the ",
+						[11] = WtInternalLink(
+							{P} postfix = "ic"
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]ic" ]
+							target = WtPageName[ [0] = "Celt" ],
+							title = -
+						),
+						[12] = " tribes of ",
+						[13] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Gaul" ],
+							title = -
+						),
+						[14] = " as well as ",
+						[15] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Iranian peoples" ],
+							title = WtLinkTitle(
+								{P} rtd = RTD[ "|" <o> "" ]
+								[0] = "Iranian"
+							)
+						),
+						[16] = ", ",
+						[17] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Balts" ],
+							title = WtLinkTitle(
+								{P} rtd = RTD[ "|" <o> "" ]
+								[0] = "Baltic"
+							)
+						),
+						[18] = ", and ",
+						[19] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Slavic peoples" ],
+							title = WtLinkTitle(
+								{P} rtd = RTD[ "|" <o> "" ]
+								[0] = "Slavic"
+							)
+						),
+						[20] = " tribes in ",
+						[21] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Eastern Europe" ],
+							title = -
+						),
+						[22] = ". Little is known about early Germanic history, except through their recorded interactions with the ",
+						[23] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Roman Empire" ],
+							title = -
+						),
+						[24] = ", etymological research and archaeological finds.",
+						[25] = WtTagExtension(
+							{P} name = "ref"
+							{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
+							xmlAttributes = WtXmlAttributes[
+								[0] = WtXmlAttribute(
+									{P} rtd = RTD[ " " <o> "=\"" <o> "\"" ]
+									name = WtName[ [0] = "name" ],
+									value = WtValue[ [0] = "Claster" ]
+								)
+							],
+							body = WtTagExtensionBody("{{cite book | first = Jill N. | last = Claster | title = Medieval Experience: 300\u20131400 | publisher = [[New York University Press]] | year = 1982 | page = 35 | isbn=0-8147-1381-5 }}")
+						)
+					],
+					[6] = "\n\n",
+					[7] = WtParagraph[
 						[0] = "Under ",
 						[1] = WtInternalLink(
 							{P} postfix = ""
@@ -6218,7 +6221,7 @@ WtParsedWikitextPage(
 							body = WtTagExtensionBody("{{cite book | series= The Cambridge Ancient History | title = The crisis of empire, A.D. 193\u2013337 | volume = 12 | page = 442 | isbn=0-521-30199-8 | first = Alan K. | last = Bowman | first2 = Peter | last2 = Garnsey | first3 = Averil | last3 = Cameron | publisher = Cambridge University Press | year = 2005}}")
 						)
 					],
-					[32] = "\n\n"
+					[8] = "\n\n"
 				]
 			),
 			[5] = WtSection(
@@ -15782,34 +15785,37 @@ WtParsedWikitextPage(
 							)
 						]
 					),
-					[4] = "\nGermany's achievements in sciences have been significant and ",
-					[5] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "research and development" ],
-						title = -
-					),
-					[6] = " efforts form an integral part of the ",
-					[7] = WtInternalLink(
-						{P} postfix = ""
-						{P} prefix = ""
-						{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-						target = WtPageName[ [0] = "Economy of Germany" ],
-						title = WtLinkTitle(
-							{P} rtd = RTD[ "|" <o> "" ]
-							[0] = "country's economy"
+					[4] = "\n",
+					[5] = WtParagraph[
+						[0] = "Germany's achievements in sciences have been significant and ",
+						[1] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "research and development" ],
+							title = -
+						),
+						[2] = " efforts form an integral part of the ",
+						[3] = WtInternalLink(
+							{P} postfix = ""
+							{P} prefix = ""
+							{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+							target = WtPageName[ [0] = "Economy of Germany" ],
+							title = WtLinkTitle(
+								{P} rtd = RTD[ "|" <o> "" ]
+								[0] = "country's economy"
+							)
+						),
+						[4] = ". Germany has been the home of some of the most prominent researchers in various scientific fields.",
+						[5] = WtTagExtension(
+							{P} name = "ref"
+							{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
+							xmlAttributes = WtXmlAttributes[],
+							body = WtTagExtensionBody("[http://www.campus-germany.de/english/2.60.260.html Back to the Future: Germany \u2013 A Country of Research] German Academic Exchange Service (23 February 2005). Retrieved 8 December 2006.")
 						)
-					),
-					[8] = ". Germany has been the home of some of the most prominent researchers in various scientific fields.",
-					[9] = WtTagExtension(
-						{P} name = "ref"
-						{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
-						xmlAttributes = WtXmlAttributes[],
-						body = WtTagExtensionBody("[http://www.campus-germany.de/english/2.60.260.html Back to the Future: Germany \u2013 A Country of Research] German Academic Exchange Service (23 February 2005). Retrieved 8 December 2006.")
-					),
-					[10] = "\n\n",
-					[11] = WtParagraph[
+					],
+					[6] = "\n\n",
+					[7] = WtParagraph[
 						[0] = "The ",
 						[1] = WtInternalLink(
 							{P} postfix = ""
@@ -15894,8 +15900,8 @@ WtParsedWikitextPage(
 							body = WtTagExtensionBody("National Science Nobel Prize shares 1901\u20132009 [http://www.idsia.ch/~juergen/sci.html by citizenship at the time of the award] and [http://www.idsia.ch/~juergen/scinat.html by country of birth]. From [[J\u00FCrgen Schmidhuber|J. Schmidhuber]] (2010), [http://www.idsia.ch/~juergen/nobelshare.html Evolution of National Nobel Prize Shares in the 20th Century] at [http://arxiv.org/abs/1009.2634 arXiv:1009.2634v1]")
 						)
 					],
-					[12] = "\n\n",
-					[13] = WtParagraph[
+					[8] = "\n\n",
+					[9] = WtParagraph[
 						[0] = "The work of ",
 						[1] = WtInternalLink(
 							{P} postfix = ""
@@ -16061,8 +16067,8 @@ WtParsedWikitextPage(
 						),
 						[42] = "."
 					],
-					[14] = "\n\n",
-					[15] = WtParagraph[
+					[10] = "\n\n",
+					[11] = WtParagraph[
 						[0] = "Important research institutions in Germany are the ",
 						[1] = WtInternalLink(
 							{P} postfix = ""
@@ -16112,7 +16118,7 @@ WtParsedWikitextPage(
 							body = WtTagExtensionBody("[http://web.archive.org/web/20080621091621/http://www.dfg.de/en/research_funding/scientific_prizes/gw_leibniz_prize.html Gottfried Wilhelm Leibniz Prize], DFG. Retrieved 12 March 2007.")
 						)
 					],
-					[16] = "\n\n"
+					[12] = "\n\n"
 				]
 			)
 		]

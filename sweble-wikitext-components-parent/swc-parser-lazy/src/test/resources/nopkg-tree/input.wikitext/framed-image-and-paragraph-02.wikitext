@@ -1,0 +1,6 @@
+Before
+[[File:X.jpg|thumb]]
+After
+more after
+
+Next paragraph

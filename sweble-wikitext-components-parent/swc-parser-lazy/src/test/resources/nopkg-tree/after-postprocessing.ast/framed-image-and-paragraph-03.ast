@@ -1,0 +1,47 @@
+WtParsedWikitextPage(
+	{P} entityMap = -
+	{P} warnings = C[]
+	[0] = WtParagraph[],
+	[1] = WtImageLink(
+		{P} border = false
+		{P} format = FRAME
+		{P} hAlign = LEFT
+		{P} height = -1
+		{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+		{P} upright = false
+		{P} vAlign = MIDDLE
+		{P} width = -1
+		target = WtPageName[ [0] = "File:X.jpg" ],
+		options = WtLinkOptions[
+			[0] = WtLinkOptionKeyword(
+				{P} keyword = "frame"
+				{P} rtd = RTD[ "|frame" ]
+			),
+			[1] = WtLinkOptionKeyword(
+				{P} keyword = "left"
+				{P} rtd = RTD[ "|left" ]
+			)
+		]
+	),
+	[2] = " same line\n",
+	[3] = WtImageLink(
+		{P} border = false
+		{P} format = UNRESTRAINED
+		{P} hAlign = RIGHT
+		{P} height = -1
+		{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+		{P} upright = false
+		{P} vAlign = MIDDLE
+		{P} width = -1
+		target = WtPageName[ [0] = "File:Y.jpg" ],
+		options = WtLinkOptions[
+			[0] = WtLinkOptionKeyword(
+				{P} keyword = "right"
+				{P} rtd = RTD[ "|right" ]
+			)
+		]
+	),
+	[4] = "\n",
+	[5] = WtParagraph[ [0] = "Text" ],
+	[6] = "\n"
+)

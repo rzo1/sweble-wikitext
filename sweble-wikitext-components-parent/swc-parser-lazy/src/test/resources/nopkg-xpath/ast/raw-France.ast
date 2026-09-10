@@ -414,89 +414,93 @@ WtSection(
 				)
 			]
 		),
-		[5] = "\nIn the 4th century AD, Gaul\u2019s eastern frontier along the ",
-		[6] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Rhine" ],
-			title = -
-		),
-		[7] = " was overrun by ",
-		[8] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Germanic peoples" ],
-			title = WtLinkTitle(
-				{P} rtd = RTD[ "|" <o> "" ]
-				[0] = "Germanic tribes"
-			)
-		),
-		[9] = ", principally the ",
-		[10] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Franks" ],
-			title = -
-		),
-		[11] = ", from whom the ancient name of \u201CFrancie\u201D was derived. The modern name \u201CFrance\u201D derives from the name of the feudal domain of the ",
-		[12] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "House of Capet" ],
-			title = WtLinkTitle(
-				{P} rtd = RTD[ "|" <o> "" ]
-				[0] = "Capetian"
-			)
-		),
-		[13] = " Kings of France around Paris. The Franks were the first tribe among the Germanic conquerors of Europe after the fall of the Roman Empire to convert to ",
-		[14] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Catholic Church" ],
-			title = WtLinkTitle(
-				{P} rtd = RTD[ "|" <o> "" ]
-				[0] = "Catholic"
-			)
-		),
-		[15] = " Christianity rather than ",
-		[16] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Arianism" ],
-			title = -
-		),
-		[17] = " (their King ",
-		[18] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Clovis I" ],
-			title = WtLinkTitle(
-				{P} rtd = RTD[ "|" <o> "" ]
-				[0] = "Clovis"
-			)
-		),
-		[19] = " did so in 498); thus France obtained the title \u201CEldest daughter of the Church\u201D (",
-		[20] = WtItalics(
-			{P} rtd = RTD[ "''" <o> "''" ]
-			[0] = "La fille a\u00EEn\u00E9e de l\u2019\u00C9glise"
-		),
-		[21] = "),",
-		[22] = WtTagExtension(
-			{P} name = "ref"
-			{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
-			xmlAttributes = WtXmlAttributes[],
-			body = WtTagExtensionBody("[http://www.wf-f.org/03-1-France.html Faith of the Eldest Daughter - Can France retain her Catholic heritage?] - [http://www.wf-f.org/ Women for Faith and Family]")
-		),
-		[23] = " and the French would adopt this as justification for calling themselves \u201Cthe Most Christian Kingdom of France\u201D.\n\n",
-		[24] = WtParagraph[],
-		[25] = WtImageLink(
+		[5] = "\n",
+		[6] = WtParagraph[
+			[0] = "In the 4th century AD, Gaul\u2019s eastern frontier along the ",
+			[1] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Rhine" ],
+				title = -
+			),
+			[2] = " was overrun by ",
+			[3] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Germanic peoples" ],
+				title = WtLinkTitle(
+					{P} rtd = RTD[ "|" <o> "" ]
+					[0] = "Germanic tribes"
+				)
+			),
+			[4] = ", principally the ",
+			[5] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Franks" ],
+				title = -
+			),
+			[6] = ", from whom the ancient name of \u201CFrancie\u201D was derived. The modern name \u201CFrance\u201D derives from the name of the feudal domain of the ",
+			[7] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "House of Capet" ],
+				title = WtLinkTitle(
+					{P} rtd = RTD[ "|" <o> "" ]
+					[0] = "Capetian"
+				)
+			),
+			[8] = " Kings of France around Paris. The Franks were the first tribe among the Germanic conquerors of Europe after the fall of the Roman Empire to convert to ",
+			[9] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Catholic Church" ],
+				title = WtLinkTitle(
+					{P} rtd = RTD[ "|" <o> "" ]
+					[0] = "Catholic"
+				)
+			),
+			[10] = " Christianity rather than ",
+			[11] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Arianism" ],
+				title = -
+			),
+			[12] = " (their King ",
+			[13] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Clovis I" ],
+				title = WtLinkTitle(
+					{P} rtd = RTD[ "|" <o> "" ]
+					[0] = "Clovis"
+				)
+			),
+			[14] = " did so in 498); thus France obtained the title \u201CEldest daughter of the Church\u201D (",
+			[15] = WtItalics(
+				{P} rtd = RTD[ "''" <o> "''" ]
+				[0] = "La fille a\u00EEn\u00E9e de l\u2019\u00C9glise"
+			),
+			[16] = "),",
+			[17] = WtTagExtension(
+				{P} name = "ref"
+				{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
+				xmlAttributes = WtXmlAttributes[],
+				body = WtTagExtensionBody("[http://www.wf-f.org/03-1-France.html Faith of the Eldest Daughter - Can France retain her Catholic heritage?] - [http://www.wf-f.org/ Women for Faith and Family]")
+			),
+			[18] = " and the French would adopt this as justification for calling themselves \u201Cthe Most Christian Kingdom of France\u201D."
+		],
+		[7] = "\n\n",
+		[8] = WtParagraph[],
+		[9] = WtImageLink(
 			{P} border = false
 			{P} format = THUMBNAIL
 			{P} hAlign = RIGHT
@@ -537,8 +541,8 @@ WtSection(
 				)
 			]
 		),
-		[26] = "\n",
-		[27] = WtImageLink(
+		[10] = "\n",
+		[11] = WtImageLink(
 			{P} border = false
 			{P} format = THUMBNAIL
 			{P} hAlign = UNSPECIFIED
@@ -586,8 +590,8 @@ WtSection(
 				)
 			]
 		),
-		[28] = "\n",
-		[29] = WtImageLink(
+		[12] = "\n",
+		[13] = WtImageLink(
 			{P} border = false
 			{P} format = THUMBNAIL
 			{P} hAlign = LEFT
@@ -634,97 +638,101 @@ WtSection(
 				)
 			]
 		),
-		[30] = "\nExistence as a separate entity began with the ",
-		[31] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Treaty of Verdun" ],
-			title = -
-		),
-		[32] = " (843), with the division of ",
-		[33] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Charlemagne" ],
-			title = -
-		),
-		[34] = "'s ",
-		[35] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Carolingian Empire" ],
-			title = -
-		),
-		[36] = " into ",
-		[37] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "East Francia" ],
-			title = -
-		),
-		[38] = ", ",
-		[39] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Middle Francia" ],
-			title = -
-		),
-		[40] = " and ",
-		[41] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "West Francia" ],
-			title = -
-		),
-		[42] = ". Western Francia approximated the area occupied by modern France and was the precursor to modern France.",
-		[43] = WtTagExtension(
-			{P} name = "ref"
-			{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
-			xmlAttributes = WtXmlAttributes[],
-			body = WtTagExtensionBody("[http://history.howstuffworks.com/european-history/treaty-of-verdun.htm Treaty of Verdun] - Howstuffworks")
-		),
-		[44] = "\nThe ",
-		[45] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Carolingian dynasty" ],
-			title = -
-		),
-		[46] = " ruled France until 987, when ",
-		[47] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "Hugh Capet of France" ],
-			title = WtLinkTitle(
-				{P} rtd = RTD[ "|" <o> "" ]
-				[0] = "Hugh Capet"
-			)
-		),
-		[48] = ", Duke of France and Count of Paris, was crowned ",
-		[49] = WtInternalLink(
-			{P} postfix = ""
-			{P} prefix = ""
-			{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
-			target = WtPageName[ [0] = "King of France" ],
-			title = -
-		),
-		[50] = ".",
-		[51] = WtTagExtension(
-			{P} name = "ref"
-			{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
-			xmlAttributes = WtXmlAttributes[],
-			body = WtTagExtensionBody("[http://www.historyworld.net/wrldhis/PlainTextHistories.asp?groupid=1008&HistoryID=ab03&gtrack=pthc History of France : The Capetian kings of France: AD 987-1328] - History World")
-		),
-		[52] = " \n\n",
-		[53] = WtParagraph[
+		[14] = "\n",
+		[15] = WtParagraph[
+			[0] = "Existence as a separate entity began with the ",
+			[1] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Treaty of Verdun" ],
+				title = -
+			),
+			[2] = " (843), with the division of ",
+			[3] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Charlemagne" ],
+				title = -
+			),
+			[4] = "'s ",
+			[5] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Carolingian Empire" ],
+				title = -
+			),
+			[6] = " into ",
+			[7] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "East Francia" ],
+				title = -
+			),
+			[8] = ", ",
+			[9] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Middle Francia" ],
+				title = -
+			),
+			[10] = " and ",
+			[11] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "West Francia" ],
+				title = -
+			),
+			[12] = ". Western Francia approximated the area occupied by modern France and was the precursor to modern France.",
+			[13] = WtTagExtension(
+				{P} name = "ref"
+				{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
+				xmlAttributes = WtXmlAttributes[],
+				body = WtTagExtensionBody("[http://history.howstuffworks.com/european-history/treaty-of-verdun.htm Treaty of Verdun] - Howstuffworks")
+			),
+			[14] = "\nThe ",
+			[15] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Carolingian dynasty" ],
+				title = -
+			),
+			[16] = " ruled France until 987, when ",
+			[17] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "Hugh Capet of France" ],
+				title = WtLinkTitle(
+					{P} rtd = RTD[ "|" <o> "" ]
+					[0] = "Hugh Capet"
+				)
+			),
+			[18] = ", Duke of France and Count of Paris, was crowned ",
+			[19] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "King of France" ],
+				title = -
+			),
+			[20] = ".",
+			[21] = WtTagExtension(
+				{P} name = "ref"
+				{P} rtd = RTD[ "<ref" <o> ">" <o> "</ref>" ]
+				xmlAttributes = WtXmlAttributes[],
+				body = WtTagExtensionBody("[http://www.historyworld.net/wrldhis/PlainTextHistories.asp?groupid=1008&HistoryID=ab03&gtrack=pthc History of France : The Capetian kings of France: AD 987-1328] - History World")
+			),
+			[22] = " "
+		],
+		[16] = "\n\n",
+		[17] = WtParagraph[
 			[0] = "His descendants, the ",
 			[1] = WtInternalLink(
 				{P} postfix = ""
@@ -807,8 +815,8 @@ WtSection(
 			),
 			[18] = " added King of England to his titles. Later Kings expanded their territory to cover over half of modern continental France, including most of the North, Centre and West of France."
 		],
-		[54] = "\n\n",
-		[55] = WtParagraph[
+		[18] = "\n\n",
+		[19] = WtParagraph[
 			[0] = "The exact boundaries changed greatly with time, but French landholdings of the ",
 			[1] = WtInternalLink(
 				{P} postfix = ""
@@ -854,8 +862,8 @@ WtSection(
 			),
 			[10] = "."
 		],
-		[56] = "\n\n",
-		[57] = WtParagraph[
+		[20] = "\n\n",
+		[21] = WtParagraph[
 			[0] = "Charles IV (The Fair) died without an heir in 1328.",
 			[1] = WtTagExtension(
 				{P} name = "ref"
@@ -956,8 +964,8 @@ WtSection(
 				body = WtTagExtensionBody("Don O'Reilly. \"[http://www.historynet.com/magazines/military_history/3031536.html Hundred Years' War: Joan of Arc and the Siege of Orl\u00E9ans]\". ''TheHistoryNet.com''.")
 			)
 		],
-		[58] = "\n\n",
-		[59] = WtParagraph[
+		[22] = "\n\n",
+		[23] = WtParagraph[
 			[0] = "In the most notorious incident during the ",
 			[1] = WtInternalLink(
 				{P} postfix = ""
@@ -990,8 +998,8 @@ WtSection(
 				body = WtTagExtensionBody("[http://www.britannica.com/EBchecked/topic/516821/Massacre-of-Saint-Bartholomews-Day Massacre of Saint Bartholomew\u2019s Day]. [[Encyclopaedia Britannica]].")
 			)
 		],
-		[60] = "\n\n",
-		[61] = WtParagraph[
+		[24] = "\n\n",
+		[25] = WtParagraph[
 			[0] = "The monarchy reached its height during the 17th century and the reign of ",
 			[1] = WtInternalLink(
 				{P} postfix = ""
@@ -1042,7 +1050,7 @@ WtSection(
 			),
 			[10] = " occurred in French intellectual circles, and major scientific breakthroughs were achieved by French scientists in the 18th century. In addition, France obtained many overseas possessions in the Americas, Africa and Asia."
 		],
-		[62] = "\n\n"
+		[26] = "\n\n"
 	]
 )
 

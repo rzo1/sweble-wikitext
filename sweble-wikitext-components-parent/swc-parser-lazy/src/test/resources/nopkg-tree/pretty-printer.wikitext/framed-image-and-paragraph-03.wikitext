@@ -1,0 +1,4 @@
+[[File:X.jpg|frame|left]] same line
+[[File:Y.jpg|right]]
+
+Text
