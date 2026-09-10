@@ -28,7 +28,6 @@ import static org.sweble.engine.serialization.SerializationCoverageFixture.toXml
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -94,14 +93,12 @@ public class WomSerializerCompressionRoundTripTest
 		assertCombinedRoundTrip(SerializationFormat.XML, false);
 	}
 
-	@Ignore("fixed in #130")
 	@Test
 	public void testJsonSerializeAndCompressRoundTrip() throws Exception
 	{
 		assertCombinedRoundTrip(SerializationFormat.JSON, false);
 	}
 
-	@Ignore("fixed in #130")
 	@Test
 	public void testCompactJsonSerializeAndCompressRoundTrip() throws Exception
 	{
