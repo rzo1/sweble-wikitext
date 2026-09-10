@@ -78,6 +78,7 @@ public enum UrlEncoding
 						case 0x3A:
 						case 0x3B:
 						case 0x40:
+						case 0x7E:
 							b.append((char) code);
 							break;
 
@@ -114,10 +115,11 @@ public enum UrlEncoding
 		{
 			try
 			{
-				// Like PHP's rawurlencode()
+				// Like PHP's rawurlencode(), which does not encode '~'
 				return URLEncoder.encode(text, "UTF-8")
 						.replace("+", "%20")
-						.replace("*", "%2A");
+						.replace("*", "%2A")
+						.replace("%7E", "~");
 			}
 			catch (UnsupportedEncodingException e)
 			{
