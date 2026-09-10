@@ -361,7 +361,8 @@ public class CoreParserFunctionsTest
 		assertTrue(expanded, expanded.contains("'''{{{1}}}''' [[x]]"));
 
 		String html = render("{{msgnw:Foo}}");
-		assertTrue(html, html.contains("&#39;&#39;&#39;{{{1}}}&#39;&#39;&#39; [[x]]"));
+		// The source is shown as text (nowiki escapes only <, > and &, like MediaWiki)
+		assertTrue(html, html.contains("'''{{{1}}}''' [[x]]"));
 		assertFalse(html, html.contains("<b>"));
 		assertFalse(html, html.contains("<a "));
 	}
