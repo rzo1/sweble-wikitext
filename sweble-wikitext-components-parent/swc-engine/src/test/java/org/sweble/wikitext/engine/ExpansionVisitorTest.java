@@ -1,0 +1,197 @@
+/**
+ * Copyright 2011 The Open Source Research Group,
+ *                University of Erlangen-Nürnberg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.sweble.wikitext.engine;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Test;
+import org.sweble.wikitext.engine.config.WikiConfigImpl;
+import org.sweble.wikitext.engine.nodes.EngProcessedPage;
+import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
+import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
+
+import de.fau.cs.osr.ptk.common.Warning;
+
+/**
+ * Template expansion must be protected against runaway templates and
+ * redirects like in MediaWiki.
+ */
+public class ExpansionVisitorTest
+{
+	private final WikiConfigImpl config = DefaultConfigEnWp.generate();
+
+	private final WtEngineImpl engine = new WtEngineImpl(config);
+
+	private final MapCallback callback = new MapCallback();
+
+	// =========================================================================
+	// == Template loops
+
+	@Test
+	public void testTemplateLoopIgnoresFragment() throws Exception
+	{
+		// Every call adds another character to the fragment
+		callback.add("Template:F", "x{{F#{{{1|}}}a|{{{1|}}}a}}");
+
+		EngProcessedPage page = expand("{{F}}");
+
+		assertOutput(
+				"x<span class=\"error\">Template loop detected: [[Template:F]]</span>",
+				page);
+		assertHasWarning(page, "TemplateLoopWarning");
+	}
+
+	@Test
+	public void testTemplateLoopIgnoresInitialColon() throws Exception
+	{
+		callback.add("Template:G", "g{{:Template:G}}");
+
+		EngProcessedPage page = expand("{{G}}");
+
+		assertOutput(
+				"g<span class=\"error\">Template loop detected: [[Template:G]]</span>",
+				page);
+		assertHasWarning(page, "TemplateLoopWarning");
+	}
+
+	// =========================================================================
+
+	/**
+	 * Adds the templates {@code prefix1} to {@code prefixN}, each transcluding
+	 * the next one.
+	 */
+	private void addTemplateChain(
+			String prefix,
+			int length,
+			String text,
+			String end)
+	{
+		for (int i = 1; i < length; ++i)
+			callback.add("Template:" + prefix + i, text + "{{" + prefix + (i + 1) + "}}");
+		callback.add("Template:" + prefix + length, end);
+	}
+
+	private EngProcessedPage expand(String wikitext) throws Exception
+	{
+		return expand(wikitext, false);
+	}
+
+	private EngProcessedPage expand(String wikitext, boolean forInclusion) throws Exception
+	{
+		PageId pageId = new PageId(PageTitle.make(config, "Test"), -1);
+
+		return engine.expand(pageId, wikitext, forInclusion, callback);
+	}
+
+	private void assertExpansion(String expected, String wikitext) throws Exception
+	{
+		EngProcessedPage page = expand(wikitext);
+		assertOutput(expected, page);
+		assertNoWarnings(page);
+	}
+
+	private static void assertOutput(String expected, EngProcessedPage page)
+	{
+		assertEquals(expected, WtRtDataPrinter.print(page.getPage()));
+	}
+
+	private static void assertNoWarnings(EngProcessedPage page)
+	{
+		assertEquals(new ArrayList<Warning>(), new ArrayList<Warning>(page.getWarnings()));
+	}
+
+	private static void assertHasWarning(EngProcessedPage page, String type)
+	{
+		for (Warning w : page.getWarnings())
+		{
+			if (w.getClass().getSimpleName().equals(type))
+				return;
+		}
+		fail("Expected a " + type + " but got: " + page.getWarnings());
+	}
+
+	// =========================================================================
+
+	/**
+	 * Serves pages from a map, keyed by their normalized full title, and
+	 * counts how often each page was retrieved.
+	 */
+	private static final class MapCallback
+			implements
+				ExpansionCallback
+	{
+		private final Map<String, String> pages = new HashMap<String, String>();
+
+		private final Map<String, Error> errors = new HashMap<String, Error>();
+
+		private final List<String> retrieved = new ArrayList<String>();
+
+		public void add(String title, String wikitext)
+		{
+			pages.put(title, wikitext);
+		}
+
+		public void fail(String title, Error error)
+		{
+			errors.put(title, error);
+		}
+
+		public int getRetrievalCount(String title)
+		{
+			int count = 0;
+			for (String t : retrieved)
+			{
+				if (t.equals(title))
+					++count;
+			}
+			return count;
+		}
+
+		@Override
+		public FullPage retrieveWikitext(
+				ExpansionFrame expansionFrame,
+				PageTitle pageTitle)
+		{
+			String title = pageTitle.getNormalizedFullTitle();
+			retrieved.add(title);
+
+			Error error = errors.get(title);
+			if (error != null)
+				throw error;
+
+			String wikitext = pages.get(title);
+			if (wikitext == null)
+				return null;
+
+			return new FullPage(new PageId(pageTitle, -1), wikitext);
+		}
+
+		@Override
+		public String fileUrl(PageTitle pageTitle, int width, int height)
+		{
+			return null;
+		}
+	}
+}

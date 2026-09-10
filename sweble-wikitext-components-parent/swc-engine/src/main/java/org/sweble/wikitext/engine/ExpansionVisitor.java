@@ -894,11 +894,22 @@ public final class ExpansionVisitor
 	{
 		for (ExpansionFrame f = expFrame; f.getParentFrame() != null; f = f.getParentFrame())
 		{
-			if (f.getTitle().equals(title))
+			if (isSamePage(f.getTitle(), title))
 				return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * Two titles refer to the same page if namespace and title are equal. The
+	 * fragment and an initial colon do not change the page.
+	 */
+	private static boolean isSamePage(PageTitle a, PageTitle b)
+	{
+		Namespace ns = a.getNamespace();
+		return (ns == null ? b.getNamespace() == null : ns.equals(b.getNamespace())) &&
+				a.getTitle().equals(b.getTitle());
 	}
 
 	/**
