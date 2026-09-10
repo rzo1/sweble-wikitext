@@ -1,0 +1,50 @@
+WtParsedWikitextPage(
+	{P} entityMap = -
+	{P} warnings = C[]
+	[0] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = "a"
+		),
+		[1] = WtDefinitionListDef[
+			[0] = WtUnorderedList(
+				{P} rtd = RTD[ "\n" <o> "" ]
+				[0] = WtListItem(
+					{P} rtd = RTD[ ":*" <o> "" ]
+					[0] = "b"
+				)
+			)
+		]
+	],
+	[1] = "\n\n",
+	[2] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = "a"
+		),
+		[1] = WtDefinitionListDef(
+			{P} rtd = RTD[ ":" <o> "\n" ]
+			[0] = "b"
+		),
+		[2] = WtDefinitionListDef(
+			{P} rtd = RTD[ ":" <o> "" ]
+			[0] = "c"
+		)
+	],
+	[3] = "\n\n",
+	[4] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "\n" ]
+			[0] = "a"
+		),
+		[1] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = "b"
+		),
+		[2] = WtDefinitionListDef(
+			{P} rtd = RTD[ ":" <o> "" ]
+			[0] = "c"
+		)
+	],
+	[5] = "\n"
+)

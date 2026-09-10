@@ -1,0 +1,120 @@
+WtParsedWikitextPage(
+	{P} entityMap = {
+		[0] = WtTemplate(
+				{P} precededByNewline = false
+				{P} rtd = RTD[ "{{" <o> "" <o> "}}" ]
+				name = WtName[ [0] = "T" ],
+				args = WtTemplateArguments[
+					[0] = WtTemplateArgument(
+						{P} rtd = RTD[ "|" <o> "" <o> "" ]
+						name = -,
+						value = WtValue[ [0] = "a:b" ]
+					)
+				]
+			)
+	}
+	{P} warnings = C[]
+	[0] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = WtInternalLink(
+				{P} postfix = ""
+				{P} prefix = ""
+				{P} rtd = RTD[ "[[" <o> "" <o> "]]" ]
+				target = WtPageName[ [0] = "a:b" ],
+				title = -
+			)
+		),
+		[1] = WtDefinitionListDef(
+			{P} rtd = RTD[ ":" <o> "" ]
+			[0] = "c"
+		)
+	],
+	[1] = "\n\n",
+	[2] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = WtExternalLink(
+				{P} rtd = RTD[ "[" <o> " " <o> "]" ]
+				target = WtUrl(
+					{P} path = "//example.org/a:b"
+					{P} protocol = "http"
+					{P} rtd = RTD[ "http://example.org/a:b" ]
+				),
+				title = WtLinkTitle[ [0] = "x" ]
+			)
+		),
+		[1] = WtDefinitionListDef(
+			{P} rtd = RTD[ ":" <o> "" ]
+			[0] = "y"
+		)
+	],
+	[3] = "\n\n",
+	[4] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = WtXmlElement(
+				{P} name = "span"
+				{P} rtd = RTD[ "<span" <o> ">" <o> "</span>" ]
+				xmlAttributes = WtXmlAttributes[
+					[0] = WtXmlAttribute(
+						{P} rtd = RTD[ " " <o> "=\"" <o> "\"" ]
+						name = WtName[ [0] = "title" ],
+						value = WtValue[ [0] = "a:b" ]
+					)
+				],
+				body = WtBody[ [0] = "x" ]
+			)
+		),
+		[1] = WtDefinitionListDef(
+			{P} rtd = RTD[ ":" <o> "" ]
+			[0] = "y"
+		)
+	],
+	[5] = "\n\n",
+	[6] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = WtTemplate(
+				{P} precededByNewline = false
+				{P} rtd = RTD[ "{{" <o> "" <o> "}}" ]
+				name = WtName[ [0] = "T" ],
+				args = WtTemplateArguments[
+					[0] = WtTemplateArgument(
+						{P} rtd = RTD[ "|" <o> "" <o> "" ]
+						name = -,
+						value = WtValue[ [0] = "a:b" ]
+					)
+				]
+			)
+		),
+		[1] = WtDefinitionListDef(
+			{P} rtd = RTD[ ":" <o> "" ]
+			[0] = "c"
+		)
+	],
+	[7] = "\n\n",
+	[8] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = WtUrl(
+				{P} path = "//example.org/a:b"
+				{P} protocol = "http"
+				{P} rtd = RTD[ "http://example.org/a:b" ]
+			)
+		)
+	],
+	[9] = "\n\n",
+	[10] = WtDefinitionList[
+		[0] = WtDefinitionListTerm(
+			{P} rtd = RTD[ ";" <o> "" ]
+			[0] = "x ",
+			[1] = WtUrl(
+				{P} path = "//example.org/a:b"
+				{P} protocol = "http"
+				{P} rtd = RTD[ "http://example.org/a:b" ]
+			)
+		)
+	],
+	[11] = "\n"
+)

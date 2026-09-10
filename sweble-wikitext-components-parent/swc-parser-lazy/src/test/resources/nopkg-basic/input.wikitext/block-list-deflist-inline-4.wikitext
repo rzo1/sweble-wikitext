@@ -1,0 +1,11 @@
+;''a:b''
+
+;''a'':b
+
+;<span>a:b</span>
+
+;a<span>b</span>:c
+
+;a<br>b:c
+
+;a</span>:b

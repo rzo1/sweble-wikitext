@@ -1,0 +1,11 @@
+;[[a:b]]:c
+
+;[http://example.org/a:b x]:y
+
+;<span title="a:b">x</span>:y
+
+;{{T|a:b}}:c
+
+;http://example.org/a:b
+
+;x http://example.org/a:b
