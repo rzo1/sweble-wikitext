@@ -34,7 +34,12 @@ public class App
 		setUp(args);
 	}
 
-	private static void setUp(String[] args) throws CloneNotSupportedException, IOException, ClassNotFoundException, ParseException, ComparisonException
+	/**
+	 * @return The parsed command line or <code>null</code> if the command line
+	 *         is incomplete or invalid, in which case the help message was
+	 *         printed.
+	 */
+	static Options parseOptions(String[] args)
 	{
 		Options opt = new Options();
 
@@ -82,16 +87,15 @@ public class App
 
 		// Go Command Line!
 
-		List<String> free;
 		try
 		{
 			opt.parse(args);
 
-			free = opt.getFreeArguments();
+			List<String> free = opt.getFreeArguments();
 			if (free == null || free.isEmpty())
 			{
 				printHelp(opt);
-				return;
+				return null;
 			}
 
 			opt.expected("format");
@@ -109,8 +113,17 @@ public class App
 			printHelp(opt);
 			System.err.println();
 			System.err.println(e.getMessage());
-			return;
+			return null;
 		}
+
+		return opt;
+	}
+
+	private static void setUp(String[] args) throws CloneNotSupportedException, IOException, ClassNotFoundException, ParseException, ComparisonException
+	{
+		Options opt = parseOptions(args);
+		if (opt == null)
+			return;
 
 		String methodName = opt.value("format");
 
@@ -133,7 +146,7 @@ public class App
 			return;
 		}
 
-		String fileTitle = free.get(0);
+		String fileTitle = opt.getFreeArguments().get(0);
 
 		// Go Go Go!
 
