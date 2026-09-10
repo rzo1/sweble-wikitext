@@ -79,7 +79,7 @@ public class UrlService
 			if (!first)
 				b.append('&');
 			b.append(encoder.encode(e.getKey()));
-			b.append('&');
+			b.append('=');
 			b.append(encoder.encode(e.getValue()));
 			first = false;
 		}
