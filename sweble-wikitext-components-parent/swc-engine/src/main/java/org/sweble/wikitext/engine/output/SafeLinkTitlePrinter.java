@@ -98,6 +98,7 @@ import org.sweble.wikitext.parser.parser.LinkTargetException;
 import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
 
 import de.fau.cs.osr.utils.FmtNotYetImplementedError;
+import de.fau.cs.osr.utils.StringTools;
 import de.fau.cs.osr.utils.visitor.VisitingException;
 
 /**
@@ -169,8 +170,15 @@ public class SafeLinkTitlePrinter
 	@Override
 	public void visit(WtExternalLink n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		if (n.hasTitle())
+		{
+			dispatch(n.getTitle());
+		}
+		else
+		{
+			// Like MediaWiki print the sequential number of untitled links
+			p.print("[" + untitledLinkCounter++ + "]");
+		}
 	}
 
 	@Override
@@ -203,8 +211,8 @@ public class SafeLinkTitlePrinter
 	@Override
 	public void visit(WtImageLink n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		// MediaWiki strips all tags from the title and alt text. A nested
+		// image is only an <img> tag and therefore contributes no text.
 	}
 
 	@Override
@@ -389,43 +397,38 @@ public class SafeLinkTitlePrinter
 	@Override
 	public void visit(WtSignature n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		// Without a pre-save transform MediaWiki shows signatures literally
+		p.print(StringTools.strrep('~', n.getTildeCount()));
 	}
 
 	@Override
 	public void visit(WtTable n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		iterate(n.getBody());
 	}
 
 	@Override
 	public void visit(WtTableCaption n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		iterate(n.getBody());
 	}
 
 	@Override
 	public void visit(WtTableCell n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		iterate(n.getBody());
 	}
 
 	@Override
 	public void visit(WtTableHeader n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		iterate(n.getBody());
 	}
 
 	@Override
 	public void visit(WtTableRow n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		iterate(n.getBody());
 	}
 
 	@Override
@@ -491,8 +494,10 @@ public class SafeLinkTitlePrinter
 	@Override
 	public void visit(WtUrl n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		String url = n.getPath();
+		if (!n.getProtocol().isEmpty())
+			url = n.getProtocol() + ":" + url;
+		p.print(esc(url, true));
 	}
 
 	@Override
@@ -578,11 +583,27 @@ public class SafeLinkTitlePrinter
 
 	private final WikiConfig wikiConfig;
 
+	private long untitledLinkCounter;
+
 	// =========================================================================
 
 	public SafeLinkTitlePrinter(Writer writer, WikiConfig wikiConfig)
 	{
+		this(writer, wikiConfig, 1L);
+	}
+
+	/**
+	 * @param firstUntitledLinkNumber
+	 *            The number printed for the first external link without a
+	 *            title.
+	 */
+	public SafeLinkTitlePrinter(
+			Writer writer,
+			WikiConfig wikiConfig,
+			long firstUntitledLinkNumber)
+	{
 		super(writer);
 		this.wikiConfig = wikiConfig;
+		this.untitledLinkCounter = firstUntitledLinkNumber;
 	}
 }

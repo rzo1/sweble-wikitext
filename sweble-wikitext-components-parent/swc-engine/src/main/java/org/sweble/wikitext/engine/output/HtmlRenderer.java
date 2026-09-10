@@ -16,7 +16,6 @@
  */
 package org.sweble.wikitext.engine.output;
 
-import de.fau.cs.osr.utils.FmtNotYetImplementedError;
 import de.fau.cs.osr.utils.StringTools;
 import de.fau.cs.osr.utils.visitor.VisitingException;
 import org.slf4j.Logger;
@@ -343,7 +342,7 @@ public class HtmlRenderer
 			}
 			else if (linkTarget != null)
 			{
-				aTitle = esc(makeImageTitle(n, target), true);//makeUrl(linkTarget);
+				aTitle = esc(makeImageTitle(n, linkTarget), true);
 			}
 			else if (linkUrl != null)
 			{
@@ -467,8 +466,9 @@ public class HtmlRenderer
 				p.indentln("<div class=\"magnify\">");
 				p.incIndent();
 				p.indent();
+				// The magnify icon always links to the file description page
 				pf("<a href=\"%s\" class=\"internal\" title=\"Enlarge\"><img src=\"/mediawiki/skins/common/images/magnify-clip.png\" width=\"15\" height=\"11\" alt=\"\" /></a>",
-						escAttrKeepCharRefs(callback.makeUrl(linkTarget)));
+						escAttrKeepCharRefs(callback.makeUrl(target)));
 				p.decIndent();
 				p.indentln("</div>");
 				dispatch(n.getTitle());
@@ -782,8 +782,8 @@ public class HtmlRenderer
 	@Override
 	public void visit(WtSignature n)
 	{
-		// TODO: Implement
-		throw new FmtNotYetImplementedError();
+		// Without a pre-save transform MediaWiki shows signatures literally
+		wrapText(StringTools.strrep('~', n.getTildeCount()));
 	}
 
 	public void visit(WtTable n)
@@ -1250,7 +1250,8 @@ public class HtmlRenderer
 	private String makeTitleFromNodes(WtNodeList titleNode)
 	{
 		StringWriter w = new StringWriter();
-		SafeLinkTitlePrinter p = new SafeLinkTitlePrinter(w, wikiConfig);
+		// Untitled external links get the numbers they will be rendered with
+		SafeLinkTitlePrinter p = new SafeLinkTitlePrinter(w, wikiConfig, untitledLinkCounter);
 		p.go(titleNode);
 		return w.toString();
 	}
