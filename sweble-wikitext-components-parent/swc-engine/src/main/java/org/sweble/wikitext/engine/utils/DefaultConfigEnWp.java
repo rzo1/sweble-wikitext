@@ -4410,7 +4410,6 @@ public class DefaultConfigEnWp
 				"redirect",
 				false,
 				Arrays.asList("#REDIRECT")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"notoc",
 				false,
@@ -4431,6 +4430,23 @@ public class DefaultConfigEnWp
 				"noeditsection",
 				false,
 				Arrays.asList("__NOEDITSECTION__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"newsectionlink",
+				true,
+				Arrays.asList("__NEWSECTIONLINK__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"nonewsectionlink",
+				true,
+				Arrays.asList("__NONEWSECTIONLINK__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"notitleconvert",
+				false,
+				Arrays.asList("__NOTITLECONVERT__", "__NOTC__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"nocontentconvert",
+				false,
+				Arrays.asList("__NOCONTENTCONVERT__", "__NOCC__")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"noheader",
 				false,
@@ -4807,14 +4823,6 @@ public class DefaultConfigEnWp
 				false,
 				Arrays.asList("GENDER:")));
 		c.addI18nAlias(new I18nAliasImpl(
-				"notitleconvert",
-				false,
-				Arrays.asList("__NOTITLECONVERT__", "__NOTC__")));
-		c.addI18nAlias(new I18nAliasImpl(
-				"nocontentconvert",
-				false,
-				Arrays.asList("__NOCONTENTCONVERT__", "__NOCC__")));
-		c.addI18nAlias(new I18nAliasImpl(
 				"currentweek",
 				true,
 				Arrays.asList("CURRENTWEEK")));
@@ -4915,14 +4923,6 @@ public class DefaultConfigEnWp
 				true,
 				Arrays.asList("R")));
 		c.addI18nAlias(new I18nAliasImpl(
-				"newsectionlink",
-				true,
-				Arrays.asList("__NEWSECTIONLINK__")));
-		c.addI18nAlias(new I18nAliasImpl(
-				"nonewsectionlink",
-				true,
-				Arrays.asList("__NONEWSECTIONLINK__")));
-		c.addI18nAlias(new I18nAliasImpl(
 				"currentversion",
 				true,
 				Arrays.asList("CURRENTVERSION")));
@@ -4997,11 +4997,19 @@ public class DefaultConfigEnWp
 				"tag",
 				false,
 				Arrays.asList("#tag:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"hiddencat",
 				true,
 				Arrays.asList("__HIDDENCAT__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"expectunusedcategory",
+				true,
+				Arrays.asList("__EXPECTUNUSEDCATEGORY__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"expectunusedtemplate",
+				true,
+				Arrays.asList("__EXPECTUNUSEDTEMPLATE__")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"pagesincategory",
 				true,
@@ -5010,6 +5018,7 @@ public class DefaultConfigEnWp
 				"pagesize",
 				true,
 				Arrays.asList("PAGESIZE")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"index",
 				true,
@@ -5018,15 +5027,34 @@ public class DefaultConfigEnWp
 				"noindex",
 				true,
 				Arrays.asList("__NOINDEX__")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"numberingroup",
 				true,
 				Arrays.asList("NUMBERINGROUP", "NUMINGROUP")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"staticredirect",
 				true,
 				Arrays.asList("__STATICREDIRECT__")));
-		*/
+
+		// Behavior switches of commonly installed extensions
+		c.addI18nAlias(new I18nAliasImpl(
+				"disambiguation",
+				false,
+				Arrays.asList("__DISAMBIG__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"noglobal",
+				true,
+				Arrays.asList("__NOGLOBAL__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"archivedtalk",
+				false,
+				Arrays.asList("__ARCHIVEDTALK__")));
+		c.addI18nAlias(new I18nAliasImpl(
+				"notalk",
+				false,
+				Arrays.asList("__NOTALK__")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"protectionlevel",
 				true,

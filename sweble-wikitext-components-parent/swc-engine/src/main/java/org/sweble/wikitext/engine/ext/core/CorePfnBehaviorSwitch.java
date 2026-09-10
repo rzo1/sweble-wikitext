@@ -39,16 +39,16 @@ public abstract class CorePfnBehaviorSwitch
 	 */
 	public CorePfnBehaviorSwitch(String name)
 	{
-		// Page Switches don't take arguments so don't waste time with funny 
+		// Page Switches don't take arguments so don't waste time with funny
 		// conversions.
-		super(PfnArgumentMode.TEMPLATE_ARGUMENTS, name);
+		super(PfnArgumentMode.TEMPLATE_ARGUMENTS, true, name);
 	}
 
 	public CorePfnBehaviorSwitch(WikiConfig wikiConfig, String name)
 	{
-		// Page Switches don't take arguments so don't waste time with funny 
+		// Page Switches don't take arguments so don't waste time with funny
 		// conversions.
-		super(wikiConfig, PfnArgumentMode.TEMPLATE_ARGUMENTS, name);
+		super(wikiConfig, PfnArgumentMode.TEMPLATE_ARGUMENTS, true, name);
 	}
 
 	// =========================================================================
@@ -62,5 +62,13 @@ public abstract class CorePfnBehaviorSwitch
 		return invoke((WtPageSwitch) pageSwitch, frame);
 	}
 
-	protected abstract WtNode invoke(WtPageSwitch var, ExpansionFrame frame);
+	/**
+	 * Behavior switches don't produce any output. By default the page switch
+	 * node is kept in the AST (renderers hide it) so that the switches of a
+	 * page can still be retrieved after expansion.
+	 */
+	protected WtNode invoke(WtPageSwitch pageSwitch, ExpansionFrame frame)
+	{
+		return pageSwitch;
+	}
 }

@@ -360,10 +360,14 @@ public class ParserConfigImpl
 
 	// ==[ Names ]==============================================================
 
+	/**
+	 * The parser passes the name without the enclosing underscores while page
+	 * switch aliases are registered with them (e.g. {@code __NOTOC__}).
+	 */
 	@Override
 	public boolean isValidPageSwitchName(String name)
 	{
-		return this.wikiConfig.getPageSwitch(name) != null;
+		return this.wikiConfig.getPageSwitch("__" + name + "__") != null;
 	}
 
 	@Override

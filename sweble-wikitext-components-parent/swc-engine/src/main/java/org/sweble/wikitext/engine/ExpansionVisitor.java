@@ -1299,14 +1299,15 @@ public final class ExpansionVisitor
 			 * parser (which only then will produce this magic word node)
 			 * there also has to be a magic word object.
 			 */
-			throw new AssertionError("Cannot find tag extension: " + name);
+			throw new AssertionError("Cannot find page switch: " + name);
 
 		WtNode result = mw.invoke(
 				n,
 				expFrame,
 				Collections.<WtNode> emptyList());
 
-		log.setSuccess(true);
+		if (log != null)
+			log.setSuccess(true);
 
 		return result;
 	}

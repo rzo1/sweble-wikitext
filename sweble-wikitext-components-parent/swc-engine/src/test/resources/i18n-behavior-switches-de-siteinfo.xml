@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<!--
+  Synthetic excerpt of a siteinfo response (namespaces, magicwords and
+  interwikimap) modelled after de.wikipedia.org. It only lists the magic
+  words needed to test localized behavior switches. The namespace aliases
+  are kept in a separate file since they use the same element name as the
+  namespaces.
+-->
+<api batchcomplete="">
+	<query>
+		<namespaces>
+			<ns id="-1" case="first-letter" canonical="Special">Spezial</ns>
+			<ns id="0" case="first-letter" content=""></ns>
+			<ns id="1" case="first-letter" subpages="" canonical="Talk">Diskussion</ns>
+			<ns id="6" case="first-letter" canonical="File">Datei</ns>
+			<ns id="10" case="first-letter" subpages="" canonical="Template">Vorlage</ns>
+			<ns id="14" case="first-letter" canonical="Category">Kategorie</ns>
+		</namespaces>
+		<magicwords>
+			<magicword name="redirect"><aliases><alias>#WEITERLEITUNG</alias><alias>#REDIRECT</alias></aliases></magicword>
+			<magicword name="notoc"><aliases><alias>__KEIN_INHALTSVERZEICHNIS__</alias><alias>__KEININHALTSVERZEICHNIS__</alias><alias>__NOTOC__</alias></aliases></magicword>
+			<magicword name="nogallery"><aliases><alias>__KEINE_GALERIE__</alias><alias>__KEINEGALERIE__</alias><alias>__NOGALLERY__</alias></aliases></magicword>
+			<magicword name="forcetoc"><aliases><alias>__INHALTSVERZEICHNIS_ERZWINGEN__</alias><alias>__FORCETOC__</alias></aliases></magicword>
+			<magicword name="toc"><aliases><alias>__INHALTSVERZEICHNIS__</alias><alias>__TOC__</alias></aliases></magicword>
+			<magicword name="noeditsection"><aliases><alias>__ABSCHNITTE_NICHT_BEARBEITEN__</alias><alias>__NOEDITSECTION__</alias></aliases></magicword>
+			<magicword name="hiddencat" case-sensitive=""><aliases><alias>__VERSTECKTE_KATEGORIE__</alias><alias>__WARTUNGSKATEGORIE__</alias><alias>__HIDDENCAT__</alias></aliases></magicword>
+			<magicword name="index" case-sensitive=""><aliases><alias>__INDIZIEREN__</alias><alias>__INDEX__</alias></aliases></magicword>
+			<magicword name="noindex" case-sensitive=""><aliases><alias>__NICHT_INDIZIEREN__</alias><alias>__KEIN_INDEX__</alias><alias>__NOINDEX__</alias></aliases></magicword>
+		</magicwords>
+		<interwikimap/>
+	</query>
+</api>

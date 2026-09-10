@@ -92,6 +92,13 @@ public interface ParserConfig
 
 	// ==[ Names ]==============================================================
 
+	/**
+	 * Checks whether the given name denotes a page switch (behavior switch).
+	 *
+	 * @param name
+	 *            The name of the page switch without the enclosing underscores
+	 *            (e.g. {@code NOTOC} for {@code __NOTOC__}).
+	 */
 	boolean isValidPageSwitchName(String name);
 
 	boolean isValidExtensionTagName(String name);

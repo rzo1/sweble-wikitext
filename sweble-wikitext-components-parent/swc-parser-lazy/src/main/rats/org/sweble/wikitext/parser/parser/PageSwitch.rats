@@ -22,6 +22,9 @@
  *   Grammar:
  *     - '__' Name '__'
  *
+ *   Name:
+ *     - Segment ( '_' Segment )*
+ *
  */
 
 module org.sweble.wikitext.parser.parser.PageSwitch;
@@ -106,7 +109,15 @@ private inline String SwitchName =
   yyValue:SwitchNameString &{ isValidSwitchName(yyValue) }
 ;
 
+/* Names may contain single underscores (e.g. `__KEIN_INHALTSVERZEICHNIS__').
+ * An underscore must be followed by another name character. Otherwise it
+ * belongs to the finishing `__' and the name ends before it.
+ */
 private transient String SwitchNameString =
+  SwitchNameSegment ( '_' SwitchNameSegment )*
+;
+
+private transient String SwitchNameSegment =
   ( '-'
   / [A-Z]
   / [a-z]
