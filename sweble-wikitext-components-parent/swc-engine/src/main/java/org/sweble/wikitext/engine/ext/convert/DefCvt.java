@@ -97,13 +97,37 @@ public enum DefCvt
 	GR("gr"),
 	T("t"),
 	LB_KG(new String[]{"lb", "kg"}),
+	KG_LB(new String[]{"kg", "lb"}),
 	OZ_G(new String[]{"oz", "g"}),
+
+	HP("hp"),
+	KW("kW"),
+
+	KPA("kPa"),
+	PSI("psi"),
+
+	MPH("mph"),
+	KM_PER_H("km/h"),
+	KM_PER_H_MPH(new String[]{"km/h", "mph"}),
+	FT_PER_S("ft/s"),
+	M_PER_S("m/s"),
 
 	F("F"),
 	C("C"),
 	C_F(new String[]{"C", "F"}),
 	MK("keVT"),
 	K_F_C(new String[]{"K", "F", "C"}),
+
+	CUFT("cuft"),
+	M3("m3"),
+	CUIN("cuin"),
+	CM3("cm3"),
+	ML("ml"),
+	IMPGAL_USGAL(new String[]{"impgal", "USgal"}),
+	L_IMPGAL(new String[]{"L", "impgal"}),
+	L_USGAL(new String[]{"L", "USgal"}),
+	IMPOZ_USOZ(new String[]{"impoz", "USoz"}),
+	ML_USOZ(new String[]{"ml", "USoz"}),
 	;
 
 	private final String[] units;
@@ -164,10 +188,11 @@ public enum DefCvt
 	 * {{convert|2|m}} -> 2 metres (6 ft 7 in) // mixed units
 	 * {{convert|3|m}} -> 3 metres (9.8 ft) // only in feet
 	 * {{convert|4|m}} -> 4 metres (13 ft) // only in feet
+	 * {{convert|-1|m}} -> −1 metre (−3.3 ft) // only in feet
 	 * </pre>
 	 *
-	 * @return The limit interpreted as an range (+/-) where the mixed notation
-	 * is applied (limit excluded). The default value is Integer.MAX_VALUE.
+	 * @return The limit of the range (0, limit) where the mixed notation is
+	 * applied (both excluded). The default value is Integer.MAX_VALUE.
 	 */
 	public final int getMixedNotationLimit()
 	{

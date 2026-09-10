@@ -43,9 +43,59 @@ public class NumberFormaterTest
 		assertTrue(NumberFormater.isNumberValid("1//2"));
 		assertTrue(NumberFormater.isNumberValid("2+1//2"));
 
+		assertTrue(NumberFormater.isNumberValid("−123")); // minus sign (u+2212)
+		assertTrue(NumberFormater.isNumberValid("1E3"));
+
 		assertFalse(NumberFormater.isNumberValid("12 34"));
 		assertFalse(NumberFormater.isNumberValid("0x1234"));
 		assertFalse(NumberFormater.isNumberValid("1234d"));
+	}
+
+	@Test
+	public void testParseNumberUnicodeMinusAndExponent()
+	{
+		assertEquals(-123d, NumberFormater.parseNumber("−123"), EPSILON); // minus sign
+		assertEquals(-2.5, NumberFormater.parseNumber("−2-1⁄2"), EPSILON);
+		assertEquals(1000d, NumberFormater.parseNumber("1E3"), EPSILON);
+		assertEquals(0.0025, NumberFormater.parseNumber("2.5E-3"), EPSILON);
+	}
+
+	@Test(expected=NumberFormatException.class)
+	public void testParseNumberDivisionByZero()
+	{
+		NumberFormater.parseNumber("1/0");
+	}
+
+	@Test
+	public void testRoundToPrecision()
+	{
+		// Values as in Module:Convert (cvtround), e.g. 1234 m in ft
+		assertEquals("4,049", NumberFormater.formatRounded(4048.556430446194, 0).getShow());
+		assertEquals("4,000", NumberFormater.formatRounded(4048.556430446194, -2).getShow());
+		assertEquals("0.30", NumberFormater.formatRounded(0.3048, 2).getShow());
+		assertEquals("150,000,000", NumberFormater.formatRounded(149597870.691, -7).getShow());
+		assertEquals("1.0×10⁻¹⁰", NumberFormater.formatRounded(1e-10, 11).getShow());
+		assertEquals("0", NumberFormater.formatRounded(0, 0).getShow());
+		assertEquals("0.00", NumberFormater.formatRounded(0.004, 2).getShow());
+		assertEquals("0.00", NumberFormater.formatRounded(-0.004, 2).getShow());
+	}
+
+	@Test
+	public void testRoundToSignificantFigures()
+	{
+		assertEquals("149,600,000", NumberFormater.formatSigFig(149597870.691, 4).getShow());
+		assertEquals("0.001550", NumberFormater.formatSigFig(0.00155, 4).getShow());
+		assertEquals("0.8361274", NumberFormater.formatSigFig(0.83612736, 7).getShow());
+		assertEquals("0.00", NumberFormater.formatSigFig(0, 3).getShow());
+	}
+
+	@Test
+	public void testFormatInput()
+	{
+		assertEquals("1,234", NumberFormater.withSeparator("1234"));
+		assertEquals("1,234.5678", NumberFormater.withSeparator("1234.5678"));
+		assertEquals("123", NumberFormater.withSeparator("123"));
+		assertEquals("0.001", NumberFormater.withSeparator("0.001"));
 	}
 
 	@Test
