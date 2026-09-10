@@ -20,10 +20,13 @@ package org.sweble.wikitext.articlecruncher;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class JobTraceSet
 {
 	private Set<JobTrace> traces = new HashSet<JobTrace>();
+
+	private boolean aborted = false;
 
 	// =========================================================================
 
@@ -44,9 +47,41 @@ public class JobTraceSet
 		return Collections.unmodifiableSet(traces);
 	}
 
+	/**
+	 * Waits until all traces have been removed or the timeout has elapsed.
+	 */
 	public synchronized void waitForCompletion(int timeoutInSeconds) throws InterruptedException
 	{
-		while (!traces.isEmpty())
-			wait(timeoutInSeconds * 1000);
+		awaitCompletion(timeoutInSeconds, TimeUnit.SECONDS);
+	}
+
+	// =========================================================================
+
+	/**
+	 * Waits until all traces have been removed, the timeout has elapsed or
+	 * waiting was aborted.
+	 *
+	 * @return Whether all traces have been removed.
+	 */
+	synchronized boolean awaitCompletion(long timeout, TimeUnit unit) throws InterruptedException
+	{
+		long deadline = System.nanoTime() + unit.toNanos(timeout);
+		while (!traces.isEmpty() && !aborted)
+		{
+			long remaining = deadline - System.nanoTime();
+			if (remaining <= 0)
+				break;
+			TimeUnit.NANOSECONDS.timedWait(this, remaining);
+		}
+		return traces.isEmpty();
+	}
+
+	/**
+	 * Makes current and future calls to awaitCompletion() return immediately.
+	 */
+	synchronized void abortWaiting()
+	{
+		aborted = true;
+		notifyAll();
 	}
 }

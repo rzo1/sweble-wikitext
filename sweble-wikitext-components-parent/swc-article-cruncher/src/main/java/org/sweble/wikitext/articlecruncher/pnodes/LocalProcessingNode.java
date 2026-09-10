@@ -92,6 +92,8 @@ public class LocalProcessingNode
 				@Override
 				public void notify(Throwable t)
 				{
+					// Let the outer abort handler (e.g. the Nexus) know
+					abort(t);
 					stop();
 				}
 			};

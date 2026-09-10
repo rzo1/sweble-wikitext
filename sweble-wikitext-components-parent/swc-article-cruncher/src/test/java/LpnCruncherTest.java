@@ -70,7 +70,7 @@ public class LpnCruncherTest
 
 	// =========================================================================
 
-	@Test
+	@Test(timeout = 120000)
 	public void test() throws Throwable
 	{
 		nexus.start();

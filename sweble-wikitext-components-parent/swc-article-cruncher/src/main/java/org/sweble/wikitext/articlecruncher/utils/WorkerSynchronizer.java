@@ -25,11 +25,16 @@ public class WorkerSynchronizer
 
 	private int running = 0;
 
+	/**
+	 * The number of workers that started or failed to start.
+	 */
+	private int arrived = 0;
+
 	private boolean oneStopped = false;
 
-	private boolean abort = false;
+	private volatile boolean abort = false;
 
-	private boolean isSync = false;
+	private volatile boolean isSync = false;
 
 	private boolean go = false;
 
@@ -46,7 +51,8 @@ public class WorkerSynchronizer
 		synchronized (lock)
 		{
 			++running;
-			lock.notify();
+			++arrived;
+			lock.notifyAll();
 		}
 
 		synchronized (goLock)
@@ -62,7 +68,21 @@ public class WorkerSynchronizer
 		{
 			--running;
 			oneStopped = true;
-			lock.notify();
+			lock.notifyAll();
+		}
+	}
+
+	/**
+	 * Called instead of oneStarted() and oneStopped() if a worker could not be
+	 * created.
+	 */
+	public void oneFailedToStart()
+	{
+		synchronized (lock)
+		{
+			++arrived;
+			oneStopped = true;
+			lock.notifyAll();
 		}
 	}
 
@@ -71,7 +91,7 @@ public class WorkerSynchronizer
 		synchronized (lock)
 		{
 			abort = true;
-			lock.notify();
+			lock.notifyAll();
 		}
 	}
 
@@ -79,7 +99,7 @@ public class WorkerSynchronizer
 	{
 		synchronized (lock)
 		{
-			while (running < numWaitingFor)
+			while (arrived < numWaitingFor && !abort)
 				lock.wait();
 		}
 

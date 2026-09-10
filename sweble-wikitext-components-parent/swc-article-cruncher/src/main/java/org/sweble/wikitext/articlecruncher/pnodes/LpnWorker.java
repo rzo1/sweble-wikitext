@@ -55,11 +55,18 @@ final class LpnWorker
 
 			job.processed(processor.process(job));
 		}
-		catch (Exception t)
+		catch (Exception e)
 		{
-			logger.warn("Processing failed with exception", t);
+			logger.warn("Processing failed with exception", e);
 
-			job.failed(t);
+			job.failed(e);
+		}
+		catch (Throwable t)
+		{
+			// An error cannot be stored in the job, the gatherer escalates it
+			logger.error("Processing failed with error", t);
+
+			throw t;
 		}
 
 		return job;

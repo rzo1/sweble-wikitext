@@ -94,13 +94,17 @@ public class LpnGatherer
 				}
 
 				processedJobs.put(processedJob);
-				backPressure.release();
 			}
 			catch (ExecutionException e)
 			{
-				error(LpnWorker.class.getSimpleName() + " failed with unhandled expection", e.getCause());
+				error(LpnWorker.class.getSimpleName() + " failed with unhandled exception", e.getCause());
 
-				abort(e.getCause());
+				// Terminates the gatherer, the launcher notifies the abort handler
+				throw e.getCause();
+			}
+			finally
+			{
+				backPressure.release();
 			}
 		}
 	}
