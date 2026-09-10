@@ -227,8 +227,19 @@ public class HtmlRendererRobustnessTest
 	{
 		String html = render("[[File:X.png|link=http://example.com/]]");
 
+		// Like MediaWiki's ThumbnailImage::toHtml(): Links to URLs only get
+		// the caption as title
 		assertImageLinkedTo(html, "http://example.com/");
-		assertContains(html, "title=\"http://example.com/\"");
+		assertFalse(html, html.contains("title="));
+	}
+
+	@Test
+	public void testInlineImageWithUrlLinkOptionAndCaption() throws Exception
+	{
+		String html = render("[[File:X.png|link=http://example.com/|cap]]");
+
+		assertImageLinkedTo(html, "http://example.com/");
+		assertContains(html, "title=\"cap\"");
 	}
 
 	@Test
@@ -247,9 +258,26 @@ public class HtmlRendererRobustnessTest
 	@Test
 	public void testInvalidCharRefInAttributeValue() throws Exception
 	{
-		String html = render("<span title=\"&#x110000;\">x</span>");
+		// Like MediaWiki's Sanitizer::decodeCharReferences()
+		String html = render("<span title=\"a&#x110000;b&#0;c&#99999999999;d&#xD800;e&#X41;\">x</span>");
 
-		assertContains(html, "title=\"&amp;#x110000;\"");
+		assertContains(html, "title=\"a�b�c�d�eA\"");
+	}
+
+	@Test
+	public void testEscapedCharRefInAttributeValueIsNotDecoded() throws Exception
+	{
+		String html = render("<span title=\"&amp;#0; &#38;#0;\">x</span>");
+
+		assertContains(html, "title=\"&amp;#0; &amp;#0;\"");
+	}
+
+	@Test
+	public void testUpperCaseHexCharRefInText() throws Exception
+	{
+		String html = render("a &#X41; &#X110000; b");
+
+		assertContains(html, "a &#65; &amp;#X110000; b");
 	}
 
 	@Test
@@ -265,9 +293,18 @@ public class HtmlRendererRobustnessTest
 	// =========================================================================
 
 	@Test
+	public void testLanguageConversionMarkupIsTextWithoutVariants() throws Exception
+	{
+		// Like MediaWiki on wikis without variants (English Wikipedia)
+		String html = render("a -{foo}- b -{R|bar}- c -{zh-hans:X;zh-hant:Y}-");
+
+		assertEquals("a -{foo}- b -{R|bar}- c -{zh-hans:X;zh-hant:Y}-", toText(html));
+	}
+
+	@Test
 	public void testLanguageConversionShowsTextWithoutConversion() throws Exception
 	{
-		String html = render("a -{foo}- b -{R|bar}- c");
+		String html = render(makeConfigWithVariants(), "a -{foo}- b -{R|bar}- c");
 
 		assertEquals("a foo b bar c", toText(html));
 	}
@@ -275,19 +312,15 @@ public class HtmlRendererRobustnessTest
 	@Test
 	public void testLanguageConversionInHeadingAndCaption() throws Exception
 	{
-		assertContains(render("== x -{y}- ==\nText"), "id=\"x_y\"");
-		assertContains(render("[[File:X.png|-{cap}-]]"), "alt=\"cap\"");
+		WikiConfigImpl config = makeConfigWithVariants();
+		assertContains(render(config, "== x -{y}- ==\nText"), "id=\"x_y\"");
+		assertContains(render(config, "[[File:X.png|-{cap}-]]"), "alt=\"cap\"");
 	}
 
 	@Test
 	public void testLanguageConversionFlagsAndRulesProduceNothing() throws Exception
 	{
-		// The parser only knows variants which are registered with their
-		// upper case names
-		WikiConfigImpl config = DefaultConfigEnWp.generate();
-		ParserConfigImpl pc = (ParserConfigImpl) config.getParserConfig();
-		pc.addLctVariantMapping("ZH-HANS", "ZH-HANS");
-		pc.addLctVariantMapping("ZH-HANT", "ZH-HANT");
+		WikiConfigImpl config = makeConfigWithVariants();
 
 		String html = render(config, "a -{zh-hans:X;zh-hant:Y}- b -{zh-hans|c}- d");
 		assertEquals("a b c d", toText(html));
@@ -340,6 +373,19 @@ public class HtmlRendererRobustnessTest
 		Matcher m = Pattern.compile("<a href=\"([^\"]*)\"[^>]*>\\s*<img [^>]*src=\"/images/X.png\"").matcher(html);
 		assertTrue(html, m.find());
 		assertEquals(html, href, m.group(1));
+	}
+
+	/**
+	 * Registers variants with their lower case names like the configurations
+	 * of wikis with variants do.
+	 */
+	private static WikiConfigImpl makeConfigWithVariants()
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+		ParserConfigImpl pc = config.getParserConfig();
+		pc.addLctVariantMapping("zh-hans", "zh-hans");
+		pc.addLctVariantMapping("zh-hant", "zh-hant");
+		return config;
 	}
 
 	private static String render(String wikitext) throws Exception

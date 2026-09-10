@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.sweble.wikitext.parser.utils.XmlCharRefUtils;
+
 import de.fau.cs.osr.utils.StringTools;
 import de.fau.cs.osr.utils.XmlEntityResolver;
 
@@ -120,6 +122,9 @@ public final class HtmlSanitizer
 
 	private static final Pattern CHAR_REF =
 			Pattern.compile("&(?:([A-Za-z][A-Za-z0-9]*)|#([0-9]+)|#[xX]([0-9A-Fa-f]+));");
+
+	private static final Pattern NUMERIC_CHAR_REF =
+			Pattern.compile("&#(?:([0-9]+)|[xX]([0-9A-Fa-f]+));");
 
 	/** Ids are truncated to this many characters (T251506). */
 	private static final int MAX_ID_LENGTH = 1024;
@@ -508,6 +513,55 @@ public final class HtmlSanitizer
 	}
 
 	/**
+	 * Decodes numeric character references like MediaWiki's
+	 * {@code Sanitizer::decodeChar()}: References to code points that may not
+	 * be written to the output (see {@link #isValidCharReference(long)})
+	 * become U+FFFD. Named references are left untouched.
+	 */
+	public static String decodeNumericCharReferences(String text)
+	{
+		return replaceNumericCharReferences(text, true);
+	}
+
+	/**
+	 * Replaces numeric character references to code points that may not be
+	 * written to the output (see {@link #isValidCharReference(long)}) with
+	 * U+FFFD. All other references are kept. This is what the HTML parser of
+	 * MediaWiki (RemexHtml) makes of invalid references in the content of
+	 * {@code <nowiki>}.
+	 */
+	public static String replaceInvalidNumericCharReferences(String text)
+	{
+		return replaceNumericCharReferences(text, false);
+	}
+
+	private static String replaceNumericCharReferences(String text, boolean decodeValid)
+	{
+		if (text == null || text.indexOf("&#") < 0)
+			return text;
+
+		Matcher m = NUMERIC_CHAR_REF.matcher(text);
+		StringBuffer sb = new StringBuffer(text.length());
+		while (m.find())
+		{
+			long cp = (m.group(1) != null)
+					? parseCodePoint(m.group(1), 10)
+					: parseCodePoint(m.group(2), 16);
+
+			String replacement;
+			if (!isValidCharReference(cp))
+				replacement = String.valueOf(REPLACEMENT_CHAR);
+			else if (decodeValid)
+				replacement = new String(Character.toChars((int) cp));
+			else
+				replacement = m.group();
+			m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+		}
+		m.appendTail(sb);
+		return sb.toString();
+	}
+
+	/**
 	 * Escapes a string for use in an HTML attribute value but leaves existing
 	 * character references (like {@code &amp;} or {@code &#34;}) intact. Use
 	 * this for values that may already be HTML encoded, like URLs handed out
@@ -643,10 +697,9 @@ public final class HtmlSanitizer
 
 	private static long parseCodePoint(String digits, int radix)
 	{
-		// Avoid overflows, anything this long is not a valid code point anyway
-		if (digits.length() > 8)
-			return -1;
-		return Long.parseLong(digits, radix);
+		// Like the parser: Leading zeros are ignored and numbers too large for
+		// a code point yield -1
+		return XmlCharRefUtils.parseCodePoint(digits, radix);
 	}
 
 	private static String decodeCodePoint(long cp)

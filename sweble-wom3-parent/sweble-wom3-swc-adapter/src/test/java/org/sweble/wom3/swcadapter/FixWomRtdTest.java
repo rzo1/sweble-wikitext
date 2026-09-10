@@ -24,6 +24,7 @@ import java.io.File;
 
 import org.junit.Test;
 import org.sweble.wikitext.engine.ExpansionCallback;
+import org.sweble.wikitext.engine.config.ParserConfigImpl;
 import org.sweble.wom3.Wom3Document;
 import org.sweble.wom3.Wom3ElementNode;
 import org.sweble.wom3.Wom3Node;
@@ -169,6 +170,13 @@ public class FixWomRtdTest
 	@Test
 	public void testLanguageConversionRoundTrip() throws Exception
 	{
+		// Without variants language conversion markup is text
+		ParserConfigImpl pc = getWikiConfig().getParserConfig();
+		pc.addLctVariantMapping("zh-hans", "zh-hans");
+		pc.addLctVariantMapping("zh-hant", "zh-hant");
+		pc.addLctVariantMapping("zh-cn", "zh-cn");
+		pc.addLctVariantMapping("zh-tw", "zh-tw");
+
 		String wm = ""
 				+ "A -{zh-hans:x; zh-hant:y}- B\n"
 				+ "\n"

@@ -665,11 +665,14 @@ public class SafeLinkTitlePrinter
 
 	/**
 	 * Like the HtmlRenderer keep valid character references in the content of
-	 * {@code <nowiki>} and {@code <pre>}.
+	 * {@code <nowiki>} and {@code <pre>}. Numeric references to invalid code
+	 * points become U+FFFD.
 	 */
 	private void printNowiki(String content)
 	{
-		p.print(HtmlSanitizer.escapeAttributeKeepingValidCharRefs(content, wikiConfig.getParserConfig()));
+		p.print(HtmlSanitizer.escapeAttributeKeepingValidCharRefs(
+				HtmlSanitizer.replaceInvalidNumericCharReferences(content),
+				wikiConfig.getParserConfig()));
 	}
 
 	// =====================================================================

@@ -25,11 +25,14 @@ import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.nodes.*;
 import org.sweble.wikitext.engine.utils.EngineAstTextUtils;
 import org.sweble.wikitext.engine.utils.UrlEncoding;
+import org.sweble.wikitext.parser.ImageLinkOptionAliases;
+import org.sweble.wikitext.parser.ParserConfig;
 import org.sweble.wikitext.parser.WtRtData;
 import org.sweble.wikitext.parser.nodes.*;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageHorizAlign;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageViewFormat;
 import org.sweble.wikitext.parser.nodes.WtLinkTarget.LinkTargetType;
+import org.sweble.wikitext.parser.parser.LinkBuilder;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 import org.sweble.wikitext.parser.utils.StringConversionException;
 import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
@@ -197,6 +200,11 @@ public class HtmlRenderer
 			throw new VisitingException(e);
 		}
 
+		// Like MediaWiki's Linker::makeImageLink(): Language and page are handed
+		// to the media handler
+		String lang = getImageOption(n, ImageLinkOptionAliases.IMG_LANG);
+		int page = parsePageOption(getImageOption(n, ImageLinkOptionAliases.IMG_PAGE));
+
 		int imgWidth = n.getWidth();
 		int imgHeight = n.getHeight();
 
@@ -204,8 +212,10 @@ public class HtmlRenderer
 		{
 			case THUMBNAIL: // FALL THROUGH
 			case FRAMELESS:
+				// Like MediaWiki's Linker::makeImageLink(): The upright factor
+				// only scales the default width
 				if (imgWidth <= 0)
-					imgWidth = 180;
+					imgWidth = n.getUpright() ? makeUprightWidth(n) : DEFAULT_THUMB_WIDTH;
 				break;
 			case FRAME:
 				// Like MediaWiki: framed images are never scaled
@@ -216,19 +226,15 @@ public class HtmlRenderer
 				break;
 		}
 
-		if (n.getUpright() && n.getFormat() != ImageViewFormat.FRAME)
-		{
-			imgWidth = 140;
-			imgHeight = -1;
-		}
-
 		MediaInfo info;
 		try
 		{
 			info = callback.getMediaInfo(
 					target.getNormalizedFullTitle(),
 					imgWidth,
-					imgHeight);
+					imgHeight,
+					lang,
+					page);
 		}
 		catch (Exception e)
 		{
@@ -257,7 +263,9 @@ public class HtmlRenderer
 					info = callback.getMediaInfo(
 							target.getNormalizedFullTitle(),
 							imgWidth,
-							imgHeight);
+							imgHeight,
+							lang,
+							page);
 				}
 				catch (Exception e)
 				{
@@ -278,7 +286,11 @@ public class HtmlRenderer
 		}
 
 		String aClasses = "";
-		String imgClasses = "";
+
+		// Like MediaWiki's Linker::makeImageLink() the class option comes first
+		String imgClasses = getImageOption(n, ImageLinkOptionAliases.IMG_CLASS);
+		if (imgClasses == null)
+			imgClasses = "";
 
 		switch (n.getFormat())
 		{
@@ -332,6 +344,12 @@ public class HtmlRenderer
 				break;
 		}
 
+		// Like MediaWiki's MediaTransformOutput::getDescLinkAttribs(): The link
+		// to the file description page gets the page and the language
+		String descQuery = null;
+		if (exists && n.getLink().getTargetType() == LinkTargetType.DEFAULT)
+			descQuery = makeImageQuery((page != 1) ? page : -1, lang);
+
 		// -- string caption --
 
 		String strCaption = null;
@@ -351,10 +369,13 @@ public class HtmlRenderer
 
 		// -- <a> title --
 
-		// Like MediaWiki's Linker::makeImageLink(): Frameless images get the
-		// caption as title like inline images. Without a caption they only get
-		// the title of a page given with the link option.
+		// Like MediaWiki's Linker::makeImageLink() and ThumbnailImage::toHtml():
+		// Inline and frameless images get the caption as title. Without a
+		// caption they only get the title of a page given with the link
+		// option. Links of missing files have the name of the file as title
+		// (Linker::makeBrokenImageLinkObj()).
 		boolean frameless = n.getFormat() == ImageViewFormat.FRAMELESS;
+		boolean missingTitle = !exists && !frameless;
 
 		String aTitle = "";
 		if (strCaption != null)
@@ -364,10 +385,10 @@ public class HtmlRenderer
 		}
 		else if (linkTarget != null)
 		{
-			if (!frameless || n.getLink().getTargetType() == LinkTargetType.PAGE)
+			if (missingTitle || n.getLink().getTargetType() == LinkTargetType.PAGE)
 				aTitle = esc(makeImageTitle(n, linkTarget), true);
 		}
-		else if (linkUrl != null && !frameless)
+		else if (linkUrl != null && missingTitle)
 		{
 			aTitle = escAttrKeepCharRefs(callback.makeUrl(linkUrl));
 		}
@@ -468,13 +489,14 @@ public class HtmlRenderer
 		if (linkTarget != null || linkUrl != null)
 		{
 			pf("<a href=\"%s\"%s%s>",
-					escAttrKeepCharRefs(linkTarget != null ? callback.makeUrl(linkTarget) : callback.makeUrl(linkUrl)),
+					escAttrKeepCharRefs(linkTarget != null ? callback.makeUrl(linkTarget, descQuery) : callback.makeUrl(linkUrl)),
 					aClasses,
 					aTitle);
 		}
 
+		imgClasses = imgClasses.trim();
 		if (!imgClasses.isEmpty())
-			imgClasses = String.format(" class=\"%s\"", imgClasses.trim());
+			imgClasses = String.format(" class=\"%s\"", esc(imgClasses, true));
 
 		if (exists)
 		{
@@ -511,8 +533,9 @@ public class HtmlRenderer
 				p.incIndent();
 				p.indent();
 				// The magnify icon always links to the file description page
+				// (like Linker::makeThumbLink2() with the page)
 				pf("<a href=\"%s\" class=\"internal\" title=\"Enlarge\"><img src=\"/mediawiki/skins/common/images/magnify-clip.png\" width=\"15\" height=\"11\" alt=\"\" /></a>",
-						escAttrKeepCharRefs(callback.makeUrl(target)));
+						escAttrKeepCharRefs(callback.makeUrl(target, makeImageQuery(page, null))));
 				p.decIndent();
 				p.indentln("</div>");
 				dispatch(n.getTitle());
@@ -1608,12 +1631,14 @@ public class HtmlRenderer
 	/**
 	 * Renders the content of a {@code <nowiki>} tag like MediaWiki: Only angle
 	 * brackets, bare ampersands and language converter markup are escaped.
-	 * Character references are kept.
+	 * Valid character references are kept, numeric references to invalid
+	 * code points become U+FFFD.
 	 */
 	private void printNowiki(String content)
 	{
 		String html = LANG_CONVERTER_MARKUP
-				.matcher(escTextKeepValidCharRefs(content))
+				.matcher(escTextKeepValidCharRefs(
+						HtmlSanitizer.replaceInvalidNumericCharReferences(content)))
 				.replaceAll(m -> m.group().equals("-{") ? "-&#123;" : "&#125;-");
 
 		if (inPre > 0)
@@ -1842,6 +1867,78 @@ public class HtmlRenderer
 		return target.getDenormalizedFullTitle();
 	}
 
+	/**
+	 * @return The value of the given image option (see
+	 *         {@link LinkBuilder#getOptionValue(ParserConfig, WtLinkOptions, String)})
+	 *         or {@code null}.
+	 */
+	private String getImageOption(WtImageLink n, String id)
+	{
+		return LinkBuilder.getOptionValue(wikiConfig.getParserConfig(), n.getOptions(), id);
+	}
+
+	/**
+	 * Like MediaWiki's Linker::makeImageLink(): The default width of
+	 * thumbnails multiplied by the upright factor and rounded to multiples of
+	 * ten. Without a factor (or with a factor of 0) the default factor
+	 * ($wgThumbUpright) is used.
+	 */
+	private int makeUprightWidth(WtImageLink n)
+	{
+		double factor = 0;
+		String value = getImageOption(n, ImageLinkOptionAliases.IMG_UPRIGHT);
+		if (value != null && !value.trim().isEmpty())
+		{
+			try
+			{
+				factor = Double.parseDouble(value.trim());
+			}
+			catch (NumberFormatException e)
+			{
+				factor = 0;
+			}
+		}
+
+		if (!(factor > 0) || Double.isInfinite(factor))
+			factor = DEFAULT_UPRIGHT_FACTOR;
+
+		// PHP's round($width, -1)
+		double width = Math.round(DEFAULT_THUMB_WIDTH * factor / 10.0) * 10.0;
+		return (int) Math.max(1, Math.min(width, Integer.MAX_VALUE));
+	}
+
+	/**
+	 * @return The page given with the page option or -1.
+	 */
+	private static int parsePageOption(String value)
+	{
+		if (value == null)
+			return -1;
+		try
+		{
+			int page = Integer.parseInt(value.trim());
+			return (page > 0) ? page : -1;
+		}
+		catch (NumberFormatException e)
+		{
+			return -1;
+		}
+	}
+
+	/**
+	 * @return The query of a link to a file description page with the given
+	 *         page (if positive) and language (if not null) or {@code null}.
+	 */
+	private static String makeImageQuery(int page, String lang)
+	{
+		String query = "";
+		if (page > 0)
+			query += "page=" + page;
+		if (lang != null && !lang.isEmpty())
+			query += (query.isEmpty() ? "" : "&") + "lang=" + UrlEncoding.QUERY.encode(lang);
+		return query.isEmpty() ? null : query;
+	}
+
 	private String makeTitleFromTarget(WtInternalLink n, PageTitle target)
 	{
 		return makeTitleFromTarget(target, n.getTarget());
@@ -1960,6 +2057,29 @@ public class HtmlRenderer
 	}
 
 	/**
+	 * Like MediaWiki's {@code Sanitizer::decodeTagAttributes()} character
+	 * references in attribute values are decoded. The parser keeps references
+	 * to invalid code points as text, like MediaWiki they become U+FFFD.
+	 * Returns a copy of the value in which the text nodes contain the decoded
+	 * references. Escaped references (like {@code &amp;#0;}) are not text and
+	 * are not decoded.
+	 */
+	private WtNodeList decodeInvalidCharRefs(WtNodeList value)
+	{
+		WtNodeList result = nf.list();
+		for (WtNode c : value)
+		{
+			if (c.getNodeType() == WtNode.NT_TEXT)
+				result.add(nf.text(HtmlSanitizer.decodeNumericCharReferences(((WtText) c).getContent())));
+			else if (c.getNodeType() == WtNode.NT_NODE_LIST)
+				result.add(decodeInvalidCharRefs((WtNodeList) c));
+			else
+				result.add(c);
+		}
+		return result;
+	}
+
+	/**
 	 * Removes or neutralizes all attributes that are not allowed on the given
 	 * element (see {@link HtmlSanitizer}). Like MediaWiki, presentational
 	 * attributes like {@code align} or {@code width} are kept as they are.
@@ -1992,7 +2112,7 @@ public class HtmlRenderer
 			}
 
 			String name = attr.getName().getAsString();
-			attribs.put(name, attr.hasValue() ? cleanAttribValue(attr.getValue()) : name);
+			attribs.put(name, attr.hasValue() ? cleanAttribValue(decodeInvalidCharRefs(attr.getValue())) : name);
 		}
 		return attribs;
 	}
@@ -2080,6 +2200,16 @@ public class HtmlRenderer
 	private boolean semiPreLineStart = false;
 
 	private static final Pattern LANG_CONVERTER_MARKUP = Pattern.compile("-\\{|\\}-");
+
+	/**
+	 * The default width of thumbnails.
+	 */
+	private static final int DEFAULT_THUMB_WIDTH = 180;
+
+	/**
+	 * The default upright factor (MediaWiki's $wgThumbUpright).
+	 */
+	private static final double DEFAULT_UPRIGHT_FACTOR = 0.75;
 
 	static
 	{

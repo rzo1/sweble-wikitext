@@ -173,7 +173,16 @@ public class LinkBuilder
 	 */
 	public boolean isValueOption(String name, String value)
 	{
-		String id = resolveOptionId(name + "$1");
+		return isValueOption(parserConfig, name, value);
+	}
+
+	/**
+	 * Like {@link #isValueOption(String, String)} using the given parser
+	 * configuration to resolve the option.
+	 */
+	public static boolean isValueOption(ParserConfig parserConfig, String name, String value)
+	{
+		String id = resolveOptionId(parserConfig, name + "$1");
 		if (id == null)
 			return false;
 
@@ -205,8 +214,70 @@ public class LinkBuilder
 	 */
 	private String resolveOptionId(String alias)
 	{
+		return resolveOptionId(parserConfig, alias);
+	}
+
+	private static String resolveOptionId(ParserConfig parserConfig, String alias)
+	{
 		String id = parserConfig.getImageLinkOptionId(alias);
 		return (id != null) ? id : ImageLinkOptionAliases.getDefaultId(alias);
+	}
+
+	/**
+	 * Returns the value of an option of an image link which is stored as
+	 * keyword option with name and value (e.g. {@code "class=foo"} or
+	 * {@code "upright=1.5"}, see {@link #isValueOption(String, String)}). Like
+	 * in MediaWiki the last option wins. A keyword option without value (e.g.
+	 * {@code "upright"}) yields the empty string.
+	 *
+	 * @param id
+	 *            The id of the option (e.g.
+	 *            {@link ImageLinkOptionAliases#IMG_CLASS}).
+	 * @return The value or {@code null} if the option is not given.
+	 */
+	public static String getOptionValue(
+			ParserConfig parserConfig,
+			WtLinkOptions options,
+			String id)
+	{
+		String result = null;
+		for (WtNode option : options)
+		{
+			if (!(option instanceof WtLinkOptionKeyword))
+				continue;
+
+			String keyword = ((WtLinkOptionKeyword) option).getKeyword();
+			if (id.equals(resolveOptionId(parserConfig, keyword)))
+			{
+				result = "";
+				continue;
+			}
+
+			int i = indexOfValueSeparator(keyword);
+			if (i < 0)
+				continue;
+
+			String name = keyword.substring(0, i + 1);
+			String value = keyword.substring(i + 1);
+			if (id.equals(resolveOptionId(parserConfig, name + "$1"))
+					&& isValueOption(parserConfig, name, value))
+				result = value;
+		}
+		return result;
+	}
+
+	/**
+	 * The name of a parameterized option cannot contain {@code '='} or
+	 * {@code ' '}, the first one separates name and value.
+	 *
+	 * @return The index of the separator or -1.
+	 */
+	private static int indexOfValueSeparator(String keyword)
+	{
+		int i = 0;
+		while (i < keyword.length() && keyword.charAt(i) != '=' && keyword.charAt(i) != ' ')
+			++i;
+		return (i < keyword.length()) ? i : -1;
 	}
 
 	// =========================================================================
@@ -282,15 +353,12 @@ public class LinkBuilder
 
 	/**
 	 * Parameterized options are stored as keyword option with name and value
-	 * (e.g. {@code "upright=1.5"}). The name cannot contain {@code '='} or
-	 * {@code ' '}, the first one separates name and value.
+	 * (e.g. {@code "upright=1.5"}).
 	 */
 	private void addValueOption(String keyword)
 	{
-		int i = 0;
-		while (i < keyword.length() && keyword.charAt(i) != '=' && keyword.charAt(i) != ' ')
-			++i;
-		if (i >= keyword.length())
+		int i = indexOfValueSeparator(keyword);
+		if (i < 0)
 			return;
 
 		String name = keyword.substring(0, i + 1);

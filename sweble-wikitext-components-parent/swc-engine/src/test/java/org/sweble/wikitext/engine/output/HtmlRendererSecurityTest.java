@@ -65,13 +65,23 @@ public class HtmlRendererSecurityTest
 	}
 
 	@Test
-	public void testTitleAndSrcOfImageAreEscaped() throws Exception
+	public void testHrefAndSrcOfImageAreEscaped() throws Exception
 	{
+		// Like in MediaWiki inline images without caption have no title
 		String html = render("[[File:A\"onmouseover=\"alert(1).png]]", false, true);
 
 		assertNoInjectedHandler(html);
-		assertContains(html, "title=\"File:A&quot;onmouseover=&quot;alert(1).png\"");
+		assertContains(html, "href=\"/wiki/File:A&quot;onmouseover=&quot;alert(1).png\"");
 		assertContains(html, "src=\"/images/File:A&quot;onmouseover=&quot;alert(1).png\"");
+	}
+
+	@Test
+	public void testCaptionTitleOfImageIsEscaped() throws Exception
+	{
+		String html = render("[[File:X.png|A\"onmouseover=\"alert(1)]]", false, true);
+
+		assertNoInjectedHandler(html);
+		assertContains(html, "title=\"A&quot;onmouseover=&quot;alert(1)\"");
 	}
 
 	@Test
