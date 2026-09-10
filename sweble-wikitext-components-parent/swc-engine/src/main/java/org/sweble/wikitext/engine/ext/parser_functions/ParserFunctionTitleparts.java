@@ -37,6 +37,12 @@ public class ParserFunctionTitleparts
 	private static final long serialVersionUID = 1L;
 
 	/**
+	 * MediaWiki splits a title into at most this many segments. The last
+	 * segment contains the rest of the title.
+	 */
+	private static final int MAX_SEGMENTS = 25;
+
+	/**
 	 * For un-marshaling only.
 	 */
 	public ParserFunctionTitleparts()
@@ -60,32 +66,32 @@ public class ParserFunctionTitleparts
 
 		WtNode arg0 = frame.expand(args.get(0));
 
-		if (args.size() < 2)
-			return arg0;
-
 		PageTitle pageTitle;
-		Integer partCount = null;
-		Integer firstPart = null;
+		int partCount = 0;
+		int firstPart = 0;
 		String titleStr = null;
 		try
 		{
 			titleStr = tu().astToText(arg0).trim();
 			pageTitle = PageTitle.make(frame.getWikiConfig(), titleStr);
 
-			WtNode arg1 = frame.expand(args.get(1));
-			String countStr = tu().astToText(arg1).trim();
-			try
+			if (args.size() > 1)
 			{
-				if (!countStr.isEmpty())
-					partCount = Integer.parseInt(countStr);
-			}
-			catch (NumberFormatException e)
-			{
-				fileIllegalArgumentsWarning(
-						frame,
-						WarningSeverity.INFORMATIVE,
-						pfn,
-						"Number of segments `" + countStr + "' is not a number and was ignored");
+				WtNode arg1 = frame.expand(args.get(1));
+				String countStr = tu().astToText(arg1).trim();
+				try
+				{
+					if (!countStr.isEmpty())
+						partCount = Integer.parseInt(countStr);
+				}
+				catch (NumberFormatException e)
+				{
+					fileIllegalArgumentsWarning(
+							frame,
+							WarningSeverity.INFORMATIVE,
+							pfn,
+							"Number of segments `" + countStr + "' is not a number and was ignored");
+				}
 			}
 
 			if (args.size() > 2)
@@ -124,46 +130,46 @@ public class ParserFunctionTitleparts
 			return pfn;
 		}
 
-		String title = pageTitle.getTitle();
+		// Like MediaWiki, split the normalized title including its namespace.
+		String[] parts = pageTitle.getPrefixedText().split("/", MAX_SEGMENTS);
 
-		String[] parts = title.split("/", 25);
+		// The first segment is counted from 1, negative values count from the
+		// end. A segment count of 0 selects all remaining segments, negative
+		// values leave out segments at the end.
+		if (firstPart > 0)
+			--firstPart;
 
-		if (partCount != null)
-		{
-			if (partCount < 0)
-			{
-				partCount = parts.length + partCount;
-			}
-			else if (partCount == 0)
-			{
-				partCount = parts.length;
-			}
-			if (partCount <= 0)
-				return nf().text("");
-		}
+		return nf().text(StringUtils.join(slice(parts, firstPart, partCount), "/"));
+	}
+
+	/**
+	 * Extracts a slice of an array like PHP's array_slice().
+	 *
+	 * @param offset
+	 *            The index of the first element. Negative values count from the
+	 *            end of the array.
+	 * @param length
+	 *            The number of elements. 0 means all remaining elements,
+	 *            negative values leave out that many elements at the end of
+	 *            the array.
+	 */
+	private static List<String> slice(String[] array, int offset, int length)
+	{
+		int n = array.length;
+
+		int from = (offset < 0) ? Math.max(n + offset, 0) : Math.min(offset, n);
+
+		int to;
+		if (length > 0)
+			to = (int) Math.min((long) from + length, n);
+		else if (length < 0)
+			to = n + length;
 		else
-			partCount = parts.length;
+			to = n;
 
-		if (firstPart != null)
-		{
-			if (firstPart > parts.length)
-			{
-				return nf().text("");
-			}
-			else if (firstPart < 0)
-			{
-				firstPart = parts.length + firstPart;
-			}
-			if (firstPart <= 0)
-				firstPart = 1;
-		}
-		else
-			firstPart = 1;
+		if (to <= from)
+			return Arrays.asList();
 
-		int from = firstPart - 1;
-		int to = Math.min(from + partCount, parts.length);
-		String newTitle = StringUtils.join(Arrays.copyOfRange(parts, from, to), "/");
-
-		return nf().text(pageTitle.newWithTitle(newTitle).getDenormalizedFullTitle());
+		return Arrays.asList(array).subList(from, to);
 	}
 }

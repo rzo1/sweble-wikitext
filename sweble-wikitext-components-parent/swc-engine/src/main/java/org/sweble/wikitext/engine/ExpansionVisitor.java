@@ -457,7 +457,7 @@ public final class ExpansionVisitor
 			ArrayList<WtTemplateArgument> args,
 			boolean hadNewline) throws ExpansionException
 	{
-		if (title.equals("!") && tail.isEmpty() && args.isEmpty())
+		if (title.trim().equals("!") && tail.isEmpty() && args.isEmpty())
 			return nf.text("|");
 		return null;
 	}
@@ -488,7 +488,8 @@ public final class ExpansionVisitor
 		String arg0Prefix = null;
 		if ((i == -1) && tail.isEmpty())
 		{
-			name = title;
+			// Like MediaWiki: {{ PAGENAME }} is {{PAGENAME}}
+			name = title.trim();
 		}
 		else if (i != -1)
 		{
@@ -674,7 +675,7 @@ public final class ExpansionVisitor
 			String title,
 			boolean hadNewline) throws ExpansionException
 	{
-		ParserFunctionBase pfn = getWikiConfig().getParserFunction(title);
+		ParserFunctionBase pfn = getWikiConfig().getParserFunction(title.trim());
 		if (pfn == null)
 			return null;
 

@@ -25,11 +25,9 @@ import org.sweble.wikitext.engine.PfnArgumentMode;
 import org.sweble.wikitext.engine.config.Namespace;
 import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
-import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
+import org.sweble.wikitext.engine.utils.UrlEncoding;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
-import org.sweble.wikitext.parser.parser.LinkTargetException;
-import org.sweble.wikitext.parser.utils.StringConversionException;
 
 public class CorePfnVariablesNamespaces
 		extends
@@ -43,6 +41,7 @@ public class CorePfnVariablesNamespaces
 	{
 		super("Core - Variables - Namespaces");
 		addParserFunction(new NamespacePfn(wikiConfig));
+		addParserFunction(new NamespaceePfn(wikiConfig));
 		addParserFunction(new TalkspacePfn(wikiConfig));
 		addParserFunction(new SubjectspacePfn(wikiConfig));
 	}
@@ -83,33 +82,9 @@ public class CorePfnVariablesNamespaces
 				ExpansionFrame frame,
 				List<? extends WtNode> argsValues)
 		{
-			PageTitle title;
-			if (argsValues.size() > 0)
-			{
-				WtNode titleNode = argsValues.get(0);
-
-				String titleStr = null;
-				try
-				{
-					titleStr = tu().astToText(titleNode);
-
-					title = PageTitle.make(frame.getWikiConfig(), titleStr);
-				}
-				catch (StringConversionException e)
-				{
-					fileInvalidNameWarning(frame, WarningSeverity.NORMAL, titleNode);
-					return var;
-				}
-				catch (LinkTargetException e)
-				{
-					fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, titleNode, titleStr);
-					return var;
-				}
-			}
-			else
-			{
-				title = frame.getRootFrame().getTitle();
-			}
+			PageTitle title = getTitleArgument(var, frame, argsValues);
+			if (title == null)
+				return var;
 
 			return nf().text(title.getNamespace().getName());
 		}
@@ -117,7 +92,45 @@ public class CorePfnVariablesNamespaces
 
 	// =========================================================================
 	// ==
-	// == TODO: {{NAMESPACEE}}
+	// == {{NAMESPACEE}}
+	// ==
+	// =========================================================================
+
+	public static final class NamespaceePfn
+			extends
+				CorePfnVariable
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public NamespaceePfn()
+		{
+			super(PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "namespacee");
+		}
+
+		public NamespaceePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "namespacee");
+		}
+
+		@Override
+		public WtNode invoke(
+				WtTemplate var,
+				ExpansionFrame frame,
+				List<? extends WtNode> argsValues)
+		{
+			PageTitle title = getTitleArgument(var, frame, argsValues);
+			if (title == null)
+				return var;
+
+			return nf().text(UrlEncoding.WIKI.encode(title.getNamespace().getName()));
+		}
+	}
+
+	// =========================================================================
+	// ==
 	// == TODO: {{NAMESPACENUMBER}}
 	// ==
 	// =========================================================================

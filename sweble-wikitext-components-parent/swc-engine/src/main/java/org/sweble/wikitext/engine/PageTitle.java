@@ -168,6 +168,32 @@ public class PageTitle
 		return result;
 	}
 
+	/**
+	 * Get the full title like {@link #getDenormalizedFullTitle()} but always
+	 * use the name of the namespace, even if an alias of the namespace was
+	 * specified (like MediaWiki's Title::getPrefixedText()):
+	 *
+	 * <pre>
+	 * &quot;[IW_PREFIX:][NS_NAME:]TITLE&quot;
+	 * </pre>
+	 *
+	 * The TITLE itself will be in de-normalized form ("_" replaced by " ").
+	 */
+	public String getPrefixedText()
+	{
+		String result = "";
+
+		if (interwiki != null)
+			result += interwiki.getPrefix() + ":";
+
+		if (namespace != null && !isDefaultNs)
+			result += namespace.getName() + ":";
+
+		result += getDenormalizedTitle();
+
+		return result;
+	}
+
 	// =========================================================================
 
 	public URL getUrl()
@@ -208,20 +234,71 @@ public class PageTitle
 
 	// =========================================================================
 
+	/**
+	 * Returns the title of the parent page (everything before the last "/")
+	 * if the namespace of this title can have subpages. Otherwise this title
+	 * is returned.
+	 */
 	public PageTitle getBaseTitle()
 	{
 		if (!namespace.isCanHaveSubpages())
 			return this;
 
+		// The first character can never be a divider, that would result in
+		// an empty base.
 		int i = title.lastIndexOf('/');
-		if (i < 0)
+		if (i <= 0)
 			return this;
 
-		String baseTitle = title.substring(0, i);
+		return newWithTitlePart(title.substring(0, i));
+	}
 
+	/**
+	 * Returns the title of the top-level page (everything before the first
+	 * "/") if the namespace of this title can have subpages. Otherwise this
+	 * title is returned.
+	 */
+	public PageTitle getRootTitle()
+	{
+		if (!namespace.isCanHaveSubpages())
+			return this;
+
+		// Skip leading slashes, but keep the last one when there is nothing
+		// but slashes.
+		int bottom = 0;
+		while (bottom < title.length() - 1 && title.charAt(bottom) == '/')
+			++bottom;
+
+		int i = title.indexOf('/', bottom);
+		if (i <= 0)
+			return this;
+
+		return newWithTitlePart(title.substring(0, i));
+	}
+
+	/**
+	 * Returns a title that consists of the last subpage segment (everything
+	 * after the last "/") if the namespace of this title can have subpages.
+	 * Otherwise this title is returned. The returned title keeps the
+	 * namespace of this title.
+	 */
+	public PageTitle getSubpageTitle()
+	{
+		if (!namespace.isCanHaveSubpages())
+			return this;
+
+		int i = title.lastIndexOf('/');
+		if (i <= 0)
+			return this;
+
+		return newWithTitlePart(title.substring(i + 1));
+	}
+
+	private PageTitle newWithTitlePart(String titlePart)
+	{
 		return new PageTitle(
 				config,
-				baseTitle,
+				titlePart,
 				null,
 				namespace,
 				namespaceAlias,
@@ -307,7 +384,9 @@ public class PageTitle
 
 		if (namespace == null)
 		{
-			namespace = defaultNamespace;
+			// An initial colon selects the default namespace: {{:Main}}
+			// transcludes the page "Main" and not "Template:Main".
+			namespace = initialColon ? null : defaultNamespace;
 			if (namespace == null)
 				namespace = config.getDefaultNamespace();
 		}

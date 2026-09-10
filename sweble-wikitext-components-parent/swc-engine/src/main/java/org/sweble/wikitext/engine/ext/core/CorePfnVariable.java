@@ -20,11 +20,15 @@ package org.sweble.wikitext.engine.ext.core;
 import java.util.List;
 
 import org.sweble.wikitext.engine.ExpansionFrame;
+import org.sweble.wikitext.engine.PageTitle;
 import org.sweble.wikitext.engine.ParserFunctionBase;
 import org.sweble.wikitext.engine.PfnArgumentMode;
 import org.sweble.wikitext.engine.config.WikiConfig;
+import org.sweble.wikitext.parser.WikitextWarning.WarningSeverity;
 import org.sweble.wikitext.parser.nodes.WtNode;
 import org.sweble.wikitext.parser.nodes.WtTemplate;
+import org.sweble.wikitext.parser.parser.LinkTargetException;
+import org.sweble.wikitext.parser.utils.StringConversionException;
 
 public abstract class CorePfnVariable
 		extends
@@ -39,7 +43,7 @@ public abstract class CorePfnVariable
 	 */
 	public CorePfnVariable(String name)
 	{
-		// Most variables don't take arguments so don't waste time with funny 
+		// Most variables don't take arguments so don't waste time with funny
 		// conversions.
 		super(PfnArgumentMode.TEMPLATE_ARGUMENTS, name);
 	}
@@ -54,7 +58,7 @@ public abstract class CorePfnVariable
 
 	public CorePfnVariable(WikiConfig wikiConfig, String name)
 	{
-		// Most variables don't take arguments so don't waste time with funny 
+		// Most variables don't take arguments so don't waste time with funny
 		// conversions.
 		super(wikiConfig, PfnArgumentMode.TEMPLATE_ARGUMENTS, name);
 	}
@@ -89,5 +93,51 @@ public abstract class CorePfnVariable
 	protected WtNode invoke(WtTemplate var, ExpansionFrame frame)
 	{
 		return var;
+	}
+
+	// =========================================================================
+
+	/**
+	 * Determines the page a variable like {@code PAGENAME} refers to.
+	 *
+	 * If the variable is called with a page name as argument (e.g.
+	 * {@code {{PAGENAME:Foo}}}), that page is returned. The part after the
+	 * colon is passed as additional first argument. Otherwise (e.g.
+	 * {@code {{PAGENAME}}}) the page that is being rendered is returned.
+	 *
+	 * Requires the argument mode
+	 * {@link PfnArgumentMode#EXPANDED_AND_TRIMMED_VALUES}.
+	 *
+	 * @return The page the variable refers to or {@code null} if the argument
+	 *         is not a valid page name. In the latter case a warning is filed.
+	 */
+	protected PageTitle getTitleArgument(
+			WtTemplate var,
+			ExpansionFrame frame,
+			List<? extends WtNode> argsValues)
+	{
+		// Only a call with colon has more arguments than the template itself.
+		if (argsValues.size() <= var.getArgs().size())
+			return frame.getRootFrame().getTitle();
+
+		WtNode titleNode = argsValues.get(0);
+
+		String titleStr = null;
+		try
+		{
+			titleStr = tu().astToText(titleNode).trim();
+
+			return PageTitle.make(frame.getWikiConfig(), titleStr);
+		}
+		catch (StringConversionException e)
+		{
+			fileInvalidNameWarning(frame, WarningSeverity.NORMAL, titleNode);
+			return null;
+		}
+		catch (LinkTargetException e)
+		{
+			fileInvalidPagenameWarning(frame, WarningSeverity.NORMAL, titleNode, titleStr);
+			return null;
+		}
 	}
 }

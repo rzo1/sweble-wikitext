@@ -436,7 +436,7 @@ public class DefaultConfig
 				1,
 				"Talk",
 				"Talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -444,7 +444,7 @@ public class DefaultConfig
 				2,
 				"User",
 				"User",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -452,7 +452,7 @@ public class DefaultConfig
 				3,
 				"User talk",
 				"User talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -460,7 +460,7 @@ public class DefaultConfig
 				4,
 				"Project",
 				"Project",
-				false,
+				true,
 				false,
 				Arrays.asList("WP")));
 
@@ -468,7 +468,7 @@ public class DefaultConfig
 				5,
 				"Project talk",
 				"Project talk",
-				false,
+				true,
 				false,
 				Arrays.asList("WT")));
 
@@ -484,7 +484,7 @@ public class DefaultConfig
 				7,
 				"File talk",
 				"File talk",
-				false,
+				true,
 				false,
 				Arrays.asList("Image talk")));
 
@@ -492,7 +492,7 @@ public class DefaultConfig
 				8,
 				"MediaWiki",
 				"MediaWiki",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -500,7 +500,7 @@ public class DefaultConfig
 				9,
 				"MediaWiki talk",
 				"MediaWiki talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -508,7 +508,7 @@ public class DefaultConfig
 				10,
 				"Template",
 				"Template",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -516,7 +516,7 @@ public class DefaultConfig
 				11,
 				"Template talk",
 				"Template talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -524,7 +524,7 @@ public class DefaultConfig
 				12,
 				"Help",
 				"Help",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -532,7 +532,7 @@ public class DefaultConfig
 				13,
 				"Help talk",
 				"Help talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
@@ -548,7 +548,7 @@ public class DefaultConfig
 				15,
 				"Category talk",
 				"Category talk",
-				false,
+				true,
 				false,
 				new ArrayList<String>()));
 
