@@ -184,6 +184,42 @@ public class Wom3JsonTypeAdapterTest
 		assertRejected(compact, "{\"x\":1}");
 	}
 
+	@Test
+	public void testRejectsUndeclaredPrefixes() throws Exception
+	{
+		assertRejected(verbose, "{\"!type\":\"p:e\"}");
+		assertRejected(verbose, "{\"!type\":\"e\",\"@p:a\":\"v\"}");
+
+		assertRejected(compact, "{\"!p:e\":[]}");
+		assertRejected(compact, "{\"!e\":[],\"@p:a\":\"v\"}");
+	}
+
+	@Test
+	public void testRejectsNamespaceErrors() throws Exception
+	{
+		assertRejected(verbose, "{\"!type\":\"p:e\",\"@xmlns:p\":\"\"}");
+		assertRejected(verbose, "{\"!type\":\"xml:e\",\"@xmlns:xml\":\"urn:x\"}");
+		assertRejected(verbose, "{\"!type\":\"e\",\"@xmlns:p\":\"urn:p\",\"@p:a:b\":\"v\"}");
+
+		assertRejected(compact, "{\"!p:e\":[],\"@xmlns:p\":\"\"}");
+		assertRejected(compact, "{\"!xml:e\":[],\"@xmlns:xml\":\"urn:x\"}");
+		assertRejected(compact, "{\"!e\":[],\"@xmlns:p\":\"urn:p\",\"@p:a:b\":\"v\"}");
+	}
+
+	@Test
+	public void testRejectsInvalidNames() throws Exception
+	{
+		assertRejected(verbose, "{\"!type\":\"1e\"}");
+		assertRejected(verbose, "{\"!type\":\"a b\"}");
+		assertRejected(verbose, "{\"!type\":\"e\",\"@1a\":\"v\"}");
+		assertRejected(verbose, "{\"!type\":\"e\",\"!children\":[{\"!type\":\"<x>\"}]}");
+
+		assertRejected(compact, "{\"!1e\":[]}");
+		assertRejected(compact, "{\"!a b\":[]}");
+		assertRejected(compact, "{\"!e\":[],\"@1a\":\"v\"}");
+		assertRejected(compact, "{\"!e\":[{\"!<x>\":[]}]}");
+	}
+
 	// =========================================================================
 
 	private static void assertRejected(Wom3JsonTypeAdapterInterface adapter, String json)

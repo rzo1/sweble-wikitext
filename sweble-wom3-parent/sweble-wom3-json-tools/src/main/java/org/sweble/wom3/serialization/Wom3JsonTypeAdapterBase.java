@@ -20,6 +20,7 @@ package org.sweble.wom3.serialization;
 import com.google.gson.*;
 import org.sweble.wom3.Wom3Node;
 import org.sweble.wom3.impl.DomImplementationImpl;
+import org.sweble.wom3.impl.Toolbox;
 import org.sweble.wom3.serialization.ScopeStack.Scope;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -39,6 +40,10 @@ public abstract class Wom3JsonTypeAdapterBase
 	protected static final String XMLNS_PREFIX = "xmlns";
 
 	protected static final String XMLNS_COLON_PREFIX = XMLNS_PREFIX + ":";
+
+	protected static final String XML_NS_URI = "http://www.w3.org/XML/1998/namespace";
+
+	protected static final String XML_PREFIX = "xml";
 
 	protected static final String ATTRIBUTE_PREFIX = "@";
 
@@ -213,6 +218,7 @@ public abstract class Wom3JsonTypeAdapterBase
 		if (!entryValue.isJsonPrimitive())
 			throw new JsonParseException("Expected attribute '" + entryName + "' to be a string");
 		entryName = entryName.substring(1);
+		checkQualifiedName(entryName);
 		String valueString = entryValue.getAsString();
 		int i = entryName.indexOf(':');
 		if (i == -1)
@@ -238,6 +244,7 @@ public abstract class Wom3JsonTypeAdapterBase
 				String nsUri = scopeStack.getNsUriForPrefix(prefix);
 				if (nsUri == null)
 					throw new NamespaceException("Namespace URI for prefix '" + prefix + "' not declared");
+				checkPrefixBinding(prefix, nsUri, entryName);
 				elem.setAttributeNS(nsUri, entryName, valueString);
 			}
 		}
@@ -249,6 +256,8 @@ public abstract class Wom3JsonTypeAdapterBase
 			String defaultNsUri,
 			String typeQName)
 	{
+		checkQualifiedName(typeQName);
+
 		Element elem;
 		int i = typeQName.indexOf(':');
 		if (i != -1)
@@ -257,6 +266,7 @@ public abstract class Wom3JsonTypeAdapterBase
 			String nsUri = scopeStack.getNsUriForPrefix(prefix);
 			if (nsUri == null)
 				throw new NamespaceException("Namespace URI for prefix '" + prefix + "' not declared");
+			checkPrefixBinding(prefix, nsUri, typeQName);
 			elem = doc.createElementNS(nsUri, typeQName);
 		}
 		else
@@ -273,7 +283,67 @@ public abstract class Wom3JsonTypeAdapterBase
 		return elem;
 	}
 
+	/**
+	 * Checks that a qualified name consists of a local name and an optional
+	 * prefix which are both valid XML names without colons.
+	 *
+	 * @throws JsonParseException
+	 *             Thrown if the name is invalid.
+	 */
+	protected static void checkQualifiedName(String qualifiedName)
+	{
+		int i = qualifiedName.indexOf(':');
+		if (!isNcName(qualifiedName.substring(i + 1))
+				|| ((i != -1) && !isNcName(qualifiedName.substring(0, i))))
+			throw new JsonParseException("Invalid name: '" + qualifiedName + "'");
+	}
+
+	private static boolean isNcName(String name)
+	{
+		if (name.indexOf(':') != -1)
+			return false;
+		try
+		{
+			Toolbox.checkValidXmlName(name);
+			return true;
+		}
+		catch (IllegalArgumentException e)
+		{
+			return false;
+		}
+	}
+
+	/**
+	 * Checks that the namespace URI a prefix is bound to can be used with that
+	 * prefix.
+	 *
+	 * @throws NamespaceException
+	 *             Thrown if the prefix is bound to no namespace or if the
+	 *             prefix "xml" is bound to a namespace other than the XML
+	 *             namespace.
+	 */
+	protected static void checkPrefixBinding(
+			String prefix,
+			String nsUri,
+			String qualifiedName)
+	{
+		if (nsUri.isEmpty())
+			throw new NamespaceException("Prefix '" + prefix + "' of '" + qualifiedName + "' is not bound to a namespace URI");
+		if (XML_PREFIX.equals(prefix) && !XML_NS_URI.equals(nsUri))
+			throw new NamespaceException("Prefix '" + XML_PREFIX + "' must be bound to '" + XML_NS_URI + "'");
+	}
+
 	// =========================================================================
+
+	/**
+	 * Turns an error that the DOM implementation or the namespace handling
+	 * raised while building nodes from JSON (e.g. an invalid name or a
+	 * namespace error) into a {@link JsonParseException}.
+	 */
+	protected static JsonParseException invalidInput(RuntimeException e)
+	{
+		return new JsonParseException("Invalid JSON input: " + e.getMessage(), e);
+	}
 
 	/**
 	 * Converts a node value to JSON. A {@code null} value is converted to

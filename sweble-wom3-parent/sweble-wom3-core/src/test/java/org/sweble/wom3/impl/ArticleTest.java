@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import org.junit.Ignore;
@@ -402,6 +403,35 @@ public class ArticleTest
 		n.addCategory("y");
 		assertSame(cat, n.getFirstChild());
 		assertEquals(2, n.getCategories().size());
+	}
+
+	@Test
+	public void testCategoriesSkipOtherNodesBetweenRedirectAndBody() throws Exception
+	{
+		BodyImpl body = (BodyImpl) TestHelperDoc.genElem("body");
+		n.setBody(body);
+		n.setRedirect((Wom3Redirect) TestHelperDoc.genElem("redirect"));
+
+		Wom3Category cat1 = n.addCategory("cat1");
+		n.insertBefore(n.getOwnerDocument().createComment("xml comment"), body);
+		Wom3Category cat2 = n.addCategory("cat2");
+		n.insertBefore(TestHelperDoc.genElem("comment"), body);
+
+		Collection<Wom3Category> categories = n.getCategories();
+		assertEquals(2, categories.size());
+		Iterator<Wom3Category> i = categories.iterator();
+		assertSame(cat1, i.next());
+		assertSame(cat2, i.next());
+		assertFalse(i.hasNext());
+
+		assertTrue(n.hasCategory("cat2"));
+		assertFalse(n.hasCategory("xml comment"));
+		assertSame(cat2, n.addCategory("cat2"));
+		cat1.setName("renamed");
+
+		assertSame(cat2, n.removeCategory("cat2"));
+		assertEquals(1, n.getCategories().size());
+		assertEquals(5, n.getChildNodes().getLength());
 	}
 
 	@Test

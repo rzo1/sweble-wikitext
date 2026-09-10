@@ -47,6 +47,9 @@ import org.sweble.wom3.Wom3Heading;
 import org.sweble.wom3.Wom3HorizontalRule;
 import org.sweble.wom3.Wom3Image;
 import org.sweble.wom3.Wom3ImageCaption;
+import org.sweble.wom3.Wom3ImageFormat;
+import org.sweble.wom3.Wom3ImageHAlign;
+import org.sweble.wom3.Wom3ImageVAlign;
 import org.sweble.wom3.Wom3IntLink;
 import org.sweble.wom3.Wom3Italics;
 import org.sweble.wom3.Wom3List;
@@ -81,21 +84,22 @@ import org.sweble.wom3.Wom3Text;
 import org.sweble.wom3.Wom3Title;
 import org.sweble.wom3.Wom3Underline;
 import org.sweble.wom3.Wom3UnorderedList;
+import org.sweble.wom3.swcadapter.nodes.SwcArg;
 import org.sweble.wom3.swcadapter.nodes.SwcAttr;
 import org.sweble.wom3.swcadapter.nodes.SwcBody;
 import org.sweble.wom3.swcadapter.nodes.SwcNode;
 import org.sweble.wom3.swcadapter.nodes.SwcTagExtBody;
 import org.sweble.wom3.swcadapter.nodes.SwcTagExtension;
+import org.sweble.wom3.swcadapter.nodes.SwcTransclusion;
 import org.sweble.wom3.swcadapter.nodes.SwcXmlElement;
 
+import de.fau.cs.osr.utils.StringTools;
 import de.fau.cs.osr.utils.WrappedException;
 
 public class FixWomRtd
 		extends
 			FixWomRtdBase
 {
-	//	private static final String LIST_PREFIXES = "*#:;";
-
 	public enum ListTypeEnum
 	{
 		// Render as HTML list items
@@ -104,17 +108,30 @@ public class FixWomRtd
 		PRERENDER,
 	}
 
+	/**
+	 * The kind of markup used for the parts of a table or the items of a list.
+	 */
+	private enum Markup
+	{
+		NATIVE,
+		HTML,
+	}
+
 	private final WikiConfig wikiConfig;
 
 	private int inInlineBlock = 0;
 
-	//	private String curListPrefix = "";
-
 	private boolean inSemiPre;
 
-	private boolean inGeneratedTable;
+	/**
+	 * The markup of the table whose parts are visited.
+	 */
+	private Markup tableMarkup;
 
-	//	private ListTypeEnum inListType;
+	/**
+	 * The markup of the list whose items are visited.
+	 */
+	private Markup listMarkup;
 
 	// =========================================================================
 
@@ -370,16 +387,7 @@ public class FixWomRtd
 		StringBuilder b = new StringBuilder();
 		b.append('<');
 		b.append(tag);
-		for (Wom3Attribute attr : e.getWomAttributes())
-		{
-			if (!isHtmlAttribute(attr))
-				continue;
-			b.append(' ');
-			b.append(attr.getName());
-			b.append("=\"");
-			b.append(escapeAttributeValue(attr.getValue()));
-			b.append('"');
-		}
+		b.append(genHtmlAttributes(e));
 
 		if (e.hasChildNodes())
 		{
@@ -392,6 +400,26 @@ public class FixWomRtd
 			b.append(" />");
 			prependRtd(e, b.toString());
 		}
+	}
+
+	/**
+	 * Generates the HTML attributes of an element. Each attribute is preceded
+	 * by a space.
+	 */
+	private String genHtmlAttributes(Wom3ElementNode e)
+	{
+		StringBuilder b = new StringBuilder();
+		for (Wom3Attribute attr : e.getWomAttributes())
+		{
+			if (!isHtmlAttribute(attr))
+				continue;
+			b.append(' ');
+			b.append(attr.getName());
+			b.append("=\"");
+			b.append(escapeAttributeValue(attr.getValue()));
+			b.append('"');
+		}
+		return b.toString();
 	}
 
 	private boolean hasHtmlAttributes(Wom3ElementNode e)
@@ -648,9 +676,12 @@ public class FixWomRtd
 
 	public void visit(Wom3Comment comment)
 	{
-		// TODO: Implement!
+		// Comments without RTD were added after conversion
 		if (!startsWithRtd(comment))
-			throw new UnsupportedOperationException();
+		{
+			prependRtd(comment, "<!--");
+			appendRtd(comment, "-->");
+		}
 
 		// Invisible to parser, don't descend!
 		// The comment's prefix and suffix are also invisible to the parser!
@@ -682,64 +713,125 @@ public class FixWomRtd
 
 		fixNewlinesBeforeElement(table, true /*TODO: Compute correctly*/);
 
-		boolean oldInGeneratedTable = inGeneratedTable;
-		inGeneratedTable = generate;
+		Markup oldTableMarkup = tableMarkup;
+		tableMarkup = hasHtmlTagRtd(table) ? Markup.HTML : Markup.NATIVE;
 		iterate(table);
-		inGeneratedTable = oldInGeneratedTable;
+		tableMarkup = oldTableMarkup;
 	}
 
 	public void visit(Wom3TableCaption caption)
 	{
-		restoreTablePartRtd(caption);
-
-		// TODO: We're not trimming any whitespace yet since we have no clue how
-		// tables and whitespace behave
-		iterate(caption);
+		processTablePart(caption, "|+");
 	}
 
 	public void visit(Wom3TableBody body)
 	{
-		restoreTablePartRtd(body);
-
-		// TODO: We're not trimming any whitespace yet since we have no clue how
-		// tables and whitespace behave
-		iterate(body);
+		// Native tables have no markup for table bodies
+		processTablePart(body, null);
 	}
 
 	public void visit(Wom3TableRow row)
 	{
-		restoreTablePartRtd(row);
-
-		// TODO: We're not trimming any whitespace yet since we have no clue how
-		// tables and whitespace behave
-		iterate(row);
+		processTablePart(row, "|-");
 	}
 
 	public void visit(Wom3TableHeaderCell header)
 	{
-		restoreTablePartRtd(header);
-
-		// TODO: We're not trimming any whitespace yet since we have no clue how
-		// tables and whitespace behave
-		iterate(header);
+		processTablePart(header, "!");
 	}
 
 	public void visit(Wom3TableCell cell)
 	{
-		restoreTablePartRtd(cell);
+		processTablePart(cell, "|");
+	}
+
+	/**
+	 * Generates the RTD of a table part that was added after conversion. In a
+	 * native table the part is rendered as native markup that starts on a line
+	 * of its own, otherwise as HTML tag.
+	 *
+	 * @param nativeMarkup
+	 *            The native markup of the table part or {@code null} if there
+	 *            is none.
+	 */
+	private void processTablePart(Wom3ElementNode e, String nativeMarkup)
+	{
+		boolean generateNative = false;
+		if ((tableMarkup != null) && isNewTablePart(e))
+		{
+			if (tableMarkup == Markup.HTML)
+			{
+				generateHtmlTagRtd(e);
+			}
+			else if (nativeMarkup != null)
+			{
+				generateNative = true;
+				generateNativeTablePartRtd(e, nativeMarkup);
+			}
+		}
 
 		// TODO: We're not trimming any whitespace yet since we have no clue how
 		// tables and whitespace behave
-		iterate(cell);
+		iterate(e);
+
+		// The markup that follows has to start on a new line
+		if (generateNative && (getNewlineCount() == 0) && isFollowedByMarkupOnSameLine(e))
+			appendRtdAfterProcessing(e, "\n");
 	}
 
-	private void restoreTablePartRtd(Wom3ElementNode e)
+	private void generateNativeTablePartRtd(Wom3ElementNode e, String nativeMarkup)
 	{
-		// TODO: Parts of converted tables can lack RTD (e.g. implicit table
-		// bodies and rows). Therefore, we only generate RTD for parts of
-		// tables which were added after conversion.
-		if (inGeneratedTable && !startsWithRtd(e))
-			generateHtmlTagRtd(e);
+		StringBuilder b = new StringBuilder();
+
+		// Native table markup has to start at the beginning of a line
+		if (getNewlineCount() == 0)
+			b.append('\n');
+
+		b.append(nativeMarkup);
+		String attrs = genHtmlAttributes(e);
+		if (e instanceof Wom3TableRow)
+		{
+			b.append(attrs);
+			b.append('\n');
+		}
+		else if (attrs.isEmpty())
+		{
+			b.append(' ');
+		}
+		else
+		{
+			b.append(attrs);
+			b.append(" | ");
+		}
+
+		prependRtd(e, b.toString());
+	}
+
+	/**
+	 * Parts of converted tables can lack RTD: Implicit table bodies and rows
+	 * have no RTD themselves but their cells do. Therefore, a body or row was
+	 * only added after conversion if none of its descendants carries RTD
+	 * either.
+	 */
+	private boolean isNewTablePart(Wom3ElementNode e)
+	{
+		if (startsWithRtd(e))
+			return false;
+		if ((e instanceof Wom3TableBody) || (e instanceof Wom3TableRow))
+			return !containsRtd(e) && hasTableContent(e);
+		return true;
+	}
+
+	private boolean hasTableContent(Wom3Node e)
+	{
+		for (Wom3Node c : e)
+		{
+			if ((c instanceof Wom3TableRow)
+					|| (c instanceof Wom3TableCell)
+					|| (c instanceof Wom3TableHeaderCell))
+				return true;
+		}
+		return false;
 	}
 
 	// =========================================================================
@@ -754,14 +846,31 @@ public class FixWomRtd
 
 	public void visit(Wom3Heading heading)
 	{
-		// TODO: Implement!
-		if (!startsWithRtd(heading))
-			throw new UnsupportedOperationException();
+		// Headings without RTD were added after conversion
+		boolean generate = !startsWithRtd(heading);
+		if (generate)
+		{
+			String equals = StringTools.strrep('=', getSectionLevel(heading));
+			prependRtd(heading, equals + " ");
+			appendRtd(heading, " " + equals);
+		}
 
 		/* TODO: Tricky: Trimming might be necessary in case the heading is an 
 		 * HTML element!
 		 */
 		iterate(heading);
+
+		// The section body has to start on a new line
+		if (generate && (getNewlineCount() == 0) && isFollowedByMarkupOnSameLine(heading))
+			appendRtdAfterProcessing(heading, "\n");
+	}
+
+	private int getSectionLevel(Wom3Heading heading)
+	{
+		Wom3Node parent = heading.getParentNode();
+		if (!(parent instanceof Wom3Section))
+			throw new IllegalStateException("A heading has to be the child of a section");
+		return ((Wom3Section) parent).getLevel();
 	}
 
 	// =========================================================================
@@ -874,286 +983,247 @@ public class FixWomRtd
 	}
 
 	// =========================================================================
-	// Definition list
+	// Lists
+
+	/* Native lists have no RTD themselves, only their items do. A list
+	 * without RTD whose items have no RTD either was added after conversion.
+	 * A new list is rendered as native list if all its items fit on one line
+	 * and as HTML list otherwise. New items of existing lists use the markup
+	 * of their siblings.
+	 */
 
 	public void visit(Wom3DefinitionList list)
 	{
-		// TODO: Implement
-		/* Really tricky: if there's no RTD information we don't know if this is
-		 * a HTML list or a native list. Maybe we should first render the list 
-		 * items and find out if a) they have HTML or native RTD information or
-		 * b) are not suitable for a native list. What's more we have to trim 
-		 * whitespace in between list items if the list is done using HTML tags.
-		 */
-		//fixNewlinesBeforeElement(list, true /*TODO: Compute correctly*/);
-		iterate(list);
+		processList(list);
 	}
 
 	public void visit(Wom3DefinitionListTerm term)
 	{
-		++inInlineBlock;
-		// TODO: Implement
 		// TODO: Tricky: Might require trimming when HTML element!
-		iterate(term);
-		--inInlineBlock;
+		processListItem(term, ';');
 	}
 
 	public void visit(Wom3DefinitionListDef def)
 	{
-		++inInlineBlock;
-		// TODO: Implement
 		// TODO: Tricky: Might require trimming when HTML element!
-		iterate(def);
-		--inInlineBlock;
+		processListItem(def, ':');
 	}
-
-	// =========================================================================
-	// Ordered/Unordered list
 
 	public void visit(Wom3OrderedList list)
 	{
-		processList(list, "#");
+		processList(list);
 	}
 
 	public void visit(Wom3UnorderedList list)
 	{
-		processList(list, "*");
+		processList(list);
 	}
-
-	private void processList(Wom3List list, String bulletType)
-	{
-		//fixNewlinesBeforeElement(list, true);
-		iterate(list);
-
-		//	ListTypeEnum oldInListType = inListType;
-		//	String oldListLevel = curListPrefix;
-		//	
-		//	// If a list starts with HTML RTD we assume the RTD is properly 
-		//	// formatted and we treat the list like any other block element.
-		//	if (hasHtmlTagRtd(list))
-		//	{
-		//		inListType = ListTypeEnum.HTML_LIST;
-		//		curListPrefix = "";
-		//		fixNewlinesBeforeElement(list, false);
-		//		iterate(list);
-		//	}
-		//	else
-		//	{
-		//		// If a list is not an HTML list it does not have RTD (the list! the 
-		//		// children are a different story). We also won't added RTD unless
-		//		// we are forced to render a HTML list and if we do render an HTML
-		//		// list it won't have newlines. Therefore, trimNewlines... should
-		//		// work here.
-		//		
-		//		fixNewlinesBeforeElement(list, true);
-		//		
-		//		// Remember markup position before the children were rendered.
-		//		int wmPosBeforeChildren = getWmPos();
-		//		boolean needHtmlList = false;
-		//		
-		//		// We fix the list items first and see if they can be formatted as 
-		//		// native wiki markup list or if it has to be an HTML list.
-		//		inListType = ListTypeEnum.PRERENDER;
-		//		curListPrefix += bulletType;
-		//		for (Wom3Node child : list)
-		//		{
-		//			if (child instanceof Wom3ListItem)
-		//			{
-		//				int wmPosBeforeListItem = getWmPos();
-		//				isHtmlListItem = true;
-		//				dispatch(child);
-		//				if (hasHtmlTagRtd(child) || countNewlinesSince(wmPosBeforeListItem) > 1)
-		//				{
-		//					needHtmlList = true;
-		//					break;
-		//				}
-		//			}
-		//			else
-		//			{
-		//				dispatch(child);
-		//			}
-		//		}
-		//		
-		//		if (needHtmlList)
-		//		{
-		//			// Reformat whole list
-		//			inListType = ListTypeEnum.HTML_LIST;
-		//			curListPrefix = "";
-		//			discardWm(wmPosBeforeChildren);
-		//			
-		//			prependText(list, "\n");
-		//			prependRtd(list, "<" + list.getTagName() + ">");
-		//			appendRtd(list, "</" + list.getTagName() + ">");
-		//			
-		//			iterate(list);
-		//		}
-		//		else
-		//			// The list was completey rendered as native list in the PRERENDER
-		//			// trial run. No need to do it again.
-		//			;
-		//	}
-		//	inListType = oldInListType;
-		//	curListPrefix = oldListLevel;
-	}
-
-	//	// TODO: Use me ...
-	//	private boolean isHtmlListItem = false;
 
 	public void visit(Wom3ListItem li)
 	{
+		processListItem(li, (li.getParentNode() instanceof Wom3OrderedList) ? '#' : '*');
+	}
+
+	private void processList(Wom3ElementNode list)
+	{
+		Markup markup;
+		Wom3Node itemWithRtd = findFirstListItemWithRtd(list);
+		if (hasHtmlTagRtd(list))
+		{
+			markup = Markup.HTML;
+		}
+		else if (itemWithRtd != null)
+		{
+			markup = hasHtmlTagRtd(itemWithRtd) ? Markup.HTML : Markup.NATIVE;
+		}
+		else if (startsWithRtd(list))
+		{
+			// A converted native list whose items were all replaced
+			markup = Markup.NATIVE;
+		}
+		else if (canRenderAsNativeList(list))
+		{
+			markup = Markup.NATIVE;
+			fixNewlinesBeforeElement(list, true);
+		}
+		else
+		{
+			markup = Markup.HTML;
+			generateHtmlTagRtd(list);
+			fixNewlinesBeforeElement(list, false);
+		}
+
+		Markup oldListMarkup = listMarkup;
+		listMarkup = markup;
+		iterate(list);
+		listMarkup = oldListMarkup;
+	}
+
+	private void processListItem(Wom3ElementNode item, char bullet)
+	{
 		++inInlineBlock;
 
-		//fixNewlinesBeforeElement(li, true);
-		iterate(li);
+		boolean generateNative = false;
+		if (!startsWithRtd(item))
+		{
+			// Items without RTD were added after conversion
+			if (!isList(item.getParentNode()) || (listMarkup == Markup.HTML))
+			{
+				generateHtmlTagRtd(item);
+			}
+			else
+			{
+				generateNative = true;
+				String prefix = getNativeListPrefix(item, bullet);
+				// A native list item has to start at the beginning of a line
+				if (!isAtPageStart() && (getNewlineCount() == 0))
+					prefix = "\n" + prefix;
+				prependRtd(item, prefix + " ");
+			}
+		}
 
-		//	if (hasHtmlTagRtd(li))
-		//	{
-		//		fixNewlinesBeforeElement(li, false);
-		//		iterate(li);
-		//
-		//		// After iterating over our children let the parent list know that 
-		//		// this is an HTML list item
-		//		isHtmlListItem = true;
-		//	}
-		//	else if (inListType == ListTypeEnum.HTML_LIST)
-		//	{
-		//		// Remove any old RTD first
-		//		Wom3Rtd rtd0 = getFirstRtdNode(li);
-		//		if (rtd0 != null)
-		//		{
-		//			li.removeChild(rtd0);
-		//			Wom3Rtd rtd1 = getLastRtdNode(li);
-		//			if (rtd1 != null)
-		//				// rtd1 may be null for the last list item in a list.
-		//				li.removeChild(rtd1);
-		//		}
-		//
-		//		// Add new HTML RTD
-		//		prependText(li, "\n");
-		//		prependRtd(li, "<" + li.getTagName() + ">");
-		//		appendRtd(li, "</" + li.getTagName() + ">");
-		//
-		//		// Treat like any other element
-		//		fixNewlinesBeforeElement(li, false);
-		//
-		//		iterate(li);
-		//
-		//		// After iterating over our children let the parent list know that 
-		//		// this is an HTML list item (unnecessary, in HTML_LIST mode the
-		//		// parent list knows anyway
-		//		isHtmlListItem = true;
-		//	}
-		//	else
-		//	{
-		//		// If we're not forced to render as HTML we simply render as native
-		//		// and don't check if native is an option. The parent list will do
-		//		// that for us afterwards and re-render the list if HTML should 
-		//		// be necessary.
-		//
-		//		// Each list item is only allowed to have one newline at the end.
-		//		// There can only be a gap of newlines between native list items 
-		//		// if would they would violate this rule. If they do violate that
-		//		// rule the list will re-render as HTML anyway and HTML list items
-		//		// make sure that there is no such gap.
-		//
-		//		// TODO: I think this is missing: fixNewlinesBeforeElement(li, true);
-		//
-		//		Wom3Node lastLi = null;
-		//
-		//		// Fix prefix
-		//		Wom3Rtd rtd0 = getFirstRtdNode(li);
-		//		if (rtd0 != null)
-		//		{
-		//			// We have a prefix (or at least RTD), update it if necessary
-		//			String prefix = rtd0.getTextContent();
-		//			int lastBullet = lastIndexOfOneOf(prefix, LIST_PREFIXES);
-		//			if (lastBullet == -1)
-		//				// that's ok
-		//				;
-		//			lastBullet += 1;
-		//			String ws = prefix.substring(lastBullet, prefix.length());
-		//			String newPrefix = curListPrefix + ws;
-		//
-		//			if (!newPrefix.equals(prefix))
-		//			{
-		//				rtd0.setTextContent(newPrefix);
-		//
-		//				// TODO: Why inside the (rtd0 != null) if?
-		//				// TODO: Probably doesn't work for list nested more than once?
-		//				// If a surrounding list was dissolved the last RTD of the
-		//				// last list item might be unwanted
-		//				//					lastLi = findLastChildOfType(li.getParentNode(), Wom3ListItem.class);
-		//				//					if (lastLi == li)
-		//				//					{
-		//				//						Wom3Rtd last = getLastRtdNode(li);
-		//				//						if (last != null)
-		//				//							li.removeChild(last);
-		//				//					}
-		//			}
-		//		}
-		//		else
-		//		{
-		//			// We don't have RTD at all, generate it
-		//			prependRtd(li, curListPrefix + " ");
-		//		}
-		//
-		//		iterate(li);
-		//
-		//		if (getNewlineCount() < 1)
-		//		{
-		//			// The last list item does not need to add a newline
-		//			if (lastLi == null)
-		//				lastLi = findLastChildOfType(li.getParentNode(), Wom3ListItem.class);
-		//			if (lastLi != li)
-		//				appendRtdAfterProcessing(li, genNewlines(1));
-		//		}
-		//	}
+		iterate(item);
+
+		// The markup that follows has to start on a new line
+		if (generateNative && (getNewlineCount() == 0) && isFollowedByMarkupOnSameLine(item))
+			appendRtdAfterProcessing(item, "\n");
 
 		--inInlineBlock;
 	}
 
-	//	private String gatherAncestorListItemPrefix(Wom3Node li)
-	//	{
-	//		String prefix = "";
-	//		Wom3Node list = li.getParentNode();
-	//		Wom3Node listContainer = list.getParentNode();
-	//		while (listContainer != null)
-	//		{
-	//			if (!((listContainer instanceof Wom3ListItem)
-	//					|| (listContainer instanceof Wom3DefinitionListTerm)
-	//					|| (listContainer instanceof Wom3DefinitionListDef)))
-	//				break;
-	//			// The list items list is again child of a list item (c)
-	//
-	//			Wom3Node prev = getPrecedingNonWsNode(list);
-	//			if (prev != null)
-	//				break;
-	//			// Our list is the first item in the containing list item (c)
-	//
-	//			Wom3Rtd rtd0 = getFirstRtdNode(listContainer);
-	//			String containerPrefix = rtd0.getTextContent();
-	//			if (rtd0 == null || lastIndexOfOneOf(containerPrefix, LIST_PREFIXES) == -1)
-	//				break;
-	//			// The containing list item (c) has a native list prefix
-	//
-	//			prefix = containerPrefix.trim() + prefix;
-	//			li = listContainer;
-	//		}
-	//		return prefix;
-	//	}
+	private Wom3Node findFirstListItemWithRtd(Wom3Node list)
+	{
+		for (Wom3Node c : list)
+		{
+			if (isListItem(c) && startsWithRtd(c))
+				return c;
+		}
+		return null;
+	}
+
+	/**
+	 * Checks if a list that was added after conversion can be rendered as
+	 * native list: Every item has to fit on one line. Only nested lists which
+	 * can be rendered as native lists themselves may follow the content of an
+	 * item.
+	 */
+	private boolean canRenderAsNativeList(Wom3Node list)
+	{
+		boolean hasItems = false;
+		for (Wom3Node item : list)
+		{
+			if (!isListItem(item) || !canRenderAsNativeListItem(item))
+				return false;
+			hasItems = true;
+		}
+		return hasItems;
+	}
+
+	private boolean canRenderAsNativeListItem(Wom3Node item)
+	{
+		boolean hadNestedList = false;
+		for (Wom3Node c : item)
+		{
+			if (isList(c))
+			{
+				if (!canRenderAsNativeList(c))
+					return false;
+				hadNestedList = true;
+			}
+			else if (hadNestedList || !fitsOnOneLine(c))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean fitsOnOneLine(Wom3Node n)
+	{
+		if (n instanceof Wom3Comment)
+			// Invisible to the parser
+			return true;
+		if (n instanceof Wom3Text)
+			return n.getTextContent().indexOf('\n') == -1;
+		if (isBlockElement(n))
+			return false;
+		for (Wom3Node c : n)
+		{
+			if (!fitsOnOneLine(c))
+				return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Returns the prefix of a new item in a native list (e.g. "**"). It is
+	 * derived from a sibling item that carries RTD. The first item of a new
+	 * list extends the prefix of the enclosing list item.
+	 */
+	private String getNativeListPrefix(Wom3Node item, char bullet)
+	{
+		Wom3Node list = item.getParentNode();
+		for (Wom3Node sibling : list)
+		{
+			if ((sibling != item) && isListItem(sibling))
+			{
+				String prefix = getNativeListItemPrefix(sibling);
+				if (!prefix.isEmpty())
+					return prefix.substring(0, prefix.length() - 1) + bullet;
+			}
+		}
+
+		Wom3Node container = list.getParentNode();
+		String outer = isListItem(container) ? getNativeListItemPrefix(container) : "";
+		return outer + bullet;
+	}
+
+	/**
+	 * Returns the list prefix characters (e.g. "*#") of the RTD that a native
+	 * list item starts with or an empty string.
+	 */
+	private String getNativeListItemPrefix(Wom3Node item)
+	{
+		Wom3Rtd rtd = getFirstRtdNode(item);
+		if (rtd == null)
+			return "";
+
+		String text = rtd.getTextContent();
+		int from = 0;
+		while ((from < text.length()) && (text.charAt(from) == '\n'))
+			++from;
+		int to = from;
+		while ((to < text.length()) && isListPrefixChar(text.charAt(to)))
+			++to;
+		return text.substring(from, to);
+	}
+
+	private static boolean isList(Wom3Node n)
+	{
+		return (n instanceof Wom3List) || (n instanceof Wom3DefinitionList);
+	}
+
+	private static boolean isListItem(Wom3Node n)
+	{
+		return (n instanceof Wom3ListItem)
+				|| (n instanceof Wom3DefinitionListTerm)
+				|| (n instanceof Wom3DefinitionListDef);
+	}
 
 	// =========================================================================
 	// A pre element
 
 	public void visit(Wom3Pre pre)
 	{
-		// TODO: Implement!
 		/* Tricky: We have to check if this is a <pre> tag extension (which then 
 		 * would contain a <nowiki> node as well) or a whitespace prefixed pre
 		 * paragraph.
 		 */
-		if (!startsWithRtd(pre) && !startsWithText(pre))
-			throw new UnsupportedOperationException();
+		// A pre element without RTD is either a whitespace prefixed pre
+		// paragraph or it was added after conversion. In the latter case it
+		// is rendered as <pre> tag.
+		if (!startsWithRtd(pre) && !isSemiPre(pre))
+			generateHtmlTagRtd(pre);
 
 		fixNewlinesBeforeElement(pre, false /*TODO: Compute correctly!*/);
 
@@ -1172,6 +1242,24 @@ public class FixWomRtd
 					dispatch(c);
 			}
 		}
+	}
+
+	/**
+	 * Checks if every line of the content of a pre element starts with a
+	 * space like the lines of a whitespace prefixed pre paragraph.
+	 */
+	private boolean isSemiPre(Wom3Pre pre)
+	{
+		String content = womToWmFast(pre);
+		if (content.isEmpty() || (content.charAt(0) != ' '))
+			return false;
+
+		for (int i = content.indexOf('\n'); i != -1; i = content.indexOf('\n', i + 1))
+		{
+			if ((i + 1 < content.length()) && (" \n".indexOf(content.charAt(i + 1)) == -1))
+				return false;
+		}
+		return true;
 	}
 
 	// =========================================================================
@@ -1197,18 +1285,30 @@ public class FixWomRtd
 	{
 		fixNewlinesBeforeElement(link, false);
 
-		// TODO: Implement!
+		// External links without RTD were added after conversion
 		if (!startsWithRtd(link))
-			throw new UnsupportedOperationException();
+		{
+			String target = link.getTarget().toString();
+			Wom3Title title = link.getLinkTitle();
+			if (link.isPlainUrl() && (title == null))
+			{
+				prependRtd(link, target);
+			}
+			else
+			{
+				prependRtd(link, "[" + target + ((title != null) ? " " : ""));
+				appendRtd(link, "]");
+			}
+		}
 
 		iterate(link);
 	}
 
 	public void visit(Wom3Image image)
 	{
-		// TODO: Implement!
+		// Images without RTD were added after conversion
 		if (!startsWithRtd(image))
-			throw new UnsupportedOperationException();
+			generateImageRtd(image);
 
 		fixNewlinesBeforeElement(image, false);
 		iterate(image);
@@ -1216,11 +1316,130 @@ public class FixWomRtd
 
 	public void visit(Wom3ImageCaption caption)
 	{
-		// TODO: Implement!
 		if (!startsWithRtd(caption))
-			throw new UnsupportedOperationException();
+			prependRtd(caption, "|");
 
 		iterate(caption);
+	}
+
+	private void generateImageRtd(Wom3Image image)
+	{
+		StringBuilder b = new StringBuilder();
+		b.append("[[");
+		b.append(image.getSource());
+
+		appendImageOption(b, genImageFormat(image.getFormat()));
+		if (image.isBorder())
+			appendImageOption(b, "border");
+		appendImageOption(b, genImageHAlign(image.getHAlign()));
+		appendImageOption(b, genImageVAlign(image.getVAlign()));
+
+		Integer width = image.getWidth();
+		Integer height = image.getHeight();
+		if ((width != null) || (height != null))
+		{
+			appendImageOption(b, ""
+					+ ((width != null) ? width : "")
+					+ ((height != null) ? "x" + height : "")
+					+ "px");
+		}
+
+		if (image.isUpright())
+			appendImageOption(b, "upright");
+		if (image.getExtLink() != null)
+			appendImageOption(b, "link=" + image.getExtLink());
+		else if (image.getIntLink() != null)
+			appendImageOption(b, "link=" + image.getIntLink());
+		if (image.getAlt() != null)
+			appendImageOption(b, "alt=" + image.getAlt());
+
+		prependRtd(image, b.toString());
+		appendRtd(image, "]]");
+	}
+
+	private static void appendImageOption(StringBuilder b, String option)
+	{
+		if (option != null)
+		{
+			b.append('|');
+			b.append(option);
+		}
+	}
+
+	private static String genImageFormat(Wom3ImageFormat format)
+	{
+		if (format == null)
+			return null;
+
+		switch (format)
+		{
+			case UNRESTRAINED:
+				return null;
+			case FRAMELESS:
+				return "frameless";
+			case THUMBNAIL:
+				return "thumb";
+			case FRAME:
+				return "frame";
+		}
+
+		// Don't push into default: case.
+		// This way we'll get a warning if we missed a constant.
+		throw new IllegalArgumentException("Unknown image format: " + format);
+	}
+
+	private static String genImageHAlign(Wom3ImageHAlign hAlign)
+	{
+		if (hAlign == null)
+			return null;
+
+		switch (hAlign)
+		{
+			case DEFAULT:
+				return null;
+			case NONE:
+				return "none";
+			case LEFT:
+				return "left";
+			case CENTER:
+				return "center";
+			case RIGHT:
+				return "right";
+		}
+
+		// Don't push into default: case.
+		// This way we'll get a warning if we missed a constant.
+		throw new IllegalArgumentException("Unknown image horizontal alignment: " + hAlign);
+	}
+
+	private static String genImageVAlign(Wom3ImageVAlign vAlign)
+	{
+		if (vAlign == null)
+			return null;
+
+		switch (vAlign)
+		{
+			case BASELINE:
+				return "baseline";
+			case SUB:
+				return "sub";
+			case SUPER:
+				return "super";
+			case TOP:
+				return "top";
+			case TEXT_TOP:
+				return "text-top";
+			case MIDDLE:
+				return "middle";
+			case BOTTOM:
+				return "bottom";
+			case TEXT_BOTTOM:
+				return "text-bottom";
+		}
+
+		// Don't push into default: case.
+		// This way we'll get a warning if we missed a constant.
+		throw new IllegalArgumentException("Unknown image vertical alignment: " + vAlign);
 	}
 
 	// =========================================================================
@@ -1491,8 +1710,28 @@ public class FixWomRtd
 
 	private void processTransclusion(Wom3ElementNode e)
 	{
+		if (!startsWithRtd(e) && (e instanceof SwcTransclusion))
+			generateTransclusionRtd((SwcTransclusion) e);
+
 		// The stuff inside transclusions is invisible to the parser
 		appendWm("{{N|...}}");
+	}
+
+	/**
+	 * Generates the RTD of a transclusion that was added after conversion.
+	 */
+	private void generateTransclusionRtd(SwcTransclusion transclusion)
+	{
+		prependRtd(transclusion, "{{");
+		for (SwcArg arg : transclusion.getArguments())
+		{
+			if (startsWithRtd(arg))
+				continue;
+			prependRtd(arg, "|");
+			if (arg.hasName() && (arg.getValue() != null))
+				insertRtdBefore(arg.getValue(), "=");
+		}
+		appendRtd(transclusion, "}}");
 	}
 
 	private void processParam(Wom3ElementNode e)

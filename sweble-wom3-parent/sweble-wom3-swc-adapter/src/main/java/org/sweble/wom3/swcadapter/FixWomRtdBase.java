@@ -171,6 +171,59 @@ public class FixWomRtdBase
 			restoreWmFromWomFast(sb, c);
 	}
 
+	/**
+	 * Checks if wiki markup that does not start with a newline follows node
+	 * {@code n} in document order. Generated markup that has to end its line
+	 * (e.g. a native list item) then needs a trailing newline.
+	 */
+	protected boolean isFollowedByMarkupOnSameLine(Wom3Node n)
+	{
+		for (Wom3Node c = n; c != null; c = c.getParentNode())
+		{
+			for (Wom3Node s = c.getNextSibling(); s != null; s = s.getNextSibling())
+			{
+				int ch = firstWmChar(s);
+				if (ch != -1)
+					return ch != '\n';
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns the first character of the wiki markup of node {@code wom} (see
+	 * {@link #womToWmFast(Wom3Node)}) or -1 if the node has no wiki markup.
+	 */
+	private int firstWmChar(Wom3Node wom)
+	{
+		if (wom instanceof Wom3Rtd || wom instanceof Wom3Text)
+		{
+			String text = wom.getTextContent();
+			return text.isEmpty() ? -1 : text.charAt(0);
+		}
+
+		if ((wom instanceof Wom3Repl)
+				|| (wom instanceof Wom3Comment))
+			return -1;
+
+		if ((wom instanceof Wom3Element) || (wom instanceof SwcNode))
+		{
+			String name = ((Wom3ElementNode) wom).getLocalName();
+			if (name.equals("tagext"))
+				return '<';
+			else if (name.equals("transclusion") || name.equals("param"))
+				return '{';
+		}
+
+		for (Wom3Node c : wom)
+		{
+			int ch = firstWmChar(c);
+			if (ch != -1)
+				return ch;
+		}
+		return -1;
+	}
+
 	// =========================================================================
 
 	protected void appendWm(String text)
@@ -963,7 +1016,12 @@ public class FixWomRtdBase
 
 	protected boolean isNonHtmlBlockElement(Wom3Node pnws)
 	{
-		return (blockElementSet.contains(pnws.getNodeName()) && !hasHtmlTagRtd(pnws));
+		return (isBlockElement(pnws) && !hasHtmlTagRtd(pnws));
+	}
+
+	protected boolean isBlockElement(Wom3Node n)
+	{
+		return blockElementSet.contains(n.getNodeName());
 	}
 
 	protected boolean isTextWhitespace(Wom3Node n)
@@ -1003,6 +1061,19 @@ public class FixWomRtdBase
 			if (!(c instanceof Wom3Comment
 			|| isElementContentWhitespace(c)))
 				return false;
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if a node has a &lt;rtd> node among its descendants.
+	 */
+	protected boolean containsRtd(Wom3Node n)
+	{
+		for (Wom3Node c : n)
+		{
+			if ((c instanceof Wom3Rtd) || containsRtd(c))
+				return true;
 		}
 		return false;
 	}

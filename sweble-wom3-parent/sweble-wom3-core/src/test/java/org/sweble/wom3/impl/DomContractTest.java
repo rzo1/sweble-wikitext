@@ -19,13 +19,18 @@ package org.sweble.wom3.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.sweble.wom3.Wom3Article;
+import org.sweble.wom3.Wom3Category;
 import org.sweble.wom3.Wom3DocumentFragment;
 import org.sweble.wom3.Wom3ElementNode;
 import org.sweble.wom3.Wom3Node;
@@ -85,6 +90,71 @@ public class DomContractTest
 
 		assertChildren(root, ref, a, b);
 		assertNull(fragment.getFirstChild());
+	}
+
+	@Test
+	public void testInsertBeforeWithRejectedFragmentChildChangesNothing() throws Exception
+	{
+		doc.setStrictErrorChecking(true);
+		final Wom3ElementNode article = wom("article");
+		final Wom3ElementNode body = wom("body");
+		article.appendChild(body);
+
+		final Wom3DocumentFragment fragment = doc.createDocumentFragment();
+		Wom3ElementNode cat = category("c");
+		Wom3ElementNode p = wom("p");
+		fragment.appendChild(cat);
+		fragment.appendChild(p);
+
+		assertRejected(() -> article.insertBefore(fragment, body));
+
+		assertChildren(article, body);
+		assertChildren(fragment, cat, p);
+	}
+
+	@Test
+	public void testAppendChildWithRejectedFragmentChildChangesNothing() throws Exception
+	{
+		doc.setStrictErrorChecking(true);
+		final Wom3ElementNode article = wom("article");
+		Wom3ElementNode redirect = wom("redirect");
+		article.appendChild(redirect);
+
+		final Wom3DocumentFragment fragment = doc.createDocumentFragment();
+		Wom3ElementNode cat = category("c");
+		Wom3ElementNode p = wom("p");
+		fragment.appendChild(cat);
+		fragment.appendChild(p);
+
+		assertRejected(() -> article.appendChild(fragment));
+
+		assertChildren(article, redirect);
+		assertChildren(fragment, cat, p);
+	}
+
+	@Test
+	public void testReplaceChildWithRejectedFragmentChildChangesNothing() throws Exception
+	{
+		doc.setStrictErrorChecking(true);
+		final Wom3ElementNode article = wom("article");
+		final Wom3ElementNode redirect = wom("redirect");
+		Wom3ElementNode body = wom("body");
+		article.appendChild(redirect);
+		article.appendChild(body);
+
+		final Wom3DocumentFragment fragment = doc.createDocumentFragment();
+		Wom3ElementNode cat1 = category("c1");
+		Wom3ElementNode cat2 = category("c2");
+		Wom3ElementNode p = wom("p");
+		fragment.appendChild(cat1);
+		fragment.appendChild(cat2);
+		fragment.appendChild(p);
+
+		assertRejected(() -> article.replaceChild(fragment, redirect));
+
+		assertChildren(article, redirect, body);
+		assertChildren(fragment, cat1, cat2, p);
+		assertSame(redirect, ((Wom3Article) article).getRedirect());
 	}
 
 	// =========================================================================
@@ -637,6 +707,25 @@ public class DomContractTest
 	}
 
 	@Test
+	public void testCompareDocumentPositionOfDisconnectedNodesWithEqualIdentityHashCodes() throws Exception
+	{
+		// Identity hash codes are not unique. Create nodes until two collide.
+		Map<Integer, Node> nodes = new HashMap<Integer, Node>();
+		Node x = null;
+		Node y = null;
+		for (int i = 0; (y == null) && (i < 10000000); ++i)
+		{
+			Node n = doc.createTextNode("t");
+			x = nodes.put(System.identityHashCode(n), n);
+			if (x != null)
+				y = n;
+		}
+		assertNotNull("No identity hash code collision found", y);
+
+		assertDisconnected(x, y);
+	}
+
+	@Test
 	public void testCompareDocumentPositionInDetachedTree() throws Exception
 	{
 		assertTreePositions(elem("root"));
@@ -833,6 +922,31 @@ public class DomContractTest
 		{
 			assertEquals(code, e.code);
 		}
+	}
+
+	private static void assertRejected(Runnable action)
+	{
+		try
+		{
+			action.run();
+			fail("Expected the operation to be rejected");
+		}
+		catch (RuntimeException e)
+		{
+			// Expected
+		}
+	}
+
+	private Wom3ElementNode wom(String name)
+	{
+		return (Wom3ElementNode) doc.createElementNS(Wom3Node.WOM_NS_URI, name);
+	}
+
+	private Wom3ElementNode category(String name)
+	{
+		Wom3Category cat = (Wom3Category) wom("category");
+		cat.setName(name);
+		return (Wom3ElementNode) cat;
 	}
 
 	// =========================================================================
