@@ -57,6 +57,8 @@ public class ExpansionFrame
 
 	private final int depth;
 
+	private final int redirects;
+
 	/**
 	 * The post-expand include size of the whole expansion process. Only the
 	 * field of the root frame is used.
@@ -135,6 +137,7 @@ public class ExpansionFrame
 		this.rootFrame = this;
 		this.parentFrame = null;
 		this.depth = 0;
+		this.redirects = 0;
 
 		expansionVisitor = new ExpansionVisitor(
 				this,
@@ -160,6 +163,50 @@ public class ExpansionFrame
 			boolean timingEnabled,
 			boolean catchAll)
 	{
+		this(
+				engine,
+				callback,
+				hooks,
+				title,
+				entityMap,
+				arguments,
+				forInclusion,
+				noRedirect,
+				rootFrame,
+				parentFrame,
+				false,
+				warnings,
+				frameLog,
+				timingEnabled,
+				catchAll);
+	}
+
+	/**
+	 * Creates the frame of a transcluded page or of the target page of a
+	 * redirect.
+	 *
+	 * @param redirect
+	 *            Whether the page is the target of a redirect of the parent
+	 *            frame. The target page replaces the redirecting page and is
+	 *            expanded at the same depth.
+	 */
+	public ExpansionFrame(
+			WtEngineImpl engine,
+			ExpansionCallback callback,
+			ExpansionDebugHooks hooks,
+			PageTitle title,
+			WtEntityMap entityMap,
+			Map<String, WtNodeList> arguments,
+			boolean forInclusion,
+			boolean noRedirect,
+			ExpansionFrame rootFrame,
+			ExpansionFrame parentFrame,
+			boolean redirect,
+			List<Warning> warnings,
+			EngLogContainer frameLog,
+			boolean timingEnabled,
+			boolean catchAll)
+	{
 		this.engine = engine;
 		this.callback = callback;
 		this.title = title;
@@ -171,7 +218,21 @@ public class ExpansionFrame
 		this.frameLog = frameLog;
 		this.rootFrame = rootFrame;
 		this.parentFrame = parentFrame;
-		this.depth = (parentFrame != null) ? parentFrame.getDepth() + 1 : 0;
+		if (parentFrame == null)
+		{
+			this.depth = 0;
+			this.redirects = redirect ? 1 : 0;
+		}
+		else if (redirect)
+		{
+			this.depth = parentFrame.getDepth();
+			this.redirects = parentFrame.getRedirectCount() + 1;
+		}
+		else
+		{
+			this.depth = parentFrame.getDepth() + 1;
+			this.redirects = 0;
+		}
 
 		expansionVisitor = new ExpansionVisitor(
 				this,
@@ -260,11 +321,22 @@ public class ExpansionFrame
 
 	/**
 	 * Returns the number of nested transclusions that lead from the root frame
-	 * to this frame. The root frame has depth 0.
+	 * to this frame. The root frame has depth 0. Following a redirect does not
+	 * increase the depth.
 	 */
 	public int getDepth()
 	{
 		return depth;
+	}
+
+	/**
+	 * Returns the number of consecutive redirects that were followed to reach
+	 * this frame. The frame of a page that is not the target of a redirect has
+	 * a redirect count of 0.
+	 */
+	public int getRedirectCount()
+	{
+		return redirects;
 	}
 
 	/**

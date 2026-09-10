@@ -44,4 +44,16 @@ public interface EngineConfig
 	 */
 	public abstract long getMaxPostExpandIncludeSize();
 
+	/**
+	 * Returns the maximum number of consecutive redirects that are followed,
+	 * like MediaWiki's {@code $wgMaxRedirects}. This applies to redirects of
+	 * transcluded pages as well as to the redirect of the page that is
+	 * expanded. A redirect that is not followed is left unresolved.
+	 *
+	 * MediaWiki follows a single redirect when viewing a page and, up to
+	 * version 1.35, also when transcluding a page (later versions follow up
+	 * to two redirects when transcluding).
+	 */
+	public abstract int getMaxRedirects();
+
 }

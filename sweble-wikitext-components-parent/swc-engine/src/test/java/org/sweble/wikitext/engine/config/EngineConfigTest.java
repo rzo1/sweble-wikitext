@@ -43,17 +43,20 @@ public class EngineConfigTest
 		WikiConfigImpl config = DefaultConfigEnWp.generate();
 		config.getEngineConfig().setMaxTemplateDepth(7);
 		config.getEngineConfig().setMaxPostExpandIncludeSize(1234);
+		config.getEngineConfig().setMaxRedirects(3);
 
 		StringWriter writer = new StringWriter();
 		config.save(writer);
 		String saved = writer.toString();
 		assertTrue(saved, saved.contains("<maxTemplateDepth>7</maxTemplateDepth>"));
 		assertTrue(saved, saved.contains("<maxPostExpandIncludeSize>1234</maxPostExpandIncludeSize>"));
+		assertTrue(saved, saved.contains("<maxRedirects>3</maxRedirects>"));
 
 		WikiConfigImpl loaded = WikiConfigImpl.load(new StringReader(saved));
 
 		assertEquals(7, loaded.getEngineConfig().getMaxTemplateDepth());
 		assertEquals(1234, loaded.getEngineConfig().getMaxPostExpandIncludeSize());
+		assertEquals(3, loaded.getEngineConfig().getMaxRedirects());
 		assertEquals(config.getEngineConfig(), loaded.getEngineConfig());
 		assertEquals(config, loaded);
 	}
@@ -82,11 +85,18 @@ public class EngineConfigTest
 		new EngineConfigImpl().setMaxPostExpandIncludeSize(-1);
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void testNegativeRedirectLimitIsRejected() throws Exception
+	{
+		new EngineConfigImpl().setMaxRedirects(-1);
+	}
+
 	// =========================================================================
 
 	private static void assertDefaultLimits(EngineConfig config)
 	{
 		assertEquals(40, config.getMaxTemplateDepth());
 		assertEquals(2097152, config.getMaxPostExpandIncludeSize());
+		assertEquals(1, config.getMaxRedirects());
 	}
 }

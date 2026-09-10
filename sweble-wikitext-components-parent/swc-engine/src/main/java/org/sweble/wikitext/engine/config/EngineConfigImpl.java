@@ -29,7 +29,8 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlType(propOrder = {
 		"trimTransparentBeforeParsing",
 		"maxTemplateDepth",
-		"maxPostExpandIncludeSize" })
+		"maxPostExpandIncludeSize",
+		"maxRedirects" })
 @XmlAccessorType(XmlAccessType.NONE)
 public class EngineConfigImpl
 		implements
@@ -45,6 +46,11 @@ public class EngineConfigImpl
 	 */
 	public static final long DEFAULT_MAX_POST_EXPAND_INCLUDE_SIZE = 2048L * 1024L;
 
+	/**
+	 * MediaWiki's default for {@code $wgMaxRedirects}.
+	 */
+	public static final int DEFAULT_MAX_REDIRECTS = 1;
+
 	// =========================================================================
 
 	@XmlElement()
@@ -55,6 +61,9 @@ public class EngineConfigImpl
 
 	@XmlElement()
 	private long maxPostExpandIncludeSize = DEFAULT_MAX_POST_EXPAND_INCLUDE_SIZE;
+
+	@XmlElement()
+	private int maxRedirects = DEFAULT_MAX_REDIRECTS;
 
 	// =========================================================================
 
@@ -96,6 +105,19 @@ public class EngineConfigImpl
 		this.maxPostExpandIncludeSize = maxPostExpandIncludeSize;
 	}
 
+	@Override
+	public int getMaxRedirects()
+	{
+		return maxRedirects;
+	}
+
+	public void setMaxRedirects(int maxRedirects)
+	{
+		if (maxRedirects < 0)
+			throw new IllegalArgumentException("maxRedirects must not be negative: " + maxRedirects);
+		this.maxRedirects = maxRedirects;
+	}
+
 	// =========================================================================
 
 	@Override
@@ -106,6 +128,7 @@ public class EngineConfigImpl
 		result = prime * result + (trimTransparentBeforeParsing ? 1231 : 1237);
 		result = prime * result + maxTemplateDepth;
 		result = prime * result + (int) (maxPostExpandIncludeSize ^ (maxPostExpandIncludeSize >>> 32));
+		result = prime * result + maxRedirects;
 		return result;
 	}
 
@@ -124,6 +147,8 @@ public class EngineConfigImpl
 		if (maxTemplateDepth != other.maxTemplateDepth)
 			return false;
 		if (maxPostExpandIncludeSize != other.maxPostExpandIncludeSize)
+			return false;
+		if (maxRedirects != other.maxRedirects)
 			return false;
 		return true;
 	}

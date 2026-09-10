@@ -508,6 +508,39 @@ public class WtEngineImpl
 			ExpansionFrame parentFrame)
 			throws EngineException
 	{
+		return preprocessAndExpand(
+				callback,
+				pageId,
+				wikitext,
+				forInclusion,
+				entityMap,
+				arguments,
+				rootFrame,
+				parentFrame,
+				false);
+	}
+
+	/**
+	 * Like
+	 * {@link #preprocessAndExpand(ExpansionCallback, PageId, String, boolean, WtEntityMap, Map, ExpansionFrame, ExpansionFrame)}
+	 * but can expand the target page of a redirect.
+	 *
+	 * @param redirect
+	 *            Whether the page is the target of a redirect of the parent
+	 *            frame.
+	 */
+	protected EngProcessedPage preprocessAndExpand(
+			ExpansionCallback callback,
+			PageId pageId,
+			String wikitext,
+			boolean forInclusion,
+			WtEntityMap entityMap,
+			Map<String, WtNodeList> arguments,
+			ExpansionFrame rootFrame,
+			ExpansionFrame parentFrame,
+			boolean redirect)
+			throws EngineException
+	{
 		if (pageId == null)
 			throw new NullPointerException();
 
@@ -537,6 +570,7 @@ public class WtEngineImpl
 					forInclusion,
 					rootFrame,
 					parentFrame,
+					redirect,
 					log);
 		}
 		catch (EngineException e)
@@ -593,6 +627,7 @@ public class WtEngineImpl
 					forInclusion,
 					rootFrame,
 					parentFrame,
+					false,
 					log);
 		}
 		catch (EngineException e)
@@ -750,6 +785,7 @@ public class WtEngineImpl
 				forInclusion,
 				null,
 				null,
+				false,
 				parentLog);
 	}
 
@@ -764,6 +800,7 @@ public class WtEngineImpl
 			boolean forInclusion,
 			ExpansionFrame rootFrame,
 			ExpansionFrame parentFrame,
+			boolean redirect,
 			EngLogContainer parentLog)
 			throws EngineException
 	{
@@ -796,6 +833,7 @@ public class WtEngineImpl
 						noRedirect,
 						rootFrame,
 						parentFrame,
+						redirect,
 						warnings,
 						log,
 						timingEnabled,

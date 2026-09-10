@@ -243,6 +243,100 @@ public class ExpansionVisitorTest
 	}
 
 	// =========================================================================
+	// == Redirects
+
+	@Test
+	public void testRedirectIsFollowed() throws Exception
+	{
+		callback.add("Template:R1", "#REDIRECT [[Template:R2]]");
+		callback.add("Template:R2", "end");
+
+		assertExpansion("end", "{{R1}}");
+	}
+
+	@Test
+	public void testRedirectLoopIsDetected() throws Exception
+	{
+		config.getEngineConfig().setMaxRedirects(10);
+		callback.add("Template:R1", "#REDIRECT [[Template:R2]]");
+		callback.add("Template:R2", "#REDIRECT [[Template:R1]]");
+
+		EngProcessedPage page = expand("{{R1}}");
+
+		assertOutput("#REDIRECT [[Template:R1]]", page);
+		assertHasWarning(page, "RedirectLoopWarning");
+	}
+
+	@Test
+	public void testSelfRedirectIsDetected() throws Exception
+	{
+		callback.add("Template:R", "#REDIRECT [[Template:R]]");
+
+		EngProcessedPage page = expand("{{R}}");
+
+		assertOutput("#REDIRECT [[Template:R]]", page);
+		assertHasWarning(page, "RedirectLoopWarning");
+	}
+
+	@Test
+	public void testSelfRedirectOfExpandedPageIsDetected() throws Exception
+	{
+		callback.add("Test", "#REDIRECT [[Test]]");
+
+		EngProcessedPage page = expand("#REDIRECT [[Test]]");
+
+		assertOutput("#REDIRECT [[Test]]", page);
+		assertHasWarning(page, "RedirectLoopWarning");
+	}
+
+	@Test
+	public void testOnlyOneRedirectIsFollowedByDefault() throws Exception
+	{
+		callback.add("Template:R1", "#REDIRECT [[Template:R2]]");
+		callback.add("Template:R2", "#REDIRECT [[Template:R3]]");
+		callback.add("Template:R3", "end");
+
+		EngProcessedPage page = expand("{{R1}}");
+
+		assertOutput("#REDIRECT [[Template:R3]]", page);
+		assertHasWarning(page, "RedirectLimitWarning");
+		assertEquals(0, callback.getRetrievalCount("Template:R3"));
+	}
+
+	@Test
+	public void testRedirectLimitIsConfigurable() throws Exception
+	{
+		config.getEngineConfig().setMaxRedirects(2);
+		callback.add("Template:R1", "#REDIRECT [[Template:R2]]");
+		callback.add("Template:R2", "#REDIRECT [[Template:R3]]");
+		callback.add("Template:R3", "end");
+
+		assertExpansion("end", "{{R1}}");
+	}
+
+	@Test
+	public void testRedirectsOfDifferentTransclusionsAreCountedSeparately() throws Exception
+	{
+		callback.add("Template:R", "#REDIRECT [[Template:T]]");
+		callback.add("Template:T", "t{{S}}");
+		callback.add("Template:S", "#REDIRECT [[Template:U]]");
+		callback.add("Template:U", "u");
+
+		assertExpansion("tu", "{{R}}");
+	}
+
+	@Test
+	public void testRedirectDoesNotIncreaseTemplateDepth() throws Exception
+	{
+		config.getEngineConfig().setMaxTemplateDepth(2);
+		callback.add("Template:R", "#REDIRECT [[Template:L1]]");
+		callback.add("Template:L1", "x{{L2}}");
+		callback.add("Template:L2", "y");
+
+		assertExpansion("xy", "{{R}}");
+	}
+
+	// =========================================================================
 
 	/**
 	 * Adds the templates {@code prefix1} to {@code prefixN}, each transcluding

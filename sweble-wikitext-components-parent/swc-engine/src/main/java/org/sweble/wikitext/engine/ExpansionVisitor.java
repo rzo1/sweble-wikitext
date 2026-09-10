@@ -297,8 +297,9 @@ public final class ExpansionVisitor
 	 * 
 	 * @return Returns null if the redirect target page cannot be found. Returns
 	 *         the redirect node n itself, if an error occurred in the expansion
-	 *         process. Otherwise the expanded form of the redirect target page
-	 *         will be returned.
+	 *         process or if the redirect is not followed because of a loop or
+	 *         the redirect limit. Otherwise the expanded form of the redirect
+	 *         target page will be returned.
 	 */
 	private WtNode expandRedirectionTargetPage(
 			WtRedirect n,
@@ -323,6 +324,21 @@ public final class ExpansionVisitor
 		if (log != null)
 			log.setCanonical(title.getDenormalizedFullTitle());
 
+		if (isRedirectLoop(title))
+		{
+			fileRedirectLoopWarning(n, title);
+
+			return n;
+		}
+
+		int maxRedirects = getEngineConfig().getMaxRedirects();
+		if (expFrame.getRedirectCount() >= maxRedirects)
+		{
+			fileRedirectLimitWarning(n, title, maxRedirects);
+
+			return n;
+		}
+
 		FullPage page = getWikitext(title);
 		if (page != null)
 		{
@@ -335,6 +351,9 @@ public final class ExpansionVisitor
 			 * 
 			 * - The arguments that were passed to the page we are redirecting
 			 *   from will also be passed to the replacement page.
+			 *
+			 * - The replacement page is expanded at the same depth as the page
+			 *   we are redirecting from.
 			 */
 			EngProcessedPage processedPage = getEngine().preprocessAndExpand(
 					expFrame.getCallback(),
@@ -344,7 +363,8 @@ public final class ExpansionVisitor
 					expFrame.getEntityMap(),
 					expFrame.getArguments(),
 					expFrame.getRootFrame(),
-					expFrame);
+					expFrame,
+					true);
 
 			log.setSuccess(true);
 
@@ -918,6 +938,24 @@ public final class ExpansionVisitor
 		{
 			if (isSamePage(f.getTitle(), title))
 				return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if a page is part of the chain of redirects that led to the current
+	 * frame, including the page whose redirect started the chain.
+	 */
+	private boolean isRedirectLoop(PageTitle title)
+	{
+		for (ExpansionFrame f = expFrame; f != null; f = f.getParentFrame())
+		{
+			if (isSamePage(f.getTitle(), title))
+				return true;
+
+			if (f.getRedirectCount() == 0)
+				break;
 		}
 
 		return false;
@@ -1498,6 +1536,28 @@ public final class ExpansionVisitor
 				getClass(),
 				n,
 				title));
+	}
+
+	private void fileRedirectLoopWarning(WtNode n, PageTitle title)
+	{
+		expFrame.fileWarning(new RedirectLoopWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title));
+	}
+
+	private void fileRedirectLimitWarning(
+			WtNode n,
+			PageTitle title,
+			int limit)
+	{
+		expFrame.fileWarning(new RedirectLimitWarning(
+				WarningSeverity.NORMAL,
+				getClass(),
+				n,
+				title,
+				limit));
 	}
 
 	private void fileTemplateRecursionDepthWarning(
