@@ -275,6 +275,46 @@ public abstract class Wom3JsonTypeAdapterBase
 
 	// =========================================================================
 
+	/**
+	 * Converts a node value to JSON. A {@code null} value is converted to
+	 * {@link JsonNull}.
+	 */
+	protected static JsonElement toJsonValue(String value)
+	{
+		return (value != null) ? new JsonPrimitive(value) : JsonNull.INSTANCE;
+	}
+
+	/**
+	 * Returns the string value of a member.
+	 *
+	 * @throws JsonParseException
+	 *             Thrown if the member is not a string.
+	 */
+	protected static String expectString(String name, JsonElement value)
+	{
+		if ((value == null) || !value.isJsonPrimitive())
+			throw new JsonParseException("Expected member '" + name + "' to be a string");
+		return value.getAsString();
+	}
+
+	/**
+	 * Creates a value node (text, comment, etc.).
+	 *
+	 * @throws JsonParseException
+	 *             Thrown if the value is {@code null}.
+	 */
+	protected static Node createValueNode(
+			Document doc,
+			ValueTypes valueType,
+			String value)
+	{
+		if (value == null)
+			throw new JsonParseException("Missing value for node of type " + valueType);
+		return valueType.create(doc, value);
+	}
+
+	// =========================================================================
+
 	protected static enum ValueTypes
 	{
 		XML_TEXT

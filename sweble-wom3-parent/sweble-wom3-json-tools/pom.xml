@@ -61,5 +61,16 @@
 			<artifactId>sweble-wom3-core</artifactId>
 		</dependency>
 
+		<!-- =============================================================== -->
+		<!-- Testing - Testing - Testing - Testing - Testing - Testing - Tes -->
+		<!-- =============================================================== -->
+
+		<!-- JUnit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 </project>

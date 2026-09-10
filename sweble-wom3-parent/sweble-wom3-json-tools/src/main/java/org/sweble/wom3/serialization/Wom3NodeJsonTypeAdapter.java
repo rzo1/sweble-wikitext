@@ -78,7 +78,7 @@ public class Wom3NodeJsonTypeAdapter
 			{
 				JsonObject o = new JsonObject();
 				o.add(PROPERTY_TYPE, new JsonPrimitive(node.getNodeName()));
-				o.add(PROPERTY_VALUE, new JsonPrimitive(node.getNodeValue()));
+				o.add(PROPERTY_VALUE, toJsonValue(node.getNodeValue()));
 				return o;
 			}
 
@@ -86,7 +86,7 @@ public class Wom3NodeJsonTypeAdapter
 			{
 				JsonObject o = new JsonObject();
 				o.add(PROPERTY_TYPE, new JsonPrimitive(TYPE_ENTITY_REF));
-				o.add(PROPERTY_VALUE, new JsonPrimitive(node.getNodeValue()));
+				o.add(PROPERTY_VALUE, toJsonValue(node.getNodeValue()));
 				return o;
 			}
 
@@ -128,7 +128,7 @@ public class Wom3NodeJsonTypeAdapter
 			{
 				Node attr = attrs.item(i);
 				scope = addPrefixDecls(scopeStack, scope, o, attr);
-				o.add(ATTRIBUTE_PREFIX + attr.getNodeName(), new JsonPrimitive(attr.getNodeValue()));
+				o.add(ATTRIBUTE_PREFIX + attr.getNodeName(), toJsonValue(attr.getNodeValue()));
 			}
 		}
 
@@ -251,7 +251,7 @@ public class Wom3NodeJsonTypeAdapter
 						throw new JsonParseException("Member '" + PROPERTY_VALUE + "' occurred repeatedly");
 					if (valueType == null)
 						throw new JsonParseException("Type '" + typeQName + "' cannot have a value");
-					nodeValue = entryValue.getAsString();
+					nodeValue = expectString(entryName, entryValue);
 				}
 				else if (entryName.equals(PROPERTY_CHILDREN))
 				{
@@ -275,7 +275,7 @@ public class Wom3NodeJsonTypeAdapter
 			scopeStack.pop();
 
 		return (valueType != null) ?
-				valueType.create(doc, nodeValue) :
+				createValueNode(doc, valueType, nodeValue) :
 				elem;
 	}
 }

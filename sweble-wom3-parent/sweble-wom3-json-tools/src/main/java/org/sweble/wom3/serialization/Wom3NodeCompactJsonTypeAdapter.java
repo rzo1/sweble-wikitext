@@ -35,7 +35,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 
 public class Wom3NodeCompactJsonTypeAdapter
@@ -87,7 +86,7 @@ public class Wom3NodeCompactJsonTypeAdapter
 			}
 
 			case Node.TEXT_NODE:
-				return new JsonPrimitive(node.getNodeValue());
+				return toJsonValue(node.getNodeValue());
 
 			case Node.ENTITY_REFERENCE_NODE:
 				return valueNodeToJson(node.getNodeValue(), TYPE_ENTITY_REF);
@@ -133,7 +132,7 @@ public class Wom3NodeCompactJsonTypeAdapter
 			{
 				Node attr = attrs.item(i);
 				scope = addPrefixDecls(scopeStack, scope, o, attr);
-				o.add(ATTRIBUTE_PREFIX + attr.getNodeName(), new JsonPrimitive(attr.getNodeValue()));
+				o.add(ATTRIBUTE_PREFIX + attr.getNodeName(), toJsonValue(attr.getNodeValue()));
 			}
 		}
 
@@ -203,6 +202,7 @@ public class Wom3NodeCompactJsonTypeAdapter
 		Scope scope = null;
 		String elemQName = null;
 		ValueTypes valueType = null;
+		String valueName = null;
 		JsonElement nodeValue = null;
 
 		// Get node type
@@ -247,6 +247,7 @@ public class Wom3NodeCompactJsonTypeAdapter
 				else
 					throw new JsonParseException("Unknown special type '" + entryName + "'");
 
+				valueName = entryName;
 				nodeValue = entryValue;
 			}
 			else if (entryName.startsWith(ATTRIBUTE_PREFIX))
@@ -256,6 +257,9 @@ public class Wom3NodeCompactJsonTypeAdapter
 			else
 				throw new JsonParseException("Unexpected field: '" + entryName + "'");
 		}
+
+		if ((elemQName != null) && (valueType != null))
+			throw new JsonParseException("Node cannot have both a node name field and a type name field");
 
 		Element elem = null;
 		String defaultNsUri = null;
@@ -295,7 +299,7 @@ public class Wom3NodeCompactJsonTypeAdapter
 		}
 		else
 		{
-			result = valueType.create(doc, nodeValue.getAsString());
+			result = createValueNode(doc, valueType, expectString(valueName, nodeValue));
 		}
 
 		if (scope != null)
