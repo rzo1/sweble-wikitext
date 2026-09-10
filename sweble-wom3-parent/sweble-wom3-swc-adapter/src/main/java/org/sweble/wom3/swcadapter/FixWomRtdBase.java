@@ -30,6 +30,7 @@ import org.sweble.wom3.Wom3Attribute;
 import org.sweble.wom3.Wom3Comment;
 import org.sweble.wom3.Wom3Document;
 import org.sweble.wom3.Wom3Element;
+import org.sweble.wom3.Wom3ElementNode;
 import org.sweble.wom3.Wom3Node;
 import org.sweble.wom3.Wom3Nowiki;
 import org.sweble.wom3.Wom3Paragraph;
@@ -37,6 +38,7 @@ import org.sweble.wom3.Wom3Repl;
 import org.sweble.wom3.Wom3Rtd;
 import org.sweble.wom3.Wom3Text;
 import org.sweble.wom3.Wom3XmlText;
+import org.sweble.wom3.swcadapter.nodes.SwcNode;
 import org.sweble.wom3.swcadapter.utils.AnalyzingStringBuffer;
 import org.sweble.wom3.util.Wom3Visitor;
 import org.w3c.dom.Node;
@@ -80,6 +82,8 @@ public class FixWomRtdBase
 				blockElementSet.add("dl");
 				blockElementSet.add("section");
 				blockElementSet.add("hr");
+				// An image on a line of its own is not wrapped in a paragraph
+				blockElementSet.add("image");
 				//blockElementSet.add("ins");
 				blockElementSet.add("ol");
 				blockElementSet.add("p");
@@ -137,9 +141,9 @@ public class FixWomRtdBase
 			return;
 		}
 
-		if (wom instanceof Wom3Element)
+		if ((wom instanceof Wom3Element) || (wom instanceof SwcNode))
 		{
-			Wom3Element element = (Wom3Element) wom;
+			Wom3ElementNode element = (Wom3ElementNode) wom;
 			String name = element.getLocalName();
 			if (name.equals("tagext"))
 			{
@@ -151,6 +155,12 @@ public class FixWomRtdBase
 			{
 				// The stuff inside transclusions is invisible to the parser
 				sb.append("{{N|...}}");
+				return;
+			}
+			else if (name.equals("param"))
+			{
+				// The stuff inside template parameters is invisible to the parser
+				sb.append("{{{N}}}");
 				return;
 			}
 
@@ -561,6 +571,10 @@ public class FixWomRtdBase
 
 		int rollback = 0;
 
+		// Nodes are only removed once we're done. Otherwise we could not
+		// continue the search from a node that was removed from the document.
+		ArrayList<Wom3Node> remove = new ArrayList<Wom3Node>();
+
 		Wom3Node n = current;
 		while (true)
 		{
@@ -583,10 +597,11 @@ public class FixWomRtdBase
 							if (count <= 0)
 							{
 								if (i == 0)
-									p.getParentNode().removeChild(p);
+									remove.add(p);
 								else
 									((Wom3XmlText) n).deleteData(i, l - i);
 
+								removeNodes(remove);
 								rollbackWm(rollback + 1);
 								return;
 							}
@@ -599,12 +614,18 @@ public class FixWomRtdBase
 					}
 				}
 
-				// The whole text/RTD node has to go. Since these nodes have 
+				// The whole text/RTD node has to go. Since these nodes have
 				// already been processed we can remove them without confusing
 				// the visitation process
-				p.getParentNode().removeChild(p);
+				remove.add(p);
 			}
 		}
+	}
+
+	private void removeNodes(Collection<Wom3Node> nodes)
+	{
+		for (Wom3Node n : nodes)
+			n.getParentNode().removeChild(n);
 	}
 
 	/**
@@ -650,13 +671,51 @@ public class FixWomRtdBase
 	}
 
 	/**
-	 * Remove newlines from RTD and text nodes preceding node {@code current} in
-	 * document order (not restricted to siblings!).
+	 * Remove spaces and tabs that follow the last newline from RTD and text
+	 * nodes preceding node {@code current} in document order (not restricted to
+	 * siblings!).
 	 */
-	protected void removePrecedingSpace(Wom3Node node)
+	protected void removePrecedingSpace(Wom3Node current)
 	{
-		// TODO: Implement
-		throw new UnsupportedOperationException();
+		int rollback = 0;
+
+		// Nodes are only removed once we're done. Otherwise we could not
+		// continue the search from a node that was removed from the document.
+		ArrayList<Wom3Node> remove = new ArrayList<Wom3Node>();
+
+		Wom3Node n = current;
+		while (true)
+		{
+			// Go to previous node in document order.
+			n = toPreviousXmlTextInDocumentOrder(n);
+
+			Wom3Node p = n.getParentNode();
+			if ((p instanceof Wom3Text)
+					|| (p instanceof Wom3Rtd))
+			{
+				String text = n.getTextContent();
+				int l = text.length();
+				int i = l - 1;
+				while ((i >= 0) && ((text.charAt(i) == ' ') || (text.charAt(i) == '\t')))
+					--i;
+
+				int spaces = l - 1 - i;
+				rollback += spaces;
+
+				if (i >= 0)
+				{
+					if (spaces > 0)
+						((Wom3XmlText) n).deleteData(i + 1, spaces);
+
+					removeNodes(remove);
+					rollbackWm(rollback);
+					return;
+				}
+
+				// The whole text/RTD node consists of spaces and has to go.
+				remove.add(p);
+			}
+		}
 	}
 
 	protected String genNewlines(int n)
@@ -702,7 +761,8 @@ public class FixWomRtdBase
 			while (true)
 			{
 				if (n == null)
-					System.err.println();
+					throw new IllegalStateException(
+							"There is no text node in front of the given node");
 				p = n.getPreviousSibling();
 				if (p != null)
 					break;
