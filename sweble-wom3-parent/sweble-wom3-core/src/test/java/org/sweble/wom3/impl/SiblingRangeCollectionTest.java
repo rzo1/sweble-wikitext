@@ -20,12 +20,16 @@ package org.sweble.wom3.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
@@ -376,6 +380,149 @@ public class SiblingRangeCollectionTest
 			assertEquals(-k - 1, c.get(k * 2).getFakeId());
 		for (int k = 0; k < nodes.size(); k++)
 			assertEquals(k, c.get(k * 2 + 1).getFakeId());
+	}
+
+	// =========================================================================
+
+	@Test
+	public void testReversedViewOfEmptyContainer() throws Exception
+	{
+		SiblingRangeCollection<Container, ChildNode>.ReversedView r = c.reversed();
+		assertTrue(r.isEmpty());
+		assertNull(r.peekFirst());
+		assertNull(r.pollLast());
+		assertFalse(r.iterator().hasNext());
+	}
+
+	@Test
+	public void testReversedViewHasReverseOrder() throws Exception
+	{
+		for (ChildNode e : nodes)
+			c.add(e);
+		List<ChildNode> expected = new ArrayList<ChildNode>(nodes);
+		Collections.reverse(expected);
+
+		SiblingRangeCollection<Container, ChildNode>.ReversedView r = c.reversed();
+		assertEquals(expected.size(), r.size());
+		for (int i = 0; i < expected.size(); ++i)
+			assertEquals(expected.get(i), r.get(i));
+		assertEquals(expected, new ArrayList<ChildNode>(r));
+		assertEquals(expected, r);
+
+		Iterator<ChildNode> i = r.descendingIterator();
+		for (ChildNode e : nodes)
+			assertEquals(e, i.next());
+		assertFalse(i.hasNext());
+
+		assertEquals(c.getLast(), r.getFirst());
+		assertEquals(c.getFirst(), r.getLast());
+		assertEquals(c.peekLast(), r.peek());
+		assertEquals(c.peekFirst(), r.peekLast());
+	}
+
+	@Test
+	public void testReversedOfReversedIsOriginal() throws Exception
+	{
+		assertSame(c, c.reversed().reversed());
+	}
+
+	@Test
+	public void testReversedViewDequeOperationsWriteThrough() throws Exception
+	{
+		for (ChildNode e : nodes)
+			c.add(e);
+		SiblingRangeCollection<Container, ChildNode>.ReversedView r = c.reversed();
+
+		r.addFirst(gen(100));
+		assertEquals(100, c.getLast().getFakeId());
+		r.addLast(gen(101));
+		assertEquals(101, c.getFirst().getFakeId());
+		r.push(gen(102));
+		assertEquals(102, c.getLast().getFakeId());
+		r.add(gen(103));
+		assertEquals(103, c.getFirst().getFakeId());
+		assertEquals(nodes.size() + 4, c.size());
+
+		assertEquals(102, r.pop().getFakeId());
+		assertEquals(100, r.removeFirst().getFakeId());
+		assertEquals(103, r.removeLast().getFakeId());
+		assertEquals(101, r.pollLast().getFakeId());
+		assertEquals(9, r.poll().getFakeId());
+		assertEquals(nodes.size() - 1, c.size());
+		assertEquals(8, c.getLast().getFakeId());
+		assertEquals(0, c.getFirst().getFakeId());
+	}
+
+	@Test
+	public void testReversedViewIndexOperationsWriteThrough() throws Exception
+	{
+		for (ChildNode e : nodes)
+			c.add(e);
+		SiblingRangeCollection<Container, ChildNode>.ReversedView r = c.reversed();
+
+		r.add(0, gen(100));
+		assertEquals(100, c.getLast().getFakeId());
+		r.add(r.size(), gen(101));
+		assertEquals(101, c.getFirst().getFakeId());
+		r.add(2, gen(102));
+		assertEquals(102, c.get(c.size() - 3).getFakeId());
+
+		assertEquals(100, r.set(0, gen(103)).getFakeId());
+		assertEquals(103, c.getLast().getFakeId());
+
+		assertEquals(103, r.remove(0).getFakeId());
+		assertEquals(102, r.remove(1).getFakeId());
+		assertEquals(101, r.remove(r.size() - 1).getFakeId());
+		for (int i = 0; i < nodes.size(); ++i)
+			assertEquals(i, c.get(i).getFakeId());
+	}
+
+	@Test(expected = IndexOutOfBoundsException.class)
+	public void testReversedViewGetOutOfBoundsFails() throws Exception
+	{
+		c.add(gen(0));
+		c.reversed().get(1);
+	}
+
+	@Test
+	public void testReversedViewIteratorRemoveWritesThrough() throws Exception
+	{
+		for (ChildNode e : nodes)
+			c.add(e);
+		// Remove every other node, starting with the last one
+		Iterator<ChildNode> i = c.reversed().iterator();
+		while (i.hasNext())
+		{
+			i.next();
+			i.remove();
+			if (i.hasNext())
+				i.next();
+		}
+		assertEquals(nodes.size() / 2, c.size());
+		for (int k = 0; k < c.size(); ++k)
+			assertEquals(k * 2, c.get(k).getFakeId());
+	}
+
+	@Test
+	public void testReversedViewRemoveOccurrence() throws Exception
+	{
+		ChildNode a = gen(42);
+		ChildNode b = gen(42);
+		c.add(gen(0));
+		c.add(a);
+		c.add(gen(1));
+		c.add(b);
+		SiblingRangeCollection<Container, ChildNode>.ReversedView r = c.reversed();
+
+		// First occurrence in the view is the last one in the container
+		assertTrue(r.removeFirstOccurrence(gen(42)));
+		assertTrue(a.isLinked());
+		assertFalse(b.isLinked());
+
+		assertTrue(r.removeLastOccurrence(gen(42)));
+		assertFalse(a.isLinked());
+		assertFalse(r.contains(gen(42)));
+		assertEquals(2, c.size());
 	}
 
 	// =========================================================================

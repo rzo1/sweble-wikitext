@@ -18,6 +18,7 @@
 package org.sweble.wom3.impl;
 
 import java.io.Serializable;
+import java.util.AbstractList;
 import java.util.AbstractSequentialList;
 import java.util.Deque;
 import java.util.Iterator;
@@ -271,6 +272,19 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 	public Iterator<T> descendingIterator()
 	{
 		return new DescIter();
+	}
+
+	/**
+	 * Returns a reverse-ordered view of this collection. Changes to the view
+	 * are reflected in this collection and vice versa.
+	 *
+	 * Since Java 21 both {@link java.util.List} and {@link Deque} declare
+	 * {@code reversed()} with unrelated return types, so this class has to
+	 * declare a {@code reversed()} that returns both a list and a deque.
+	 */
+	public ReversedView reversed()
+	{
+		return new ReversedView();
 	}
 
 	// =========================================================================
@@ -535,6 +549,213 @@ public class SiblingRangeCollection<U extends BackboneWithChildren, T extends Ba
 		public void remove()
 		{
 			i.remove();
+		}
+	}
+
+	// =========================================================================
+
+	/**
+	 * Reverse-ordered view of the enclosing collection.
+	 */
+	public final class ReversedView
+			extends
+				AbstractList<T>
+			implements
+				Deque<T>
+	{
+		public SiblingRangeCollection<U, T> reversed()
+		{
+			return SiblingRangeCollection.this;
+		}
+
+		@Override
+		public int size()
+		{
+			return SiblingRangeCollection.this.size();
+		}
+
+		@Override
+		public T get(int index)
+		{
+			return SiblingRangeCollection.this.get(reverseIndex(index));
+		}
+
+		@Override
+		public T set(int index, T e)
+		{
+			return SiblingRangeCollection.this.set(reverseIndex(index), e);
+		}
+
+		@Override
+		public void add(int index, T e)
+		{
+			int size = size();
+			if (index < 0 || index > size)
+				throw new IndexOutOfBoundsException();
+			SiblingRangeCollection.this.add(size - index, e);
+		}
+
+		@Override
+		public T remove(int index)
+		{
+			return SiblingRangeCollection.this.remove(reverseIndex(index));
+		}
+
+		@Override
+		public Iterator<T> iterator()
+		{
+			return SiblingRangeCollection.this.descendingIterator();
+		}
+
+		@Override
+		public Iterator<T> descendingIterator()
+		{
+			return SiblingRangeCollection.this.iterator();
+		}
+
+		private int reverseIndex(int index)
+		{
+			int size = size();
+			if (index < 0 || index >= size)
+				throw new IndexOutOfBoundsException();
+			return size - 1 - index;
+		}
+
+		// =====================================================================
+
+		@Override
+		public boolean add(T e)
+		{
+			addLast(e);
+			return true;
+		}
+
+		@Override
+		public void addFirst(T e)
+		{
+			SiblingRangeCollection.this.addLast(e);
+		}
+
+		@Override
+		public void addLast(T e)
+		{
+			SiblingRangeCollection.this.addFirst(e);
+		}
+
+		@Override
+		public boolean offer(T e)
+		{
+			return add(e);
+		}
+
+		@Override
+		public boolean offerFirst(T e)
+		{
+			addFirst(e);
+			return true;
+		}
+
+		@Override
+		public boolean offerLast(T e)
+		{
+			addLast(e);
+			return true;
+		}
+
+		@Override
+		public T removeFirst()
+		{
+			return SiblingRangeCollection.this.removeLast();
+		}
+
+		@Override
+		public T removeLast()
+		{
+			return SiblingRangeCollection.this.removeFirst();
+		}
+
+		@Override
+		public T pollFirst()
+		{
+			return SiblingRangeCollection.this.pollLast();
+		}
+
+		@Override
+		public T pollLast()
+		{
+			return SiblingRangeCollection.this.pollFirst();
+		}
+
+		@Override
+		public T getFirst()
+		{
+			return SiblingRangeCollection.this.getLast();
+		}
+
+		@Override
+		public T getLast()
+		{
+			return SiblingRangeCollection.this.getFirst();
+		}
+
+		@Override
+		public T peekFirst()
+		{
+			return SiblingRangeCollection.this.peekLast();
+		}
+
+		@Override
+		public T peekLast()
+		{
+			return SiblingRangeCollection.this.peekFirst();
+		}
+
+		@Override
+		public boolean removeFirstOccurrence(Object o)
+		{
+			return SiblingRangeCollection.this.removeLastOccurrence(o);
+		}
+
+		@Override
+		public boolean removeLastOccurrence(Object o)
+		{
+			return SiblingRangeCollection.this.removeFirstOccurrence(o);
+		}
+
+		@Override
+		public T remove()
+		{
+			return removeFirst();
+		}
+
+		@Override
+		public T poll()
+		{
+			return pollFirst();
+		}
+
+		@Override
+		public T element()
+		{
+			return getFirst();
+		}
+
+		@Override
+		public T peek()
+		{
+			return peekFirst();
+		}
+
+		@Override
+		public void push(T e)
+		{
+			addFirst(e);
+		}
+
+		@Override
+		public T pop()
+		{
+			return removeFirst();
 		}
 	}
 }
