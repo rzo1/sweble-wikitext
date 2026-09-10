@@ -74,6 +74,16 @@ public class ParserFunctionIfError
 		super(wikiConfig, "iferror");
 	}
 
+	/**
+	 * Like the strip markers MediaWiki passes on, nowiki in the test string
+	 * must not be searched for errors.
+	 */
+	@Override
+	protected boolean isNowikiKeptInFirstArgument()
+	{
+		return true;
+	}
+
 	@Override
 	protected WtNode evaluate(
 			WtTemplate pfn,
@@ -119,9 +129,10 @@ public class ParserFunctionIfError
 		{
 			text.append(((WtText) node).getContent());
 		}
-		else if (node.getNodeType() == WtNode.NT_TAG_EXTENSION)
+		else if (node.getNodeType() == WtNode.NT_TAG_EXTENSION
+				|| node.getNodeType() == EngNode.NT_NOWIKI)
 		{
-			// The content of tag extensions is not searched
+			// The content of tag extensions and nowiki is not searched
 			text.append(STRIP_MARKER);
 		}
 		else

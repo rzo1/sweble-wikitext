@@ -92,6 +92,14 @@ public class ParserFunctionSemanticsTest
 	}
 
 	@Test
+	public void testTagKeepsEqualsSignInContent() throws Exception
+	{
+		// Like MediaWiki's tagObj(), which expands the whole content argument
+		assertExpansion("<nowiki>a=b</nowiki>", "{{#tag:nowiki|a=b}}");
+		assertExpansion("<ref name=\"y\">name=x</ref>", "{{#tag:ref|name=x|name=y}}");
+	}
+
+	@Test
 	public void testTagNameIsLowercased() throws Exception
 	{
 		assertExpansion("<ref>x</ref>", "{{#tag:REF|x}}");
@@ -141,6 +149,22 @@ public class ParserFunctionSemanticsTest
 		assertExpansion("y", "{{#iferror: {{#expr: 1/0 }} | y | n }}");
 		assertExpansion("y", "{{#iferror: {{#ifexpr: 1/0 | a | b }} | y | n }}");
 		assertExpansion("y", "{{#iferror: {{#rel2abs: ../.. | Foo }} | y | n }}");
+	}
+
+	@Test
+	public void testIferrorDoesNotSearchNowiki() throws Exception
+	{
+		// Like the strip markers in MediaWiki
+		assertExpansion("n", "{{#iferror: <nowiki><span class=\"error\">x</span></nowiki> | y | n }}");
+		assertExpansion("n", "{{#iferror: a<nowiki><span class=\"error\">x</span></nowiki> | y | n }}");
+		assertExpansion("y", "{{#iferror: <nowiki>a</nowiki><span class=\"error\">x</span> | y | n }}");
+	}
+
+	@Test
+	public void testNowikiInFirstArgumentOfOtherFunctionsIsStillConverted() throws Exception
+	{
+		assertExpansion("y", "{{#ifeq: <nowiki>a</nowiki> | a | y | n }}");
+		assertExpansion("ab", "{{lc: <nowiki>AB</nowiki> }}");
 	}
 
 	@Test
@@ -249,9 +273,28 @@ public class ParserFunctionSemanticsTest
 	// == #ifexist
 
 	@Test
-	public void testIfexistSpecialPagesExist() throws Exception
+	public void testIfexistCoreSpecialPagesExist() throws Exception
 	{
 		assertExpansion("y", "{{#ifexist:Special:RecentChanges|y|n}}");
+		assertExpansion("y", "{{#ifexist:Special:recentchanges|y|n}}");
+		assertExpansion("y", "{{#ifexist:Special:Search|y|n}}");
+		assertExpansion("y", "{{#ifexist:Special:Contributions/Foo|y|n}}");
+	}
+
+	@Test
+	public void testIfexistUnknownSpecialPageDoesNotExist() throws Exception
+	{
+		assertExpansion("n", "{{#ifexist:Special:NoSuchSpecialPage|y|n}}");
+		assertExpansion("n", "{{#ifexist:Special:JavaScriptTest|y|n}}");
+	}
+
+	@Test
+	public void testIfexistAsksCallbackForOtherSpecialPages() throws Exception
+	{
+		// E.g. special pages of extensions
+		callback.add("Special:CiteThisPage", "");
+
+		assertExpansion("y", "{{#ifexist:Special:CiteThisPage|y|n}}");
 	}
 
 	@Test

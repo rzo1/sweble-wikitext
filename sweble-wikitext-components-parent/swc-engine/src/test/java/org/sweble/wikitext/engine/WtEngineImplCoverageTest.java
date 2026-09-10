@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
 import org.sweble.wikitext.engine.nodes.EngLogExpansionPass;
@@ -60,14 +59,6 @@ import org.sweble.wikitext.parser.nodes.WtTicks;
  */
 public class WtEngineImplCoverageTest
 {
-	static final String LOG_GETTER_BUG =
-			"EngProcessedPage.getLog() returns null: the constructor stores the "
-					+ "log as child while the getter reads a property that is never set";
-
-	static final String LOG_FLATTENED_BUG =
-			"Log passes are node lists (NT_NODE_LIST), so adding them to the "
-					+ "parent log flattens them away and the processing log stays empty";
-
 	private static final String TITLE = "Stage test";
 
 	private static final Long REVISION = Long.valueOf(42);
@@ -249,7 +240,6 @@ public class WtEngineImplCoverageTest
 
 	// ==[ Logs ]===============================================================
 
-	@Ignore(LOG_GETTER_BUG)
 	@Test
 	public void testEachStageReturnsItsLog() throws Exception
 	{
@@ -290,7 +280,6 @@ public class WtEngineImplCoverageTest
 				EngLogPostprocessorPass.class);
 	}
 
-	@Ignore(LOG_FLATTENED_BUG)
 	@Test
 	public void testFailingPassLogsUnhandledError() throws Exception
 	{

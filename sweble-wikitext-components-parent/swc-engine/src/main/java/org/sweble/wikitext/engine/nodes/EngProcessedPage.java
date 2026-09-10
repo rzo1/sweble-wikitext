@@ -72,20 +72,6 @@ public class EngProcessedPage
 	// =========================================================================
 	// Properties
 
-	private EngLogProcessingPass log;
-
-	public final EngLogProcessingPass getLog()
-	{
-		return this.log;
-	}
-
-	public final EngLogProcessingPass setLog(EngLogProcessingPass log)
-	{
-		EngLogProcessingPass old = this.log;
-		this.log = log;
-		return old;
-	}
-
 	private List<Warning> warnings;
 
 	public final List<Warning> getWarnings()
@@ -117,7 +103,7 @@ public class EngProcessedPage
 	@Override
 	public final int getPropertyCount()
 	{
-		return 3;
+		return 2;
 	}
 
 	@Override
@@ -128,7 +114,7 @@ public class EngProcessedPage
 			@Override
 			protected int getPropertyCount()
 			{
-				return 3;
+				return 2;
 			}
 
 			@Override
@@ -137,10 +123,8 @@ public class EngProcessedPage
 				switch (index)
 				{
 					case 0:
-						return "log";
-					case 1:
 						return "warnings";
-					case 2:
+					case 1:
 						return "entityMap";
 
 					default:
@@ -154,10 +138,8 @@ public class EngProcessedPage
 				switch (index)
 				{
 					case 0:
-						return EngProcessedPage.this.getLog();
-					case 1:
 						return EngProcessedPage.this.getWarnings();
-					case 2:
+					case 1:
 						return EngProcessedPage.this.getEntityMap();
 
 					default:
@@ -171,14 +153,12 @@ public class EngProcessedPage
 				switch (index)
 				{
 					case 0:
-						return EngProcessedPage.this.setLog((EngLogProcessingPass) value);
-					case 1:
 					{
 						@SuppressWarnings("unchecked")
 						List<Warning> warnings = (List<Warning>) value;
 						return EngProcessedPage.this.setWarnings(warnings);
 					}
-					case 2:
+					case 1:
 						return EngProcessedPage.this.setEntityMap((WtEntityMap) value);
 
 					default:
@@ -201,7 +181,23 @@ public class EngProcessedPage
 		return (EngPage) get(0);
 	}
 
-	private static final String[] CHILD_NAMES = new String[] { "page" };
+	/**
+	 * @return The previous log.
+	 */
+	public final EngLogProcessingPass setLog(EngLogProcessingPass log)
+	{
+		return (EngLogProcessingPass) set(1, log);
+	}
+
+	/**
+	 * Returns the log of the processing of the page.
+	 */
+	public final EngLogProcessingPass getLog()
+	{
+		return (EngLogProcessingPass) get(1);
+	}
+
+	private static final String[] CHILD_NAMES = new String[] { "page", "log" };
 
 	public final String[] getChildNames()
 	{

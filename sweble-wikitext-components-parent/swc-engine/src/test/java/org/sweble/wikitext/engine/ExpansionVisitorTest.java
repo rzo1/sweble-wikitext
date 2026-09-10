@@ -19,6 +19,7 @@ package org.sweble.wikitext.engine;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -243,6 +244,65 @@ public class ExpansionVisitorTest
 	}
 
 	// =========================================================================
+	// == Parser functions that fetch pages (msgnw)
+
+	@Test
+	public void testMsgnwIsSubjectToTemplateDepthLimit() throws Exception
+	{
+		config.getEngineConfig().setMaxTemplateDepth(1);
+		callback.add("Template:A", "a{{msgnw:B}}");
+		callback.add("Template:B", "b");
+
+		EngProcessedPage page = expand("{{A}}");
+
+		assertOutput(
+				"a<span class=\"error\">Template recursion depth limit exceeded (1)</span>",
+				page);
+		assertHasWarning(page, "TemplateRecursionDepthWarning");
+		assertEquals(0, callback.getRetrievalCount("Template:B"));
+	}
+
+	@Test
+	public void testMsgnwDetectsTemplateLoop() throws Exception
+	{
+		callback.add("Template:A", "a{{msgnw:A}}");
+
+		EngProcessedPage page = expand("{{A}}");
+
+		assertOutput(
+				"a<span class=\"error\">Template loop detected: [[Template:A]]</span>",
+				page);
+		assertHasWarning(page, "TemplateLoopWarning");
+	}
+
+	@Test
+	public void testMsgnwIsSubjectToPostExpandIncludeSize() throws Exception
+	{
+		config.getEngineConfig().setMaxPostExpandIncludeSize(15);
+		callback.add("Template:Big", "0123456789012345678");
+
+		EngProcessedPage page = expand("{{msgnw:Big}}");
+
+		assertOutput("[[:Template:Big]]" + OMITTED, page);
+		assertHasWarning(page, "PostExpandIncludeSizeWarning");
+	}
+
+	@Test
+	public void testMsgnwCountsTowardsPostExpandIncludeSize() throws Exception
+	{
+		// The source of T has size 10, a transclusion of T size 11
+		config.getEngineConfig().setMaxPostExpandIncludeSize(25);
+		callback.add("Template:T", "0123456789");
+
+		EngProcessedPage page = expand("{{msgnw:T}}{{T}}{{T}}");
+
+		String output = WtRtDataPrinter.print(page.getPage());
+		assertTrue(output, output.startsWith("<nowiki>0123456789</nowiki>0123456789[[:Template:T]]"));
+		assertTrue(output, output.endsWith(OMITTED));
+		assertHasWarning(page, "PostExpandIncludeSizeWarning");
+	}
+
+	// =========================================================================
 	// == Redirects
 
 	@Test
@@ -290,8 +350,35 @@ public class ExpansionVisitorTest
 	}
 
 	@Test
-	public void testOnlyOneRedirectIsFollowedByDefault() throws Exception
+	public void testTwoRedirectsAreFollowedByDefault() throws Exception
 	{
+		// Like MediaWiki's Parser::statelessFetchTemplate()
+		callback.add("Template:R1", "#REDIRECT [[Template:R2]]");
+		callback.add("Template:R2", "#REDIRECT [[Template:R3]]");
+		callback.add("Template:R3", "end");
+
+		assertExpansion("end", "{{R1}}");
+	}
+
+	@Test
+	public void testThirdRedirectIsNotFollowedByDefault() throws Exception
+	{
+		callback.add("Template:R1", "#REDIRECT [[Template:R2]]");
+		callback.add("Template:R2", "#REDIRECT [[Template:R3]]");
+		callback.add("Template:R3", "#REDIRECT [[Template:R4]]");
+		callback.add("Template:R4", "end");
+
+		EngProcessedPage page = expand("{{R1}}");
+
+		assertOutput("#REDIRECT [[Template:R4]]", page);
+		assertHasWarning(page, "RedirectLimitWarning");
+		assertEquals(0, callback.getRetrievalCount("Template:R4"));
+	}
+
+	@Test
+	public void testRedirectLimitIsConfigurable() throws Exception
+	{
+		config.getEngineConfig().setMaxRedirects(1);
 		callback.add("Template:R1", "#REDIRECT [[Template:R2]]");
 		callback.add("Template:R2", "#REDIRECT [[Template:R3]]");
 		callback.add("Template:R3", "end");
@@ -301,17 +388,6 @@ public class ExpansionVisitorTest
 		assertOutput("#REDIRECT [[Template:R3]]", page);
 		assertHasWarning(page, "RedirectLimitWarning");
 		assertEquals(0, callback.getRetrievalCount("Template:R3"));
-	}
-
-	@Test
-	public void testRedirectLimitIsConfigurable() throws Exception
-	{
-		config.getEngineConfig().setMaxRedirects(2);
-		callback.add("Template:R1", "#REDIRECT [[Template:R2]]");
-		callback.add("Template:R2", "#REDIRECT [[Template:R3]]");
-		callback.add("Template:R3", "end");
-
-		assertExpansion("end", "{{R1}}");
 	}
 
 	@Test

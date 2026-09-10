@@ -40,7 +40,6 @@ import org.sweble.wikitext.engine.config.ParserFunctionGroup;
 import org.sweble.wikitext.engine.config.TagExtensionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
-import org.sweble.wikitext.engine.nodes.EngLogMagicWordResolution;
 import org.sweble.wikitext.engine.nodes.EngLogParameterResolution;
 import org.sweble.wikitext.engine.nodes.EngLogParserFunctionResolution;
 import org.sweble.wikitext.engine.nodes.EngLogRedirectResolution;
@@ -66,14 +65,12 @@ import org.sweble.wikitext.parser.nodes.WtTemplateParameter;
 import de.fau.cs.osr.ptk.common.Warning;
 
 /**
- * If resolving a redirect, a transclusion, a parser function, a parameter, a
- * tag extension or a page switch fails, the {@link ExpansionVisitor} logs the
- * failure as unhandled error and keeps the original markup. If the engine does
- * not catch all failures, expansion is aborted instead.
+ * If resolving a redirect, a transclusion, a parser function, a parameter or a
+ * tag extension fails, the {@link ExpansionVisitor} logs the failure as
+ * unhandled error and keeps the original markup. If the engine does not catch
+ * all failures, expansion is aborted instead.
  *
- * The resolution logs are captured with {@link ExpansionDebugHooks} since the
- * log of the processed page is not accessible (see
- * {@link WtEngineImplCoverageTest#LOG_GETTER_BUG}).
+ * The resolution logs are captured with {@link ExpansionDebugHooks}.
  */
 public class ExpansionVisitorErrorPathCoverageTest
 {
@@ -179,12 +176,15 @@ public class ExpansionVisitorErrorPathCoverageTest
 	}
 
 	/**
-	 * Page switches are recognized by the parser, not by the preprocessor. The
-	 * expansion only encounters them in a preprocessed AST built by hand.
+	 * Page switches are recognized by the parser, not by the preprocessor, and
+	 * are handled after parsing. The expansion leaves a page switch in a
+	 * preprocessed AST built by hand alone.
 	 */
 	@Test
-	public void testFailingPageSwitchIsLogged() throws Exception
+	public void testPageSwitchIsNotResolvedByExpansion() throws Exception
 	{
+		engine.setCatchAll(false);
+
 		EngProcessedPage result = engine.expand(
 				new NoPagesCallback(),
 				pageId,
@@ -195,8 +195,8 @@ public class ExpansionVisitorErrorPathCoverageTest
 				null,
 				null);
 
-		assertMarkedAsFailed(single(result.getPage(), WtPageSwitch.class), failure);
-		assertLoggedFailure(EngLogMagicWordResolution.class, failure);
+		assertFalse(single(result.getPage(), WtPageSwitch.class).hasAttribute(SKIP_ATTR_NAME));
+		assertTrue(hooks.logs.isEmpty());
 	}
 
 	@Test
@@ -259,24 +259,6 @@ public class ExpansionVisitorErrorPathCoverageTest
 		assertAborts("{{Foo}}", new FailingCallback(failure));
 		assertAborts("{{#throwingpfn: x}}", new NoPagesCallback());
 		assertAborts("<throwingtag>body</throwingtag>", new NoPagesCallback());
-
-		try
-		{
-			engine.expand(
-					new NoPagesCallback(),
-					pageId,
-					preprocessedPageWithPageSwitch(),
-					null,
-					false,
-					null,
-					null,
-					null);
-			fail("Expected EngineException for page switch");
-		}
-		catch (EngineException e)
-		{
-			assertAborted(e);
-		}
 
 		// Aborted resolutions do not reach the after-resolution hooks
 		assertTrue(hooks.logs.isEmpty());
@@ -420,18 +402,6 @@ public class ExpansionVisitorErrorPathCoverageTest
 				WtTagExtensionBody wtTagExtensionBody,
 				WtNode result,
 				EngLogTagExtensionResolution log)
-		{
-			logs.add(log);
-			return result;
-		}
-
-		@Override
-		public WtNode afterResolvePageSwitch(
-				ExpansionVisitor expansionVisitor,
-				WtPageSwitch n,
-				String word,
-				WtNode result,
-				EngLogMagicWordResolution log)
 		{
 			logs.add(log);
 			return result;

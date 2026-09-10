@@ -133,12 +133,20 @@ public class CorePfnFunctionsMiscellaneous
 			WtTagExtensionBody body = null;
 			if (argsValues.size() >= 2)
 			{
-				// FIXME: Meld 'name=' part into value
-				// FIXME: Do something about the "remove comments" hack
+				// Like MediaWiki's tagObj(), the whole content argument is
+				// expanded: A `name=' part belongs to the content.
 				WtTemplateArgument bodyNode = (WtTemplateArgument) argsValues.get(1);
-				WtNode expValueNode = frame.expand(bodyNode.getValue());
-				expValueNode = stripComments(expValueNode);
-				body = nf().tagExtBody(WtRtDataPrinter.print(expValueNode));
+				WtNodeList content = nf().list();
+				if (bodyNode.hasName())
+				{
+					content.add(frame.expand(bodyNode.getName()));
+					content.add(nf().text("="));
+				}
+				content.add(frame.expand(bodyNode.getValue()));
+
+				// MediaWiki's expansion removes comments when the output is
+				// HTML.
+				body = nf().tagExtBody(WtRtDataPrinter.print(stripComments(content)));
 			}
 
 			WtNodeList attrs = nf().list();

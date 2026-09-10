@@ -159,6 +159,17 @@ public abstract class ParserFunctionBase
 		return tu;
 	}
 
+	/**
+	 * Returns whether nowiki elements in the first argument (the part of the
+	 * name following the colon) are passed on as nowiki nodes, like MediaWiki
+	 * passes on their strip markers. By default their content is passed on as
+	 * text.
+	 */
+	protected boolean isNowikiKeptInFirstArgument()
+	{
+		return false;
+	}
+
 	// =========================================================================
 
 	/**

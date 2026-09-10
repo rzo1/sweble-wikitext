@@ -382,6 +382,45 @@ public class ExpansionFrame
 		return true;
 	}
 
+	/**
+	 * Checks the limits MediaWiki applies before a page is included, either
+	 * by a transclusion or by a parser function that fetches the page itself
+	 * (like msgnw): The template depth, template loops and whether the
+	 * post-expand include size is already exceeded. If a limit applies, a
+	 * warning is filed.
+	 *
+	 * @param n
+	 *            The node that includes the page.
+	 * @param title
+	 *            The title of the page to include.
+	 * @return Null if the page may be included. Otherwise the replacement of
+	 *         the inclusion (an error message or a link to the page).
+	 */
+	public WtNode checkInclusionLimits(WtNode n, PageTitle title)
+	{
+		return expansionVisitor.checkInclusionLimits(n, title);
+	}
+
+	/**
+	 * Adds the size of an included page to the post-expand include size of
+	 * the expansion process.
+	 *
+	 * @param n
+	 *            The node that includes the page.
+	 * @param title
+	 *            The title of the included page.
+	 * @param result
+	 *            The expanded result of the inclusion.
+	 * @return The given result if it fits into the post-expand include size.
+	 *         Otherwise a warning is filed and the replacement of the
+	 *         inclusion (a link to the page) is returned.
+	 * @see org.sweble.wikitext.engine.config.EngineConfig#getMaxPostExpandIncludeSize()
+	 */
+	public WtNode limitPostExpandIncludeSize(WtNode n, PageTitle title, WtNode result)
+	{
+		return expansionVisitor.limitPostExpandIncludeSize(n, title, result);
+	}
+
 	// =========================================================================
 
 	public WtNode expand(WtNode ppAst) throws ExpansionException
