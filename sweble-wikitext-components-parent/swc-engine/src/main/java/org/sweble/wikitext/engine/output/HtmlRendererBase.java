@@ -52,6 +52,16 @@ public class HtmlRendererBase
 		return StringTools.escHtml(content, forAttribute);
 	}
 
+	/**
+	 * Escape a string for use in an HTML attribute value but keep existing
+	 * character references intact. Use this for values that may already be
+	 * HTML encoded, like URLs returned by the renderer callback.
+	 */
+	protected static String escAttrKeepCharRefs(String content)
+	{
+		return HtmlSanitizer.escapeAttributeKeepingCharRefs(content);
+	}
+
 	protected static String capitalize(String text)
 	{
 		return StringUtils.capitalize(text);
