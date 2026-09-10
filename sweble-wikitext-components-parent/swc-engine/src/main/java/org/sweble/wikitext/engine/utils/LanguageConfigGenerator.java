@@ -16,6 +16,8 @@ package org.sweble.wikitext.engine.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -25,8 +27,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -67,9 +71,6 @@ public class LanguageConfigGenerator
 	public static final String API_ENDPOINT_NAMESPACEALIASES =
 			".wikipedia.org/w/api.php?action=query&meta=siteinfo&siprop=namespacealiases&format=xml";
 
-	public static final String API_ENDPOINT_EXTENSIONTAGS =
-			".wikipedia.org/w/api.php?action=query&meta=siteinfo&siprop=extensiontags&format=xml";
-
 	/**
 	 * Name of the group holding the extension tags reported by the wiki for
 	 * which no implementation is available.
@@ -78,6 +79,20 @@ public class LanguageConfigGenerator
 
 	/** Extension tags are reported as {@code <name>}. */
 	private static final Pattern EXTENSION_TAG = Pattern.compile("^\\s*<?\\s*([^<>\\s]+)\\s*>?\\s*$");
+
+	/**
+	 * The path of the API relative to the server on Wikimedia wikis.
+	 */
+	public static final String DEFAULT_API_PATH = "/w/api.php";
+
+	private static final String DEFAULT_SCHEME = "https";
+
+	/**
+	 * Matches the body of a MediaWiki link trail regex like
+	 * "^([a-z]+)(.*)$". The first group matches the trail itself.
+	 */
+	private static final Pattern LINK_TRAIL_BODY =
+			Pattern.compile("\\^\\((.*)\\)\\(\\.\\*\\)\\$", Pattern.DOTALL);
 
     private static final String DEFAULT_FALLBACK_USER_AGENT =
             "Sweble Wikitext/unknown (+https://github.com/rzo1/sweble-wikitext/";
@@ -96,6 +111,19 @@ public class LanguageConfigGenerator
 				languagePrefix);
 	}
 
+	/**
+	 * Generates the configuration of the wiki at the given URL from its
+	 * siteinfo. The API endpoint is derived from the site URL, see
+	 * {@link #getApiUrl(String)}.
+	 *
+	 * @param siteName
+	 *            The name of the wiki. Only used if the siteinfo does not
+	 *            report a site name.
+	 * @param siteURL
+	 *            The URL of the wiki, e.g. "https://de.wiktionary.org".
+	 * @param languagePrefix
+	 *            The content language and interwiki prefix of the wiki.
+	 */
 	public static WikiConfig generateWikiConfig(
 			String siteName,
 			String siteURL,
@@ -104,21 +132,25 @@ public class LanguageConfigGenerator
 			ParserConfigurationException,
 			SAXException
 	{
-		String endpointPrefix = "https://" + languagePrefix;
+		String apiUrl = getApiUrl(siteURL);
 		return generateWikiConfig(
 				siteName,
 				siteURL,
 				languagePrefix,
-				endpointPrefix + API_ENDPOINT_NAMESPACEALIASES,
-				endpointPrefix + API_ENDPOINT_NAMESPACES,
-				endpointPrefix + API_ENDPOINT_INTERWIKIMAP,
-				endpointPrefix + API_ENDPOINT_MAGICWORDS,
-				endpointPrefix + API_ENDPOINT_EXTENSIONTAGS);
+				getSiteInfoUrl(apiUrl, "namespacealiases"),
+				getSiteInfoUrl(apiUrl, "namespaces"),
+				getSiteInfoUrl(apiUrl, "interwikimap"),
+				getSiteInfoUrl(apiUrl, "magicwords"),
+				getSiteInfoUrl(apiUrl, "general"),
+				getSiteInfoUrl(apiUrl, "extensiontags"));
 	}
 
 	/**
-	 * Does not query the extension tags of the wiki but registers the
-	 * extension tags of {@link DefaultConfigEnWp} instead.
+	 * Generates a configuration without the general site information and
+	 * without querying the extension tags of the wiki: The site name and
+	 * URL are used as given, the article path, link trail and time zone keep
+	 * their defaults and the extension tags of {@link DefaultConfigEnWp} are
+	 * registered.
 	 */
 	public static WikiConfig generateWikiConfig(
 			String siteName,
@@ -140,10 +172,15 @@ public class LanguageConfigGenerator
 				apiUrlNamespaces,
 				apiUrlInterwikimap,
 				apiUrlMagicwords,
+				null,
 				null);
 	}
 
 	/**
+	 * @param apiUrlGeneral
+	 *            The URL of the general site information (siprop=general) or
+	 *            null. See {@link #addGeneralSiteInfo(WikiConfigImpl, String,
+	 *            String)} for what it configures.
 	 * @param apiUrlExtensiontags
 	 *            If {@code null}, the extension tags of
 	 *            {@link DefaultConfigEnWp} are registered.
@@ -156,6 +193,7 @@ public class LanguageConfigGenerator
 			String apiUrlNamespaces,
 			String apiUrlInterwikimap,
 			String apiUrlMagicwords,
+			String apiUrlGeneral,
 			String apiUrlExtensiontags)
 		throws IOException,
 			ParserConfigurationException,
@@ -169,6 +207,10 @@ public class LanguageConfigGenerator
 
 		DefaultConfigEnWp config = new DefaultConfigEnWp();
 		config.configureEngine(wikiConfig);
+
+		// Overrides the link trail set up by configureEngine()
+		if (apiUrlGeneral != null)
+			addGeneralSiteInfo(wikiConfig, apiUrlGeneral, siteUrl);
 
 		MultiValueMap namespaceAliases = getNamespaceAliases(apiUrlNamespacealiases);
 		addNamespaces(wikiConfig, apiUrlNamespaces, namespaceAliases);
@@ -188,6 +230,215 @@ public class LanguageConfigGenerator
 		}
 
 		return wikiConfig;
+	}
+
+	/**
+	 * Derives the URL of the API from the URL of a wiki. Wikimedia wikis
+	 * serve the API at {@value #DEFAULT_API_PATH}, e.g.
+	 * "https://de.wiktionary.org" results in
+	 * "https://de.wiktionary.org/w/api.php". A URL that already points to an
+	 * api.php is used as is (without query), which allows for wikis with a
+	 * different script path. Protocol-relative URLs and URLs without scheme
+	 * use https.
+	 */
+	public static String getApiUrl(String siteUrl)
+	{
+		String url = siteUrl.trim();
+		if (url.startsWith("//"))
+			url = DEFAULT_SCHEME + ":" + url;
+		else if (!url.contains("://"))
+			url = DEFAULT_SCHEME + "://" + url;
+
+		URI uri;
+		try
+		{
+			uri = new URI(url);
+		}
+		catch (URISyntaxException e)
+		{
+			throw new IllegalArgumentException("Not a valid site URL: `" + siteUrl + "'.", e);
+		}
+
+		if (uri.getRawAuthority() == null)
+			throw new IllegalArgumentException("Not a valid site URL: `" + siteUrl + "'.");
+
+		String server = uri.getScheme() + "://" + uri.getRawAuthority();
+		String path = uri.getRawPath();
+		if (path != null && path.endsWith("/api.php"))
+			return server + path;
+		return server + DEFAULT_API_PATH;
+	}
+
+	/**
+	 * Returns the URL of a siteinfo query for the given property, e.g.
+	 * "general" or "namespaces".
+	 */
+	public static String getSiteInfoUrl(String apiUrl, String siprop)
+	{
+		return apiUrl + "?action=query&meta=siteinfo&siprop=" + siprop + "&format=xml";
+	}
+
+	/**
+	 * Configures the site name, wiki URL (MediaWiki's $wgServer followed by
+	 * $wgScript), article path ($wgServer followed by $wgArticlePath), link
+	 * trail and time zone from the general site information (siprop=general).
+	 * Has to be called after the parser was configured since it overrides
+	 * the link trail.
+	 *
+	 * @param siteUrl
+	 *            The URL of the wiki. Its scheme completes the
+	 *            protocol-relative server URL reported by Wikimedia wikis (e.g.
+	 *            "//de.wikipedia.org"). If null, https is used.
+	 */
+	public static void addGeneralSiteInfo(
+			WikiConfigImpl wikiConfig,
+			String apiUrlGeneral,
+			String siteUrl)
+		throws IOException,
+			ParserConfigurationException,
+			SAXException
+	{
+		Document document = getXMLFromUrl(apiUrlGeneral);
+		NodeList generalNodes = document.getElementsByTagName("general");
+		if (generalNodes.getLength() == 0)
+		{
+			logger.warn("No general site information found at `{}'", apiUrlGeneral);
+			return;
+		}
+
+		NamedNodeMap attributes = generalNodes.item(0).getAttributes();
+
+		String siteName = getAttributeValue(attributes, "sitename");
+		if (siteName != null)
+			wikiConfig.setSiteName(siteName);
+
+		String server = getAttributeValue(attributes, "server");
+		if (server != null)
+		{
+			if (server.startsWith("//"))
+				server = getScheme(siteUrl) + ":" + server;
+
+			String script = getAttributeValue(attributes, "script");
+			if (script != null)
+				wikiConfig.setWikiUrl(server + script);
+
+			String articlePath = getAttributeValue(attributes, "articlepath");
+			if (articlePath != null)
+				wikiConfig.setArticlePath(server + articlePath);
+		}
+
+		String linkTrail = getAttributeValue(attributes, "linktrail");
+		if (linkTrail != null)
+		{
+			String pattern = convertLinkTrail(linkTrail);
+			if (pattern != null)
+			{
+				wikiConfig.getParserConfig().setInternalLinkPostfixPattern(pattern);
+			}
+			else
+			{
+				logger.warn("Cannot convert the link trail `{}', keeping `{}'",
+						linkTrail, wikiConfig.getParserConfig().getInternalLinkPostfixPattern());
+			}
+		}
+
+		String timezone = getAttributeValue(attributes, "timezone");
+		if (timezone != null)
+		{
+			TimeZone tz = TimeZone.getTimeZone(timezone);
+			// Unknown IDs silently result in GMT
+			if (tz.getID().equals(timezone))
+				wikiConfig.setTimezone(tz);
+			else
+				logger.warn("Unknown time zone `{}'", timezone);
+		}
+	}
+
+	/**
+	 * Converts a link trail as reported by the siteinfo API into the format
+	 * expected by
+	 * {@link org.sweble.wikitext.engine.config.ParserConfigImpl#setInternalLinkPostfixPattern(String)}.
+	 *
+	 * MediaWiki's link trail is a PCRE regex like "/^([a-z]+)(.*)$/sD" that
+	 * is applied to the text following a link, its first group is the trail
+	 * that becomes part of the link. The parser instead takes everything the
+	 * postfix pattern matches at the beginning of the text following a link.
+	 * Therefore only the first group is kept and the modifiers are turned
+	 * into embedded flags. PHP's "u" modifier (UTF-8 with Unicode character
+	 * properties) becomes Java's UNICODE_CHARACTER_CLASS flag.
+	 *
+	 * @return The postfix pattern, an empty pattern if the wiki does not use
+	 *         link trails (e.g. "/^()(.*)$/sD" on zh.wikipedia) or null if the
+	 *         link trail cannot be converted.
+	 */
+	public static String convertLinkTrail(String linkTrail)
+	{
+		if (linkTrail.isEmpty())
+			return "";
+
+		char delimiter = linkTrail.charAt(0);
+		int end = linkTrail.lastIndexOf(delimiter);
+		if (Character.isLetterOrDigit(delimiter) || delimiter == '\\' || end <= 0)
+			return null;
+
+		Matcher m = LINK_TRAIL_BODY.matcher(linkTrail.substring(1, end));
+		if (!m.matches())
+			return null;
+		String trail = m.group(1);
+
+		StringBuilder flags = new StringBuilder();
+		for (char modifier : linkTrail.substring(end + 1).toCharArray())
+		{
+			switch (modifier)
+			{
+				case 'i':
+				case 'm':
+				case 's':
+				case 'x':
+					flags.append(modifier);
+					break;
+				case 'u':
+					flags.append('U');
+					break;
+				case 'A':
+				case 'D':
+				case 'S':
+					// No effect on a pattern that only matches the trail
+					break;
+				default:
+					return null;
+			}
+		}
+
+		String pattern = (trail.isEmpty() || flags.length() == 0) ?
+				trail :
+				"(?" + flags + ":" + trail + ")";
+		try
+		{
+			Pattern.compile(pattern);
+		}
+		catch (PatternSyntaxException e)
+		{
+			return null;
+		}
+		return pattern;
+	}
+
+	private static String getScheme(String siteUrl)
+	{
+		if (siteUrl != null)
+		{
+			int i = siteUrl.indexOf("://");
+			if (i > 0)
+				return siteUrl.substring(0, i);
+		}
+		return DEFAULT_SCHEME;
+	}
+
+	private static String getAttributeValue(NamedNodeMap attributes, String name)
+	{
+		Node node = attributes.getNamedItem(name);
+		return (node != null) ? node.getNodeValue() : null;
 	}
 
 	/**

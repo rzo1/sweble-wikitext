@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<!--
+  Response of
+  https://de.wiktionary.org/w/api.php?action=query&meta=siteinfo&siprop=namespacealiases&format=xml
+-->
+<api batchcomplete="">
+	<query>
+		<namespacealiases>
+			<ns id="2" xml:space="preserve">Benutzerin</ns>
+			<ns id="3" xml:space="preserve">BD</ns>
+			<ns id="3" xml:space="preserve">Benutzerin Diskussion</ns>
+			<ns id="4" xml:space="preserve">WT</ns>
+			<ns id="5" xml:space="preserve">Wiktionary talk</ns>
+			<ns id="6" xml:space="preserve">Bild</ns>
+			<ns id="6" xml:space="preserve">Image</ns>
+			<ns id="7" xml:space="preserve">Bild Diskussion</ns>
+			<ns id="7" xml:space="preserve">Image talk</ns>
+			<ns id="104" xml:space="preserve">WikiSaurus</ns>
+			<ns id="105" xml:space="preserve">WikiSaurus Diskussion</ns>
+		</namespacealiases>
+	</query>
+</api>
