@@ -179,11 +179,13 @@ public class TextConverterTest
 	}
 
 	@Test
-	public void testInvalidCharRefIsReplaced() throws Exception
+	public void testInvalidCharRefIsKeptAsText() throws Exception
 	{
+		// References to invalid code points are no character references but
+		// text, like in MediaWiki (#142)
 		String actual = convert("a&#x110000;b&#xD800;c&#65;");
 
-		assertEquals("a�b�cA", actual);
+		assertEquals("a&#x110000;b&#xD800;cA", actual);
 	}
 
 	@Test
