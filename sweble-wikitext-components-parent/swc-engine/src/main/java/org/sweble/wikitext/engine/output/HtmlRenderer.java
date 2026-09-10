@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class HtmlRenderer
 		extends
@@ -70,7 +71,7 @@ public class HtmlRenderer
 	@Override
 	public void visit(EngNowiki n)
 	{
-		wrapText(n.getContent());
+		printNowiki(n.getContent());
 	}
 
 	public void visit(EngPage n)
@@ -713,11 +714,80 @@ public class HtmlRenderer
 
 	public void visit(WtParagraph n)
 	{
+		if (!containsPre(n))
+		{
+			printParagraph(n);
+			return;
+		}
+
+		// Like MediaWiki, close the paragraph in front of a <pre> and open a
+		// new one after it if there is anything left to wrap.
+		WtNodeList content = nf.list();
+		for (WtNode c : n)
+		{
+			if (isPre(c))
+			{
+				if (!isBlank(content))
+					printParagraph(content);
+				content = nf.list();
+				dispatch(c);
+			}
+			else
+			{
+				content.add(c);
+			}
+		}
+		if (!isBlank(content))
+			printParagraph(content);
+	}
+
+	private void printParagraph(WtNodeList content)
+	{
 		p.indentln("<p>");
 		p.incIndent();
-		iterate(n);
+		iterate(content);
 		p.decIndent();
 		p.indentln("</p>");
+	}
+
+	private static boolean containsPre(WtNodeList content)
+	{
+		for (WtNode c : content)
+		{
+			if (isPre(c))
+				return true;
+		}
+		return false;
+	}
+
+	/**
+	 * @return Whether the node is a {@code <pre>} tag, either as tag
+	 *         extension or as element created by the tag extension.
+	 */
+	private static boolean isPre(WtNode n)
+	{
+		if (n instanceof WtTagExtension)
+			return ((WtTagExtension) n).getName().trim().equalsIgnoreCase("pre");
+		if (n instanceof WtXmlElement)
+			return ((WtXmlElement) n).getName().equalsIgnoreCase("pre");
+		return false;
+	}
+
+	private static boolean isBlank(WtNodeList content)
+	{
+		for (WtNode c : content)
+		{
+			if (c instanceof WtText)
+			{
+				if (!((WtText) c).getContent().trim().isEmpty())
+					return false;
+			}
+			else if (!(c instanceof WtNewline))
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
@@ -768,15 +838,29 @@ public class HtmlRenderer
 	{
 		p.indent();
 		++inPre;
+		// MediaWiki removes the space that starts each line. Unless the parser
+		// keeps it as an empty WtSemiPreLine, it is part of the text.
+		inSemiPre = !isPreserveSemiPreLeadingSpace();
+		semiPreLineStart = true;
 		pt("<pre>%!</pre>", n);
+		inSemiPre = false;
 		--inPre;
 		p.println();
 	}
 
 	public void visit(WtSemiPreLine n)
 	{
+		// Only stands for the leading space of a line, see visit(WtSemiPre)
+		if (n.isEmpty() && isPreserveSemiPreLeadingSpace())
+			return;
+
 		iterate(n);
 		p.println();
+	}
+
+	private boolean isPreserveSemiPreLeadingSpace()
+	{
+		return wikiConfig.getParserConfig().isPreserveSemiPreLeadingSpace();
 	}
 
 	@Override
@@ -914,6 +998,20 @@ public class HtmlRenderer
 		// it as wikitext or HTML.
 		if (!n.hasBody() || INVISIBLE_TAG_EXTENSIONS.contains(name))
 			return;
+
+		if (name.equals("pre"))
+		{
+			printPre(
+					sanitizeAttribs("pre", n.getXmlAttributes()),
+					nf.list(nf.text(n.getBody().getContent())));
+			return;
+		}
+
+		if (name.equals("nowiki"))
+		{
+			printNowiki(n.getBody().getContent());
+			return;
+		}
 
 		String body = esc(n.getBody().getContent());
 		if (CODE_TAG_EXTENSIONS.contains(name))
@@ -1136,6 +1234,13 @@ public class HtmlRenderer
 		}
 
 		WtNodeList attribs = toXmlAttributes(sanitized);
+		if (n.hasBody() && name.equalsIgnoreCase("pre"))
+		{
+			// Created by the <pre> tag extension
+			printPre(attribs, n.getBody());
+			return;
+		}
+
 		if (n.hasBody())
 		{
 			if (blockElements.contains(name.toLowerCase()))
@@ -1226,12 +1331,92 @@ public class HtmlRenderer
 	{
 		if (inPre > 0)
 		{
-			p.print(esc(text));
+			printPreformatted(esc(removeSemiPreIndent(text)));
 		}
 		else
 		{
 			p.indentAtBol(esc(StringTools.collapseWhitespace(text)));
 		}
+	}
+
+	/**
+	 * Renders a {@code <pre>} tag like MediaWiki: The content is not
+	 * interpreted, {@code <nowiki>} tags are removed and only angle brackets
+	 * and bare ampersands are escaped. Character references are kept.
+	 */
+	private void printPre(WtNodeList attribs, WtNodeList body)
+	{
+		p.indent();
+		pt("<pre%!>", attribs);
+		++inPre;
+		for (WtNode c : body)
+		{
+			if (c instanceof WtText)
+			{
+				String content = ((WtText) c).getContent();
+				content = NOWIKI_TAGS.matcher(content).replaceAll("$1");
+				printPreformatted(escTextKeepCharRefs(content));
+			}
+			else
+			{
+				dispatch(c);
+			}
+		}
+		--inPre;
+		p.print("</pre>");
+		p.println();
+	}
+
+	/**
+	 * Renders the content of a {@code <nowiki>} tag like MediaWiki: Only angle
+	 * brackets, bare ampersands and language converter markup are escaped.
+	 * Character references are kept.
+	 */
+	private void printNowiki(String content)
+	{
+		String html = LANG_CONVERTER_MARKUP
+				.matcher(escTextKeepCharRefs(content))
+				.replaceAll(m -> m.group().equals("-{") ? "-&#123;" : "&#125;-");
+
+		if (inPre > 0)
+		{
+			printPreformatted(html);
+		}
+		else
+		{
+			p.indentAtBol(StringTools.collapseWhitespace(html));
+		}
+	}
+
+	/**
+	 * Prints preformatted text as it is. The printer would otherwise merge
+	 * consecutive newlines and indent an element that follows a newline.
+	 */
+	private void printPreformatted(String html)
+	{
+		p.verbatim(html);
+		// Leave the "beginning of line" state, nothing must be indented
+		p.verbatim("");
+	}
+
+	/**
+	 * Removes the space which starts each line of a preformatted block
+	 * (indent-pre), like MediaWiki does.
+	 */
+	private String removeSemiPreIndent(String text)
+	{
+		if (!inSemiPre)
+			return text;
+
+		StringBuilder b = new StringBuilder(text.length());
+		for (int i = 0; i < text.length(); ++i)
+		{
+			char ch = text.charAt(i);
+			if (!semiPreLineStart || ch != ' ')
+				b.append(ch);
+			semiPreLineStart = (ch == '\n');
+		}
+		return b.toString();
 	}
 
 	/*
@@ -1663,6 +1848,19 @@ public class HtmlRenderer
 	protected final HtmlRendererCallback callback;
 
 	protected int inPre = 0;
+
+	/**
+	 * Whether we are in a preformatted block (indent-pre) whose lines still
+	 * start with a space.
+	 */
+	private boolean inSemiPre = false;
+
+	private boolean semiPreLineStart = false;
+
+	private static final Pattern NOWIKI_TAGS =
+			Pattern.compile("<nowiki>(.*?)</nowiki>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
+	private static final Pattern LANG_CONVERTER_MARKUP = Pattern.compile("-\\{|\\}-");
 
 	static
 	{

@@ -493,6 +493,22 @@ public final class HtmlSanitizer
 	 */
 	public static String escapeAttributeKeepingCharRefs(String text)
 	{
+		return escapeKeepingCharRefs(text, true);
+	}
+
+	/**
+	 * Escapes a string for use as HTML text content but leaves existing
+	 * character references intact. Only a bare {@code &} and angle brackets
+	 * are escaped, quotes are kept. This is what MediaWiki does with the
+	 * content of {@code <pre>} and {@code <nowiki>}.
+	 */
+	public static String escapeTextKeepingCharRefs(String text)
+	{
+		return escapeKeepingCharRefs(text, false);
+	}
+
+	private static String escapeKeepingCharRefs(String text, boolean forAttribute)
+	{
 		if (text == null)
 			return "";
 
@@ -501,12 +517,19 @@ public final class HtmlSanitizer
 		int last = 0;
 		while (m.find())
 		{
-			b.append(StringTools.escHtml(text.substring(last, m.start()), true));
+			b.append(escape(text.substring(last, m.start()), forAttribute));
 			b.append(m.group());
 			last = m.end();
 		}
-		b.append(StringTools.escHtml(text.substring(last), true));
+		b.append(escape(text.substring(last), forAttribute));
 		return b.toString();
+	}
+
+	private static String escape(String text, boolean forAttribute)
+	{
+		if (forAttribute)
+			return StringTools.escHtml(text, true);
+		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 
 	// =========================================================================
