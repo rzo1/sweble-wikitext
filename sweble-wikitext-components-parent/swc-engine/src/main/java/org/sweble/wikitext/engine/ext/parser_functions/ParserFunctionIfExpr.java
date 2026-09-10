@@ -98,6 +98,15 @@ public class ParserFunctionIfExpr
 		if (result == null || result.isEmpty())
 			return false;
 
-		return Double.parseDouble(result) != 0.;
+		try
+		{
+			return Double.parseDouble(result) != 0.;
+		}
+		catch (NumberFormatException e)
+		{
+			// Like MediaWiki, treat non-numeric results like "INF" or "NAN"
+			// as non-empty strings, which are true
+			return true;
+		}
 	}
 }

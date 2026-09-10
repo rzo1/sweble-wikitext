@@ -1,0 +1,16 @@
+0.33333333333333
+0.3
+3000000000
+2147483648
+1.0E+15
+1.0E-5
+-0
+1
+1.5
+1.4142135623731
+INF
+<strong class="error">Division by zero.</strong>
+<strong class="error">Expression error: Unrecognized word "foo".</strong>
+yes
+no
+no
