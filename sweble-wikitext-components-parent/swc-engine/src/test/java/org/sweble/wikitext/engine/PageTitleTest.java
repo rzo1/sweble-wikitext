@@ -17,8 +17,13 @@
 package org.sweble.wikitext.engine;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
+import org.sweble.wikitext.engine.config.InterwikiImpl;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
 
@@ -46,5 +51,80 @@ public class PageTitleTest
 				title.getDenormalizedFullTitle());
 
 		assertEquals(title, title3);
+	}
+
+	/** Interwiki prefixes are case-insensitive (issue #101). */
+	@Test
+	public void testInterwikiPrefixesAreCaseInsensitive() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+
+		for (String target : new String[] { "wikt:Haus", "Wikt:Haus", "WIKT:Haus" })
+		{
+			PageTitle title = PageTitle.make(config, target);
+
+			assertTrue(target, title.isInterwiki());
+			assertEquals(target, "wikt", title.getInterwikiLink().getPrefix());
+			assertEquals(target, "Haus", title.getTitle());
+		}
+
+		PageTitle title = PageTitle.make(config, "DE:Foo");
+
+		assertTrue(title.isInterwiki());
+		assertEquals("de", title.getInterwikiLink().getPrefix());
+		assertEquals("Foo", title.getTitle());
+		assertEquals(PageTitle.make(config, "de:Foo"), title);
+	}
+
+	/** The interwiki prefix of this wiki is case-insensitive (issue #101). */
+	@Test
+	public void testInterwikiPrefixOfThisWikiIsCaseInsensitive() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+
+		assertTrue(config.getParserConfig().isIwPrefixOfThisWiki("EN"));
+
+		PageTitle title = PageTitle.make(config, "EN:Foo");
+
+		assertFalse(title.isInterwiki());
+		assertEquals("Foo", title.getTitle());
+		assertEquals(config.getDefaultNamespace(), title.getNamespace());
+	}
+
+	/** Prefixes registered in upper case keep working (issue #101). */
+	@Test
+	public void testUpperCaseRegisteredInterwikiPrefix() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+
+		InterwikiImpl iw = new InterwikiImpl(
+				"MyWiki",
+				"http://example.org/wiki/$1",
+				false,
+				false);
+		config.addInterwiki(iw);
+
+		assertSame(iw, config.getInterwiki("MyWiki"));
+		assertSame(iw, config.getInterwiki("mywiki"));
+		assertSame(iw, config.getInterwiki("MYWIKI"));
+
+		PageTitle title = PageTitle.make(config, "mywiki:Foo");
+
+		assertTrue(title.isInterwiki());
+		assertSame(iw, title.getInterwikiLink());
+
+		try
+		{
+			config.addInterwiki(new InterwikiImpl(
+					"MYWIKI",
+					"http://example.com/wiki/$1",
+					false,
+					false));
+			fail("Prefixes differing only in case must be rejected");
+		}
+		catch (IllegalArgumentException e)
+		{
+			// expected
+		}
 	}
 }

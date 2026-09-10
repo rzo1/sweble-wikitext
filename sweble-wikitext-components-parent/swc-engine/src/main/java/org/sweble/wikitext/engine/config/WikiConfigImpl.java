@@ -141,6 +141,7 @@ public class WikiConfigImpl
 
 	// -- Interwikis --
 
+	/** Keys are lower-case for case-insensitive lookups. */
 	private final Map<String, InterwikiImpl> prefixToInterwikiMap = new HashMap<String, InterwikiImpl>();
 
 	// -- Namespaces --
@@ -346,7 +347,9 @@ public class WikiConfigImpl
 
 	public void addInterwiki(InterwikiImpl iw)
 	{
-		InterwikiImpl old = prefixToInterwikiMap.get(iw.getPrefix());
+		String key = iw.getPrefix().toLowerCase();
+
+		InterwikiImpl old = prefixToInterwikiMap.get(key);
 
 		if (old == iw)
 			throw new IllegalArgumentException("The wiki with interwiki prefix `" + iw.getPrefix() + "' is already registered.");
@@ -354,13 +357,18 @@ public class WikiConfigImpl
 		if (old != null)
 			throw new IllegalArgumentException("A wiki with the same interwiki prefix `" + iw.getPrefix() + "' is already registered.");
 
-		prefixToInterwikiMap.put(iw.getPrefix(), iw);
+		prefixToInterwikiMap.put(key, iw);
 	}
 
+	/**
+	 * Interwiki prefixes are case-insensitive (MediaWiki lower-cases them).
+	 */
 	@Override
 	public InterwikiImpl getInterwiki(String prefix)
 	{
-		return prefixToInterwikiMap.get(prefix);
+		if (prefix == null)
+			return null;
+		return prefixToInterwikiMap.get(prefix.toLowerCase());
 	}
 
 	@Override

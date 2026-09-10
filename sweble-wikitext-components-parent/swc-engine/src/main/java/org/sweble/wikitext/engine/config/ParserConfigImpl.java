@@ -345,7 +345,7 @@ public class ParserConfigImpl
 	@Override
 	public boolean isIwPrefixOfThisWiki(String iwPrefix)
 	{
-		return iwPrefix.equals(this.wikiConfig.getInterwikiPrefix());
+		return iwPrefix.equalsIgnoreCase(this.wikiConfig.getInterwikiPrefix());
 	}
 
 	/**
