@@ -68,6 +68,26 @@ public class DumpReaderJobGeneratorTest
 		assertJobs(jobs, BigInteger.ZERO, "Example");
 	}
 
+	@Test
+	public void testFileSizeIsKnown() throws Throwable
+	{
+		File file = getFile("/dump-0.11.xml");
+
+		DumpReaderJobGenerator generator = createGenerator(
+				file,
+				new LinkedBlockingQueue<Job>(),
+				new JobTraceSet());
+
+		try
+		{
+			assertEquals(file.length(), generator.getFileSize());
+		}
+		finally
+		{
+			generator.after();
+		}
+	}
+
 	// =========================================================================
 
 	private static void assertJobs(
@@ -111,25 +131,11 @@ public class DumpReaderJobGeneratorTest
 
 	private static List<RevisionJob> generateJobs(String resource) throws Throwable
 	{
-		URL url = DumpReaderJobGeneratorTest.class.getResource(resource);
-		File file = new File(StringTools.decodeUsingDefaultCharset(url.getFile()));
-
 		LinkedBlockingQueue<Job> inTray = new LinkedBlockingQueue<Job>();
 		JobTraceSet jobTraces = new JobTraceSet();
 
-		// Without a dump cruncher no GUI is updated
-		DumpReaderJobGenerator generator = new DumpReaderJobGenerator(
-				null,
-				file,
-				Charset.forName("UTF8"),
-				new AbortHandler()
-				{
-					@Override
-					public void notify(Throwable t)
-					{
-						throw new AssertionError(t);
-					}
-				},
+		DumpReaderJobGenerator generator = createGenerator(
+				getFile(resource),
 				inTray,
 				jobTraces);
 
@@ -149,5 +155,33 @@ public class DumpReaderJobGeneratorTest
 		assertEquals(jobs.size(), jobTraces.getTraces().size());
 
 		return jobs;
+	}
+
+	private static File getFile(String resource)
+	{
+		URL url = DumpReaderJobGeneratorTest.class.getResource(resource);
+		return new File(StringTools.decodeUsingDefaultCharset(url.getFile()));
+	}
+
+	private static DumpReaderJobGenerator createGenerator(
+			File file,
+			LinkedBlockingQueue<Job> inTray,
+			JobTraceSet jobTraces)
+	{
+		// Without a dump cruncher no GUI is updated
+		return new DumpReaderJobGenerator(
+				null,
+				file,
+				Charset.forName("UTF8"),
+				new AbortHandler()
+				{
+					@Override
+					public void notify(Throwable t)
+					{
+						throw new AssertionError(t);
+					}
+				},
+				inTray,
+				jobTraces);
 	}
 }
