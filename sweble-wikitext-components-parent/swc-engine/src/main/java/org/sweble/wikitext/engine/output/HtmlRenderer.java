@@ -1993,14 +1993,17 @@ public class HtmlRenderer
 
 	/**
 	 * Elements which keep a self-closing tag ($htmlsingleonly in MediaWiki's
-	 * Sanitizer).
+	 * Sanitizer) plus {@code col}: MediaWiki does not allow {@code col} in
+	 * wikitext, but the sanitizer allows it in tables and it is a void element
+	 * in HTML.
 	 */
 	private static final Set<String> VOID_ELEMENTS = setOf(
 			"br",
 			"wbr",
 			"hr",
 			"meta",
-			"link");
+			"link",
+			"col");
 
 	protected final WikiConfig wikiConfig;
 
