@@ -1,6 +1,93 @@
 # Change Log
 [A guide to writing change logs][keepachangelog]
 
+## 4.1.0 - unreleased
+Numbers refer to issues and pull requests in [rzo1/sweble-wikitext](https://github.com/rzo1/sweble-wikitext).
+
+### Changed
+- **Licensing:** the unit data of `{{convert}}` is derived from Wikipedia's
+  Module:Convert/data and licensed under CC BY-SA 4.0. It ships in the new
+  artifact `swc-convert-data` with its own NOTICE file, not in the Apache
+  licensed jars. `swc-engine` depends on it only as an optional dependency:
+  add it to use `{{convert}}`, which otherwise reports an error. The NOTICE is
+  repeated in the NOTICE file of the repository root (#178, #179).
+- Version 4.1.0; internal modules resolve from the build (#81). The build works
+  on Java 11 to 25 (#83) and without a `.git` directory (#76).
+- Transclusions follow up to two redirects (`maxRedirects`, #150, #172).
+- `EngProcessedPage` stores its processing log as a child; serialized data with
+  a `log` property may not load (#172).
+- Language conversion (`-{…}-`) is only active when the wiki has variants (#174).
+- Parse and render output follow MediaWiki more closely: paragraphs after
+  framed images (#74), indented tables in definition lists (#75, #173), `;a:b`
+  (#124), unclosed extension tags stay text (#154, #173), HtmlRenderer output
+  (#121, #123) and the pretty printer (#116).
+- `PageTitle` decodes percent-encoded UTF-8 like `rawurldecode`, so `+` stays
+  a plus (#72).
+- Namespaces with the same id but different settings, and parser functions of
+  the same class with different ids, are no longer equal (#149).
+- Machine-facing case conversion and formatting use `Locale.ROOT`; the build
+  fails on default locale or charset APIs in main code (#177).
+- Dependencies with known vulnerabilities are updated: commons-compress 1.28.0,
+  xercesImpl 2.12.2, xalan 2.7.3, commons-jxpath 1.4.0, commons-math3 3.6.1,
+  Saxon-HE 12.10 (#147). Further updates by Dependabot.
+
+### Added
+- swc-dumpreader reads the MediaWiki XML dump format 0.11 (#63).
+- `{{convert}}` follows Module:Convert: all unit families of Module:Convert/data,
+  SI prefixes, per units, engineering notation, and the options `disp=`, `adj=`,
+  `spell`, `frac`, `comma=`, `order=out`, `sortable=`, `error`, `stylein`,
+  `styleout` and `$` (#178).
+- Core parser functions and magic words: `formatnum`, `padright`,
+  `anchorencode`, `plural`, `grammar`, `int:`, `localurl(e)`, `fullurle`,
+  `canonicalurl(e)`, `nse`, `DISPLAYTITLE`, `msgnw:`, `SERVER`, `SERVERNAME`,
+  `SCRIPTPATH`, `{{=}}` (#128) and missing date and time variables (#151).
+- Behaviour switches like `__NOTOC__`, including localized names (#113).
+- Localized image link options via `ParserConfig.getImageLinkOptionId` (#73).
+- Limits like MediaWiki's: `maxTemplateDepth` (40), `maxPostExpandIncludeSize`
+  (2 MiB) and `maxRedirects` in `EngineConfig` (#150), and a parser nesting depth
+  limit, `ParserConfig.getMaxNestingDepth()` (100) (#154, #173).
+- Parser functions file warnings instead of silently ignoring errors (#78).
+- HtmlRenderer: MediaWiki heading ids and fragment links (#122); the image
+  options `upright=`, `class=`, `lang=` and `page=` (#174).
+- LanguageConfigGenerator takes the general siteinfo, the extension tags and
+  the language variants of the wiki into account (#109, #110, #176).
+- Getting started section in the README (#79).
+
+### Removed
+- The `Units` and `DefCvt` enums of `{{convert}}` (#178).
+- The generated class `encval.EncodingValidatorLexer` (#153).
+- The default-value constructors and `setDefault` of `IfThenElseStmt` (#151).
+- The protected method `HtmlRenderer.cleanAttribs` (#123).
+- The unused `TreeBuilder.getAboveOnStack` (#173).
+
+### Security
+- HtmlRenderer sanitizes HTML and escapes attribute values (#107).
+- XML parsing and deserialization are hardened against XXE, SSRF and unsafe
+  classes; siteinfo or WOM XML with a DOCTYPE is rejected (#148).
+- Limits against exponential templates and deep nesting (#150, #154).
+
+### Fixed
+- Parser: crashes on character references and data loss in the encoding
+  validation (#153), linear parse time (#154), tree builder crashes and lost
+  text (#120, #156), image options, free URLs and redirect targets (#155),
+  title normalization (#173), case-sensitive namespaces (#119),
+  case-insensitive interwiki prefixes (#112), a missing link prefix pattern
+  (#118).
+- Engine: parser function and expansion semantics (#111), `#expr` (#114), page
+  name magic words (#115), `#time` (#127), `#iferror`, `#ifexpr`, `#rel2abs` and
+  namespace functions (#151), `#ifexist` (#172), `{{convert}}` (#152), config
+  alias matching, equality and serialization (#149), `DefaultConfig.generate()`
+  (#125), redirect loops (#150).
+- HtmlRenderer crashes (#108, #157) and extension tags (#109).
+- Round-trip data pretty printers (#126).
+- WOM3: categories, DOM contract, JSON adapter errors, round trips and markup
+  for new content (#161, #162, #175).
+- Dump reader: version detection, gzip, log items, counts and file size (#158,
+  #171). The article cruncher stops on errors instead of hanging and shuts
+  down in order (#159, #171). `CompressionFormat.XZ` works (#171).
+- Examples: TextConverter, XPath and the DumpCruncher startup (#160, #171).
+- LanguageConfigGenerator resolves i18n alias conflicts deterministically (#77).
+
 ## 3.1.10 - unreleased
 ### Changed
 
