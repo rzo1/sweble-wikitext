@@ -4,7 +4,7 @@ The Sweble Wikitext Components module provides a parser for MediaWiki's wikitext
 
 ## How to use
 
-This library is published on Maven Central. You can use it by adding the following Maven coordinates to your project:
+This library is published on Maven Central and requires Java 11 or newer. You can use it by adding the following Maven coordinates to your project:
 
 ```
 <dependency>
@@ -13,7 +13,7 @@ This library is published on Maven Central. You can use it by adding the followi
   <version>4.1.0</version>
 </dependency>
 ```
-This module exposes the wikitext parser itself, [other Maven modules are available as well](https://search.maven.org/search?q=org.sweble.wikitext).
+This module exposes the wikitext parser itself, [other Maven modules are available as well](https://central.sonatype.com/namespace/io.github.rzo1.org.sweble.wikitext).
 
 ## Getting started
 
@@ -173,6 +173,11 @@ The wikitext of a revision (`r.getText()`) can then be fed into `WtEngineImpl` a
 
 ## How to set up the library for development
 
-You first need to clone the [sweble/osr-common](https://github.com/sweble/osr-common) repository, and then clone this repository inside it, as the `tooling/sweble-wikitext` local directory.
-You can then work on this library as a Maven project.
+Clone this repository and build it with Maven and Java 11 or newer (CI builds with Java 11 and 25):
+
+```
+mvn clean install
+```
+
+The build needs no other checkout: the parent POM and the other dependencies come from Maven Central.
 
