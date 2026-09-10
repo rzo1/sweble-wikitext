@@ -35,6 +35,8 @@ import org.sweble.wikitext.parser.nodes.WtTableHeader;
 import org.sweble.wikitext.parser.nodes.WtTableRow;
 import org.sweble.wikitext.parser.nodes.WtText;
 import org.sweble.wikitext.parser.nodes.WtXmlComment;
+import org.sweble.wikitext.parser.nodes.WtXmlElement;
+import org.sweble.wikitext.parser.nodes.WtXmlEmptyTag;
 import org.sweble.wikitext.parser.nodes.WtXmlEndTag;
 import org.sweble.wikitext.parser.nodes.WtXmlStartTag;
 
@@ -137,6 +139,29 @@ public final class TreeBuilderInTable
 				 */
 				if (n.getNodeType() != WtNode.NT_IM_END_TAG)
 					anythingElseR16(n);
+				break;
+			default:
+				anythingElseR16(n);
+				break;
+		}
+	}
+
+	public void visit(WtXmlEmptyTag n)
+	{
+		ElementType nodeType = getNodeType(n);
+		if (nodeType == null)
+		{
+			anythingElseR16(n);
+			return;
+		}
+
+		switch (nodeType)
+		{
+			case COLGROUP:
+				emptyTagR05(n);
+				break;
+			case COL:
+				startTagR06(n);
 				break;
 			default:
 				anythingElseR16(n);
@@ -267,6 +292,17 @@ public final class TreeBuilderInTable
 		tb.clearStackBackToTableContext();
 		tb.insertAnHtmlElement(n);
 		tb.switchInsertionMode(InsertionMode.IN_COLUMN_GROUP);
+	}
+
+	/**
+	 * R05: A start tag whose tag name is colgroup, written as empty tag. The
+	 * column group has no columns and is closed right away.
+	 */
+	private void emptyTagR05(WtNode n)
+	{
+		tb.clearStackBackToTableContext();
+		tb.insertAnHtmlElement(n);
+		tb.popFromStack();
 	}
 
 	/**
@@ -482,6 +518,14 @@ public final class TreeBuilderInTable
 			// throw new AssertionError();
 		}
 
+		public void visit(WtXmlEmptyTag n)
+		{
+			if (isNodeOneOf(n, COL, COLGROUP))
+				rule02(n);
+			else
+				anythingElse(n);
+		}
+
 		private void rule02(WtNode n)
 		{
 			tb.error(n, "12.2.5.4.11 R02");
@@ -535,14 +579,19 @@ public final class TreeBuilderInTable
 		public void visit(WtXmlStartTag n)
 		{
 			ElementType nodeType = getNodeType(n);
-			if (nodeType == null)
+			if (nodeType == COL)
 			{
-				anythingElse(n);
+				rule05(n);
 			}
-			else if (nodeType == COL)
+			else if (nodeType == ElementType.P
+					&& n.getNodeType() == WtNode.NT_IM_START_TAG)
 			{
-				tb.insertAnHtmlElement(n);
-				tb.popFromStack();
+				/**
+				 * The parser generates intermediate paragraph tags inside HTML
+				 * tables because it does not understand the scope. We can
+				 * simply ignore those intermediate paragraphs which do not
+				 * contain any other information that could get lost.
+				 */
 			}
 			else
 			{
@@ -550,24 +599,36 @@ public final class TreeBuilderInTable
 			}
 		}
 
+		public void visit(WtXmlEmptyTag n)
+		{
+			// col is a void element and is usually written as empty tag
+			if (getNodeType(n) == COL)
+				rule05(n);
+			else
+				anythingElse(n);
+		}
+
 		public void visit(WtXmlEndTag n)
 		{
 			ElementType nodeType = getNodeType(n);
-			if (nodeType == null)
-			{
-				anythingElse(n);
-			}
-			else if (nodeType == COLGROUP)
+			if (nodeType == COLGROUP)
 			{
 				// We have no fragment case!
-				if (getNodeType(tb.popFromStack()) != COLGROUP)
+				WtNode colgroup = tb.popFromStack();
+				if (getNodeType(colgroup) != COLGROUP)
 					throw new AssertionError();
+				addRtDataOfEndTag(colgroup, n);
 				tb.switchInsertionMode(InsertionMode.IN_TABLE);
 			}
 			else if (nodeType == COL)
 			{
 				tb.error(n, "12.2.5.4.12 R07");
 				tb.ignore(n);
+			}
+			else if (nodeType == ElementType.P
+					&& n.getNodeType() == WtNode.NT_IM_END_TAG)
+			{
+				// Ignore intermediate paragraphs (see above)
 			}
 			else
 			{
@@ -577,15 +638,30 @@ public final class TreeBuilderInTable
 
 		public void visit(WtNode n)
 		{
-			// anythingElse(n);
-			throw new AssertionError();
+			anythingElse(n);
 		}
 
 		public void visit(WtText n)
 		{
-			if (StringTools.isWhitespace(n.getContent()))
+			String text = n.getContent();
+			if (StringTools.isWhitespace(text))
 			{
 				tb.insertText(n);
+				return;
+			}
+
+			/**
+			 * Leading whitespace stays in the column group, the rest closes
+			 * the column group and is processed by the table.
+			 */
+			int i = 0;
+			while (i < text.length() && Character.isWhitespace(text.charAt(i)))
+				++i;
+
+			if (i > 0)
+			{
+				tb.insertText(getFactory().text(text.substring(0, i)));
+				anythingElse(getFactory().text(text.substring(i)));
 			}
 			else
 			{
@@ -603,6 +679,20 @@ public final class TreeBuilderInTable
 			tb.appendToCurrentNode(n);
 		}
 
+		/**
+		 * R05: A start tag whose tag name is col. The col element is a void
+		 * element and is closed right away.
+		 */
+		private void rule05(WtNode n)
+		{
+			tb.insertAnHtmlElement(n);
+			tb.popFromStack();
+		}
+
+		/**
+		 * R10: Anything else closes the column group and is processed by the
+		 * table.
+		 */
 		private void anythingElse(WtNode n)
 		{
 			dispatch(getFactory().createMissingRepairEndTag(COLGROUP));
@@ -706,6 +796,14 @@ public final class TreeBuilderInTable
 			// throw new AssertionError();
 		}
 
+		public void visit(WtXmlEmptyTag n)
+		{
+			if (isNodeOneOf(n, COL, COLGROUP))
+				rule04(n);
+			else
+				anythingElse(n);
+		}
+
 		public void visit(WtTableRow n)
 		{
 			rule01(n);
@@ -787,12 +885,27 @@ public final class TreeBuilderInTable
 						// front of the table already -> no need to check.
 						continue;
 					case WtNode.NT_TABLE_CAPTION:
+					case WtNode.NT_XML_COMMENT:
 						continue;
 					case WtNode.NT_XML_ELEMENT:
-						if (getNodeType(n) == CAPTION)
-							continue;
-						else
-							; // FALL THROUGH
+						switch (getNodeType(n))
+						{
+							case CAPTION:
+							case COLGROUP:
+								continue;
+							case TBODY:
+							case TFOOT:
+							case THEAD:
+								for (WtNode rows : ((WtXmlElement) n).getBody())
+								{
+									if (getNodeType(rows) == TR)
+										return true;
+								}
+								continue;
+							default:
+								break;
+						}
+						// FALL THROUGH
 					default:
 						// Any other garbage should have been hoisted in front
 						// of the table already.
@@ -929,6 +1042,14 @@ public final class TreeBuilderInTable
 		{
 			anythingElse(n);
 			// throw new AssertionError(n.toString());
+		}
+
+		public void visit(WtXmlEmptyTag n)
+		{
+			if (isNodeOneOf(n, COL, COLGROUP))
+				rule03(n);
+			else
+				anythingElse(n);
 		}
 
 		public void visit(WtTableCell n)
@@ -1093,6 +1214,14 @@ public final class TreeBuilderInTable
 		{
 			anythingElse(n);
 			// throw new AssertionError(n.toString());
+		}
+
+		public void visit(WtXmlEmptyTag n)
+		{
+			if (isNodeOneOf(n, COL, COLGROUP))
+				rule02(n);
+			else
+				anythingElse(n);
 		}
 
 		public void visit(WtTableCaption n)

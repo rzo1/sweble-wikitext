@@ -1,0 +1,1 @@
+<table><col span="2"/><col><tr><td>a</td><td>b</td><td>c</td></tr></table>

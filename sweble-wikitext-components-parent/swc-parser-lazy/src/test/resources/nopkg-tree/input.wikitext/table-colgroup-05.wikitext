@@ -1,0 +1,7 @@
+<table>
+<colgroup> <!-- first two columns --> <col span="2"/>
+<!-- last column -->
+<col/>
+</colgroup>
+<tr><td>a</td><td>b</td><td>c</td></tr>
+</table>

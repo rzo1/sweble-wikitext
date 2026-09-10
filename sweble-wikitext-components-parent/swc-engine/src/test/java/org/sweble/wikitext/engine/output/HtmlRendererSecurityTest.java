@@ -401,6 +401,26 @@ public class HtmlRendererSecurityTest
 	}
 
 	@Test
+	public void testColgroupWithColIsRendered() throws Exception
+	{
+		// Issue #105
+		String html = render("<table><colgroup><col span=\"2\"/></colgroup><tr><td>a</td><td>b</td></tr></table>");
+
+		assertNoEscapedMarkup(html);
+		assertInOrder(html, "<table>", "<colgroup>", "<col span=\"2\" />", "</colgroup>", "<tr>", "<td>", "a", "</td>", "<td>", "b", "</td>", "</tr>", "</table>");
+	}
+
+	@Test
+	public void testColWithoutColgroupIsRendered() throws Exception
+	{
+		String html = render("<table><col span=\"2\" onclick=\"alert(1)\"/><tr><td>a</td></tr></table>");
+
+		assertNoEscapedMarkup(html);
+		assertFalse(html, html.contains("onclick"));
+		assertInOrder(html, "<table>", "<colgroup>", "<col span=\"2\" />", "</colgroup>", "<tr>", "<td>", "a", "</td>", "</tr>", "</table>");
+	}
+
+	@Test
 	public void testRepairedElementsAreRendered() throws Exception
 	{
 		String html = render("<b>a<i>b</b>c</i>") + render("<p>a<div>b</div>c</p>");
