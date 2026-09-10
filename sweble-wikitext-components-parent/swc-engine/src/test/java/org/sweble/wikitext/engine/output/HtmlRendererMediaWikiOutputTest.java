@@ -211,10 +211,13 @@ public class HtmlRendererMediaWikiOutputTest
 		String html = render("[[File:X.png|thumb|Caption|upright=1.5|class=noviewer|lang=de|page=2]]");
 
 		assertInOrder(html, "<div class=\"thumbcaption\">", "Caption", "</div>");
-		assertNotContains(html, "upright=1.5");
-		assertNotContains(html, "class=noviewer");
-		assertNotContains(html, "lang=de");
-		assertNotContains(html, "page=2");
+
+		// Page and language are part of the links to the file (issue #166)
+		String withoutLinks = html.replaceAll("href=\"[^\"]*\"", "");
+		assertNotContains(withoutLinks, "upright=1.5");
+		assertNotContains(withoutLinks, "class=noviewer");
+		assertNotContains(withoutLinks, "lang=de");
+		assertNotContains(withoutLinks, "page=2");
 	}
 
 	@Test
@@ -424,6 +427,137 @@ public class HtmlRendererMediaWikiOutputTest
 	}
 
 	// =========================================================================
+	// Title of inline images (issue #166)
+
+	@Test
+	public void testInlineImageWithoutCaptionHasNoTitle() throws Exception
+	{
+		// Like MediaWiki's Linker::makeImageLink() and ThumbnailImage::toHtml()
+		assertContains(render("[[File:X.png]]"),
+				"<a href=\"/wiki/File:X.png\" class=\"image\"><img alt=\"\" ");
+		assertContains(render("[[File:X.png|left]]"),
+				"<a href=\"/wiki/File:X.png\" class=\"image\"><img alt=\"\" ");
+		assertContains(render("[[File:X.png|link=http://example.com/]]"),
+				"<a href=\"http://example.com/\"><img alt=\"\" ");
+	}
+
+	@Test
+	public void testInlineImageGetsCaptionAsTitle() throws Exception
+	{
+		assertContains(render("[[File:X.png|Cap]]"),
+				"<a href=\"/wiki/File:X.png\" class=\"image\" title=\"Cap\"><img alt=\"Cap\" ");
+		assertContains(render("[[File:X.png|link=Main Page]]"),
+				"<a href=\"/wiki/Main_Page\" title=\"Main Page\"><img alt=\"\" ");
+	}
+
+	@Test
+	public void testMissingInlineImageHasTitle() throws Exception
+	{
+		// Like MediaWiki's Linker::makeBrokenImageLinkObj()
+		assertContains(render("[[File:X.png]]", new TestCallback(-1, -1)),
+				"title=\"File:X.png\"");
+	}
+
+	// =========================================================================
+	// Image options (issue #166)
+
+	@Test
+	public void testUprightScalesDefaultThumbnailWidth() throws Exception
+	{
+		// Like MediaWiki's Linker::makeImageLink(): The default width is
+		// multiplied by the factor and rounded to multiples of ten
+		assertContains(render("[[File:X.png|thumb|upright|Cap]]"), "width=\"140\"");
+		assertContains(render("[[File:X.png|thumb|upright=0.5|Cap]]"), "width=\"90\"");
+		assertContains(render("[[File:X.png|thumb|upright=1.2|Cap]]"), "width=\"220\"");
+		assertContains(render("[[File:X.png|thumb|upright 1.5|Cap]]"), "width=\"270\"");
+		assertContains(render("[[File:X.png|frameless|upright=2]]"), "width=\"360\"");
+		// A factor of 0 means the default factor
+		assertContains(render("[[File:X.png|thumb|upright=0|Cap]]"), "width=\"140\"");
+	}
+
+	@Test
+	public void testUprightDoesNotChangeGivenWidth() throws Exception
+	{
+		assertContains(render("[[File:X.png|thumb|upright=2|100px|Cap]]"), "width=\"100\"");
+		assertContains(render("[[File:X.png|upright|100px]]"), "width=\"100\"");
+	}
+
+	@Test
+	public void testUprightDoesNotScaleInlineImages() throws Exception
+	{
+		// Inline images are shown at the width of the file
+		assertContains(render("[[File:X.png|upright=0.5]]"),
+				"<img alt=\"\" src=\"/images/File:X.png\" width=\"400\" height=\"200\" />");
+	}
+
+	@Test
+	public void testClassIsAddedToImage() throws Exception
+	{
+		assertContains(render("[[File:X.png|class=foo bar]]"),
+				"width=\"400\" height=\"200\" class=\"foo bar\" />");
+		assertContains(render("[[File:X.png|border|class=foo]]"),
+				"class=\"foo thumbborder\" />");
+		assertContains(render("[[File:X.png|thumb|class=foo|Cap]]"),
+				"class=\"foo thumbimage\" />");
+		assertContains(render("[[File:X.png|frame|class=foo|Cap]]"),
+				"class=\"foo thumbimage\" />");
+		// The last class option wins
+		assertContains(render("[[File:X.png|class=a|class=b]]"),
+				"class=\"b\" />");
+	}
+
+	@Test
+	public void testClassIsEscaped() throws Exception
+	{
+		String html = render("[[File:X.png|class=a\"onclick=\"alert(1)]]");
+
+		assertContains(html, "class=\"a&quot;onclick=&quot;alert(1)\"");
+		assertNotContains(html, "\"alert");
+	}
+
+	@Test
+	public void testPageAndLangArePassedToCallbackAndLinks() throws Exception
+	{
+		TestCallback callback = new TestCallback(400, 200);
+		String html = render("[[File:X.png|thumb|page=2|lang=de|Cap]]", callback);
+
+		assertEquals("de", callback.lastLang);
+		assertEquals(2, callback.lastPage);
+		assertContains(html, "src=\"/thumb/page2-langde-File:X.png\"");
+		// Like MediaWiki's MediaTransformOutput::getDescLinkAttribs() ...
+		assertContains(html, "<a href=\"/wiki/File:X.png?page=2&amp;lang=de\" class=\"image\">");
+		// ... and Linker::makeThumbLink2()
+		assertContains(html, "<a href=\"/wiki/File:X.png?page=2\" class=\"internal\" title=\"Enlarge\">");
+	}
+
+	@Test
+	public void testPageAndLangOfInlineImage() throws Exception
+	{
+		TestCallback callback = new TestCallback(400, 200);
+		String html = render("[[File:X.png|page=1|lang=de]]", callback);
+
+		assertEquals("de", callback.lastLang);
+		assertEquals(1, callback.lastPage);
+		// The first page is not added to the link
+		assertContains(html, "<a href=\"/wiki/File:X.png?lang=de\" class=\"image\">");
+
+		html = render("[[File:X.png|page=3|link=Main Page]]", callback);
+		assertEquals(null, callback.lastLang);
+		assertEquals(3, callback.lastPage);
+		assertContains(html, "<a href=\"/wiki/Main_Page\" title=\"Main Page\">");
+	}
+
+	@Test
+	public void testImageWithoutPageAndLang() throws Exception
+	{
+		TestCallback callback = new TestCallback(400, 200);
+		render("[[File:X.png|thumb|Cap]]", callback);
+
+		assertEquals(null, callback.lastLang);
+		assertEquals(-1, callback.lastPage);
+	}
+
+	// =========================================================================
 
 	private static final Pattern EMPTY_PARAGRAPH = Pattern.compile("<p>\\s*</p>");
 
@@ -476,6 +610,10 @@ public class HtmlRendererMediaWikiOutputTest
 
 		private final int fileHeight;
 
+		private String lastLang;
+
+		private int lastPage;
+
 		public TestCallback(int fileWidth, int fileHeight)
 		{
 			this.fileWidth = fileWidth;
@@ -491,8 +629,23 @@ public class HtmlRendererMediaWikiOutputTest
 		@Override
 		public MediaInfo getMediaInfo(String title, int width, int height)
 		{
+			return getMediaInfo(title, width, height, null, -1);
+		}
+
+		@Override
+		public MediaInfo getMediaInfo(String title, int width, int height, String lang, int page)
+		{
+			lastLang = lang;
+			lastPage = page;
+
 			if (fileWidth < 0)
 				return null;
+
+			String prefix = "";
+			if (page > 0)
+				prefix += "page" + page + "-";
+			if (lang != null)
+				prefix += "lang" + lang + "-";
 
 			int thumbWidth = (width > 0) ? width : fileWidth;
 			int thumbHeight = (height > 0) ? height : fileHeight;
@@ -502,7 +655,7 @@ public class HtmlRendererMediaWikiOutputTest
 					"/images/" + title,
 					fileWidth,
 					fileHeight,
-					"/thumb/" + title,
+					"/thumb/" + prefix + title,
 					thumbWidth,
 					thumbHeight);
 		}

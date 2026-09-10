@@ -469,10 +469,15 @@ public class ParserConfigImpl
 		this.langConvTagsEnabled = langConvTagsEnabled;
 	}
 
+	/**
+	 * Language conversion markup is only recognized if it is enabled and at
+	 * least one variant is configured. Like MediaWiki, wikis without variants
+	 * (e.g. the English Wikipedia) show the markup as text.
+	 */
 	@Override
 	public boolean isLangConvTagsEnabled()
 	{
-		return langConvTagsEnabled;
+		return langConvTagsEnabled && !lctVariantMap.isEmpty();
 	}
 
 	@Override
@@ -502,25 +507,35 @@ public class ParserConfigImpl
 	@Override
 	public boolean isLctVariant(String variant)
 	{
-		return lctVariantMap.containsKey(normalizeLctVariant(variant));
+		return lctVariantMap.containsKey(toLctVariantKey(variant));
 	}
 
 	@Override
 	public String normalizeLctVariant(String variant)
 	{
-		variant = variant.trim().toUpperCase();
+		variant = toLctVariantKey(variant);
 		String normalized = lctVariantMap.get(variant);
 		if (normalized == null)
 			normalized = variant;
 		return normalized;
 	}
 
+	/**
+	 * Variant names are matched ignoring case. MediaWiki's variant codes are
+	 * lower case (e.g. "zh-hans").
+	 */
 	public void addLctVariantMapping(String name, String normalized)
 	{
-		String old = lctVariantMap.get(name);
+		String key = toLctVariantKey(name);
+		String old = lctVariantMap.get(key);
 		if (old != null)
 			throw new IllegalArgumentException("LCT variant mapping `" + name + "' already registered.");
-		this.lctVariantMap.put(name, normalized);
+		this.lctVariantMap.put(key, normalized);
+	}
+
+	private static String toLctVariantKey(String variant)
+	{
+		return variant.trim().toLowerCase(Locale.ROOT);
 	}
 
 	// =========================================================================

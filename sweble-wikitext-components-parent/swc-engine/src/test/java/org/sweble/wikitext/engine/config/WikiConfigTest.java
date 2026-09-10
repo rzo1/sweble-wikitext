@@ -44,6 +44,36 @@ public class WikiConfigTest
 	}
 
 	@Test
+	public void testLanguageConversionIsOnlyEnabledWithVariants() throws Exception
+	{
+		// Like MediaWiki on wikis without variants (English Wikipedia)
+		ParserConfigImpl pc = DefaultConfigEnWp.generate().getParserConfig();
+		assertFalse(pc.isLangConvTagsEnabled());
+
+		pc.addLctVariantMapping("zh-hans", "zh-hans");
+		assertTrue(pc.isLangConvTagsEnabled());
+
+		pc.setLangConvTagsEnabled(false);
+		assertFalse(pc.isLangConvTagsEnabled());
+	}
+
+	@Test
+	public void testLctVariantsAreMatchedIgnoringCase() throws Exception
+	{
+		ParserConfigImpl pc = DefaultConfigEnWp.generate().getParserConfig();
+		pc.addLctVariantMapping("zh-hans", "zh-hans");
+		pc.addLctVariantMapping("zh-classical", "lzh");
+
+		assertTrue(pc.isLctVariant("zh-hans"));
+		assertTrue(pc.isLctVariant(" ZH-Hans "));
+		assertEquals("zh-hans", pc.normalizeLctVariant("ZH-HANS"));
+		assertTrue(pc.isLctVariant("zh-classical"));
+		assertEquals("lzh", pc.normalizeLctVariant("zh-classical"));
+		assertFalse(pc.isLctVariant("zh-hant"));
+		assertEquals("zh-hant", pc.normalizeLctVariant("ZH-HANT"));
+	}
+
+	@Test
 	public void testLoadConfig() throws Exception
 	{
 		WikiConfigImpl gconf = DefaultConfigEnWp.generate();

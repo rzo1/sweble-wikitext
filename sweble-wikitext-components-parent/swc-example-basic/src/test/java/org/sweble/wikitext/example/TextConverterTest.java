@@ -155,11 +155,13 @@ public class TextConverterTest
 	}
 
 	@Test
-	public void testLanguageConversionTextIsPrinted() throws Exception
+	public void testLanguageConversionMarkupIsPrinted() throws Exception
 	{
+		// Like MediaWiki the English Wikipedia has no variants and shows the
+		// markup as text
 		String actual = convert("a -{b}- c");
 
-		assertEquals("a b c", actual);
+		assertEquals("a -{b}- c", actual);
 	}
 
 	@Test

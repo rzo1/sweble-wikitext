@@ -104,6 +104,11 @@ private inline WtNode XmlCharRefChoice =
       // TODO: add warnings for incomplete syntax
       yyValue = makeCharRef("&#x", ch, 16);
     }
+  / 'X' ch:HexDigitPlus ';'
+    {
+      // Like MediaWiki's Sanitizer::CHAR_REFS_REGEX
+      yyValue = makeCharRef("&#X", ch, 16);
+    }
   / ch:DigitPlus ';'
     {
       // TODO: add warnings for incomplete syntax

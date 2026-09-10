@@ -160,11 +160,12 @@ public class HtmlRendererPreNowikiTest
 	}
 
 	@Test
-	public void testInvalidCharRefsInNowikiAreEscaped() throws Exception
+	public void testInvalidCharRefsInNowikiAreDecodedToReplacementChar() throws Exception
 	{
-		// Issue #136: Like in normal text
-		for (String html : renderBoth("x <nowiki>&#0; &#xD800; &foo; &amp; &#65; &nbsp;</nowiki> y"))
-			assertContains(html, "x &amp;#0; &amp;#xD800; &amp;foo; &amp; &#65; &nbsp; y");
+		// Issue #166: Like MediaWiki invalid numeric references become U+FFFD,
+		// unknown entities stay text
+		for (String html : renderBoth("x <nowiki>&#0; &#xD800; &#X110000; &#99999999999; &foo; &amp; &#65; &#X41; &nbsp;</nowiki> y"))
+			assertContains(html, "x � � � � &amp;foo; &amp; &#65; &#X41; &nbsp; y");
 	}
 
 	@Test
