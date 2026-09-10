@@ -27,7 +27,7 @@ import jakarta.xml.bind.annotation.XmlType;
 
 @XmlType(
 		name = "namespace",
-		propOrder = { "id", "name", "canonical", "canHaveSubpages", "fileNs", "aliases" })
+		propOrder = { "id", "name", "canonical", "canHaveSubpages", "fileNs", "case", "aliases" })
 public class NamespaceImpl
 		implements
 			Namespace,
@@ -45,6 +45,8 @@ public class NamespaceImpl
 	private boolean canHaveSubpages;
 
 	private boolean fileNs;
+
+	private NamespaceCase caseSetting = NamespaceCase.FIRST_LETTER;
 
 	private TreeSet<String> aliases = new TreeSet<String>();
 
@@ -102,11 +104,24 @@ public class NamespaceImpl
 			boolean isFileNs,
 			Collection<String> aliases)
 	{
+		this(id, name, canonical, subpages, isFileNs, NamespaceCase.FIRST_LETTER, aliases);
+	}
+
+	public NamespaceImpl(
+			int id,
+			String name,
+			String canonical,
+			boolean subpages,
+			boolean isFileNs,
+			NamespaceCase caseSetting,
+			Collection<String> aliases)
+	{
 		this.id = id;
 		this.name = name;
 		this.canHaveSubpages = subpages;
 		this.canonical = canonical;
 		this.fileNs = isFileNs;
+		setCase(caseSetting);
 		this.aliases.addAll(aliases);
 	}
 
@@ -170,6 +185,26 @@ public class NamespaceImpl
 	public void setFileNs(boolean fileNs)
 	{
 		this.fileNs = fileNs;
+	}
+
+	/**
+	 * Configurations without this attribute use
+	 * {@link NamespaceCase#FIRST_LETTER}.
+	 */
+	@Override
+	@XmlAttribute(name = "case")
+	public NamespaceCase getCase()
+	{
+		return caseSetting;
+	}
+
+	/**
+	 * @param caseSetting
+	 *            If null, {@link NamespaceCase#FIRST_LETTER} is used.
+	 */
+	public void setCase(NamespaceCase caseSetting)
+	{
+		this.caseSetting = (caseSetting != null) ? caseSetting : NamespaceCase.FIRST_LETTER;
 	}
 
 	@Override
@@ -249,7 +284,7 @@ public class NamespaceImpl
 	@Override
 	public String toString()
 	{
-		return "NamespaceImpl [id=" + id + ", name=" + name + ", canonical=" + canonical + ", canHaveSubpages=" + canHaveSubpages + ", fileNs=" + fileNs + ", aliases=" + aliases + "]";
+		return "NamespaceImpl [id=" + id + ", name=" + name + ", canonical=" + canonical + ", canHaveSubpages=" + canHaveSubpages + ", fileNs=" + fileNs + ", case=" + caseSetting.getValue() + ", aliases=" + aliases + "]";
 	}
 
 	// =========================================================================

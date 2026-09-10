@@ -18,6 +18,8 @@
 package org.sweble.wikitext.engine.config;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -73,5 +75,44 @@ public class WikiConfigTest
 
 		// Now check if the configurations are really identical
 		assertEquals(xconf, gconf);
+	}
+
+	@Test
+	public void testNamespaceCaseIsSavedAndLoaded() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+		config.getNamespace(0).setCase(NamespaceCase.CASE_SENSITIVE);
+		config.getNamespace(10).setCase(NamespaceCase.CASE_SENSITIVE);
+
+		StringWriter writer = new StringWriter();
+		config.save(writer);
+		String saved = writer.toString();
+		assertTrue(saved, saved.contains("case=\"case-sensitive\""));
+		assertTrue(saved, saved.contains("case=\"first-letter\""));
+
+		WikiConfigImpl loaded = WikiConfigImpl.load(new StringReader(saved));
+
+		assertEquals(NamespaceCase.CASE_SENSITIVE, loaded.getNamespace(0).getCase());
+		assertEquals(NamespaceCase.CASE_SENSITIVE, loaded.getNamespace(10).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, loaded.getNamespace(2).getCase());
+		for (Namespace ns : config.getNamespaces())
+			assertEquals(ns.getName(), ns.getCase(), loaded.getNamespace(ns.getId()).getCase());
+
+		writer = new StringWriter();
+		loaded.save(writer);
+		assertEquals(saved, writer.toString());
+		assertEquals(config, loaded);
+	}
+
+	@Test
+	public void testNamespacesWithoutCaseAreFirstLetter() throws Exception
+	{
+		// The XML configuration has no case attributes
+		WikiConfigImpl config = WikiConfigImpl.load(getClass().getResourceAsStream(
+				"/org/sweble/wikitext/engine/utils/DefaultConfigEnWp.xml"));
+
+		assertFalse(config.getNamespaces().isEmpty());
+		for (Namespace ns : config.getNamespaces())
+			assertEquals(ns.getName(), NamespaceCase.FIRST_LETTER, ns.getCase());
 	}
 }

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<!--
+  Some namespaces of dewiktionary-siteinfo.xml without the case attribute.
+  Used to test that the generator falls back to the case setting of the wiki
+  (siprop=general).
+-->
+<api batchcomplete="">
+	<query>
+		<namespaces>
+			<ns _idx="-1" id="-1" canonical="Special" xml:space="preserve">Spezial</ns>
+			<ns _idx="0" id="0" content="" xml:space="preserve" />
+			<ns _idx="1" id="1" subpages="" canonical="Talk" xml:space="preserve">Diskussion</ns>
+			<ns _idx="2" id="2" subpages="" canonical="User" xml:space="preserve">Benutzer</ns>
+			<ns _idx="3" id="3" subpages="" canonical="User talk" xml:space="preserve">Benutzer Diskussion</ns>
+			<ns _idx="8" id="8" subpages="" canonical="MediaWiki" xml:space="preserve">MediaWiki</ns>
+			<ns _idx="10" id="10" subpages="" canonical="Template" xml:space="preserve">Vorlage</ns>
+		</namespaces>
+	</query>
+</api>

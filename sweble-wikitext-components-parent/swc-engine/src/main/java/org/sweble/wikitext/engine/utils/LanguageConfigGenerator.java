@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sweble.wikitext.engine.config.I18nAliasImpl;
 import org.sweble.wikitext.engine.config.InterwikiImpl;
+import org.sweble.wikitext.engine.config.NamespaceCase;
 import org.sweble.wikitext.engine.config.NamespaceImpl;
 import org.sweble.wikitext.engine.config.TagExtensionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
@@ -112,6 +113,16 @@ public class LanguageConfigGenerator
 
     private static final String DEFAULT_FALLBACK_USER_AGENT =
             "Sweble Wikitext/unknown (+https://github.com/rzo1/sweble-wikitext/";
+
+	private static final int NS_SPECIAL = -1;
+
+	private static final int NS_USER = 2;
+
+	private static final int NS_USER_TALK = 3;
+
+	private static final int NS_MEDIAWIKI = 8;
+
+	private static final int NS_MEDIAWIKI_TALK = 9;
 
 
     // =========================================================================
@@ -196,7 +207,8 @@ public class LanguageConfigGenerator
 	 * @param apiUrlGeneral
 	 *            The URL of the general site information (siprop=general) or
 	 *            null. See {@link #addGeneralSiteInfo(WikiConfigImpl, String,
-	 *            String)} for what it configures.
+	 *            String)} for what it configures. Its case setting is used for
+	 *            the namespaces that do not report their own.
 	 * @param apiUrlExtensiontags
 	 *            If {@code null}, the extension tags of
 	 *            {@link DefaultConfigEnWp} are registered.
@@ -224,12 +236,21 @@ public class LanguageConfigGenerator
 		DefaultConfigEnWp config = new DefaultConfigEnWp();
 		config.configureEngine(wikiConfig);
 
-		// Overrides the link trail and prefix set up by configureEngine()
+		// Used for namespaces that do not report their own case setting
+		NamespaceCase wikiCase = NamespaceCase.FIRST_LETTER;
 		if (apiUrlGeneral != null)
-			addGeneralSiteInfo(wikiConfig, apiUrlGeneral, siteUrl);
+		{
+			NamedNodeMap general = getGeneralSiteInfo(apiUrlGeneral);
+			if (general != null)
+			{
+				// Overrides the link trail and prefix set up by configureEngine()
+				addGeneralSiteInfo(wikiConfig, general, siteUrl);
+				wikiCase = getCase(general, NamespaceCase.FIRST_LETTER);
+			}
+		}
 
 		MultiValueMap namespaceAliases = getNamespaceAliases(apiUrlNamespacealiases);
-		addNamespaces(wikiConfig, apiUrlNamespaces, namespaceAliases);
+		addNamespaces(wikiConfig, apiUrlNamespaces, namespaceAliases, wikiCase);
 		addInterwikis(wikiConfig, apiUrlInterwikimap);
 		addi18NAliases(wikiConfig, apiUrlMagicwords);
 
@@ -299,7 +320,10 @@ public class LanguageConfigGenerator
 	 * $wgScript), article path ($wgServer followed by $wgArticlePath), link
 	 * trail, link prefix and time zone from the general site information
 	 * (siprop=general). Has to be called after the parser was configured
-	 * since it overrides the link trail and the link prefix.
+	 * since it overrides the link trail and the link prefix. The case
+	 * setting of the wiki is not part of the configuration, the case setting
+	 * of each namespace is configured by
+	 * {@link #addNamespaces(WikiConfigImpl, String, MultiValueMap, NamespaceCase)}.
 	 *
 	 * @param siteUrl
 	 *            The URL of the wiki. Its scheme completes the
@@ -314,16 +338,35 @@ public class LanguageConfigGenerator
 			ParserConfigurationException,
 			SAXException
 	{
+		NamedNodeMap attributes = getGeneralSiteInfo(apiUrlGeneral);
+		if (attributes != null)
+			addGeneralSiteInfo(wikiConfig, attributes, siteUrl);
+	}
+
+	/**
+	 * Returns the attributes of the general site information or null if the
+	 * response contains none.
+	 */
+	private static NamedNodeMap getGeneralSiteInfo(String apiUrlGeneral)
+		throws IOException,
+			ParserConfigurationException,
+			SAXException
+	{
 		Document document = getXMLFromUrl(apiUrlGeneral);
 		NodeList generalNodes = document.getElementsByTagName("general");
 		if (generalNodes.getLength() == 0)
 		{
 			logger.warn("No general site information found at `{}'", apiUrlGeneral);
-			return;
+			return null;
 		}
+		return generalNodes.item(0).getAttributes();
+	}
 
-		NamedNodeMap attributes = generalNodes.item(0).getAttributes();
-
+	private static void addGeneralSiteInfo(
+			WikiConfigImpl wikiConfig,
+			NamedNodeMap attributes,
+			String siteUrl)
+	{
 		String siteName = getAttributeValue(attributes, "sitename");
 		if (siteName != null)
 			wikiConfig.setSiteName(siteName);
@@ -601,6 +644,47 @@ public class LanguageConfigGenerator
 	{
 		Node node = attributes.getNamedItem(name);
 		return (node != null) ? node.getNodeValue() : null;
+	}
+
+	/**
+	 * Returns the setting of the {@code case} attribute of a namespace or of
+	 * the general site information, or the given default if the attribute is
+	 * missing or unknown.
+	 */
+	private static NamespaceCase getCase(NamedNodeMap attributes, NamespaceCase defaultCase)
+	{
+		String value = getAttributeValue(attributes, "case");
+		if (value == null)
+			return defaultCase;
+
+		NamespaceCase result = NamespaceCase.fromValue(value);
+		if (result == null)
+		{
+			logger.warn("Unknown case setting `{}', using `{}'", value, defaultCase.getValue());
+			return defaultCase;
+		}
+		return result;
+	}
+
+	/**
+	 * Returns the case setting of a namespace that does not report its own.
+	 * Like MediaWiki's NamespaceInfo::isCapitalized() the special, user and
+	 * MediaWiki namespaces and their talk namespaces are always first-letter,
+	 * all others use the setting of the wiki.
+	 */
+	private static NamespaceCase getDefaultCase(int id, NamespaceCase wikiCase)
+	{
+		switch (id)
+		{
+			case NS_SPECIAL:
+			case NS_USER:
+			case NS_USER_TALK:
+			case NS_MEDIAWIKI:
+			case NS_MEDIAWIKI_TALK:
+				return NamespaceCase.FIRST_LETTER;
+			default:
+				return wikiCase;
+		}
 	}
 
 	/**
@@ -888,6 +972,24 @@ public class LanguageConfigGenerator
 			ParserConfigurationException,
 			SAXException
 	{
+		addNamespaces(wikiConfig, apiUrlNamespaces, nameSpaceAliases, NamespaceCase.FIRST_LETTER);
+	}
+
+	/**
+	 * @param wikiCase
+	 *            The case setting of the wiki as reported by the general site
+	 *            information. Only used for namespaces that do not report
+	 *            their own case setting.
+	 */
+	public static void addNamespaces(
+			WikiConfigImpl wikiConfig,
+			String apiUrlNamespaces,
+			MultiValueMap nameSpaceAliases,
+			NamespaceCase wikiCase)
+		throws IOException,
+			ParserConfigurationException,
+			SAXException
+	{
 		Document document = getXMLFromUrl(apiUrlNamespaces);
 		NodeList apiNamespaces = document.getElementsByTagName("ns");
 
@@ -924,12 +1026,15 @@ public class LanguageConfigGenerator
 				aliases = tmp;
 			}
 
+			NamespaceCase nsCase = getCase(attributes, getDefaultCase(id.intValue(), wikiCase));
+
 			NamespaceImpl namespace = new NamespaceImpl(
 					id.intValue(),
 					name,
 					canonical,
 					canHaveSubpages,
 					fileNs,
+					nsCase,
 					aliases);
 			wikiConfig.addNamespace(namespace);
 

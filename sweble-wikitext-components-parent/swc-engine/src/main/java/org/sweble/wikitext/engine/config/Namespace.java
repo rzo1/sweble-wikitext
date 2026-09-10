@@ -44,4 +44,13 @@ public interface Namespace
 
 	public abstract int getSubjectspaceId();
 
+	/**
+	 * Returns whether the first letter of the titles in this namespace is
+	 * converted to upper case or whether the titles are case-sensitive.
+	 */
+	public default NamespaceCase getCase()
+	{
+		return NamespaceCase.FIRST_LETTER;
+	}
+
 }
