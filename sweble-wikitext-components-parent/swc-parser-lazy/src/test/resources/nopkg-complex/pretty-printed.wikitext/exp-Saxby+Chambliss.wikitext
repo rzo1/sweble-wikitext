@@ -1,82 +1,82 @@
 
 {| class="infobox vcard" style="width: 22em; font-size: 90%; text-align: left"
- | colspan="2" class="n" style="text-align: center; font-size: 125%; font-weight: bold" |<span class="fn">Clarence Saxby Chambliss Jr</span>
- |-
- | colspan="2" style="text-align: center" | [[file:Saxby Chambliss.jpg|225px|alt=|Saxby Chambliss]]<br /><small></small>
- |-
- | colspan="2" style="text-align:center; font-size:110%;" |<hr /><div style="background:lavender; font-weight:bold;">[[United States Senate|United States Senator]]<br />from [[Georgia (U.S. state)|Georgia]]</div>
- |-
- | colspan="2" style="text-align:center; background:lavender;" | '''[[Incumbent]]'''
- |-
- | colspan="2" style="text-align:center;" |'''Assumed&nbsp;office&nbsp;'''<br />January 3, 2003<br />Serving&nbsp;with&nbsp;[[Johnny Isakson]]
- |-
- ! Preceded&nbsp;by
- | [[Max Cleland]]
- |-
- |-
- |-
- | colspan="2" style="text-align:center; font-size:110%;" |<hr /><div style="background:lavender; font-weight:bold;">Member of the [[United States House of Representatives|U.S.&nbsp;House&nbsp;of&nbsp;Representatives]]<br />from [[Georgia (U.S. state)|Georgia]]'s [[Georgia's 8th congressional district|8th]] district
+| colspan="2" class="n" style="text-align: center; font-size: 125%; font-weight: bold" |<span class="fn">Clarence Saxby Chambliss Jr</span>
+|-
+| colspan="2" style="text-align: center" | [[file:Saxby Chambliss.jpg|225px|alt=|Saxby Chambliss]]<br /><small></small>
+|-
+| colspan="2" style="text-align:center; font-size:110%;" |<hr /><div style="background:lavender; font-weight:bold;">[[United States Senate|United States Senator]]<br />from [[Georgia (U.S. state)|Georgia]]</div>
+|-
+| colspan="2" style="text-align:center; background:lavender;" | '''[[Incumbent]]'''
+|-
+| colspan="2" style="text-align:center;" |'''Assumed&nbsp;office&nbsp;'''<br />January 3, 2003<br />Serving&nbsp;with&nbsp;[[Johnny Isakson]]
+|-
+! Preceded&nbsp;by
+| [[Max Cleland]]
+|-
+|-
+|-
+| colspan="2" style="text-align:center; font-size:110%;" |<hr /><div style="background:lavender; font-weight:bold;">Member of the [[United States House of Representatives|U.S.&nbsp;House&nbsp;of&nbsp;Representatives]]<br />from [[Georgia (U.S. state)|Georgia]]'s [[Georgia's 8th congressional district|8th]] district
 </div>
- |-
- | colspan="2" style="border-bottom:none; text-align:center;" |'''In&nbsp;office'''<br />January 3, 1995&nbsp;&ndash;&nbsp;January 3, 2003
- |-
- ! Preceded&nbsp;by
- | [[J. Roy Rowland]]
- |-
- ! Succeeded&nbsp;by
- | [[Mac Collins]]<ref name="sucessessordistrict">In 2002, Georgia was redistricted as per the 2000 Census and some districts were renumbered. Democrat [[Jim Marshall (U.S. politician)|Jim Marshall]] took the seat in {{ushr|Georgia|3|}}, which was substantially the same as the old 8th district Chambliss represented.</ref>
- |-
- ! colspan="2" style="text-align:center; font-size:110%;" | 
+|-
+| colspan="2" style="border-bottom:none; text-align:center;" |'''In&nbsp;office'''<br />January 3, 1995&nbsp;&ndash;&nbsp;January 3, 2003
+|-
+! Preceded&nbsp;by
+| [[J. Roy Rowland]]
+|-
+! Succeeded&nbsp;by
+| [[Mac Collins]]<ref name="sucessessordistrict">In 2002, Georgia was redistricted as per the 2000 Census and some districts were renumbered. Democrat [[Jim Marshall (U.S. politician)|Jim Marshall]] took the seat in {{ushr|Georgia|3|}}, which was substantially the same as the old 8th district Chambliss represented.</ref>
+|-
+! colspan="2" style="text-align:center; font-size:110%;" | 
 
 <hr /><div style="background:lavender;">Chairman of the [[United States Senate Committee on Agriculture, Nutrition and Forestry|Senate Committee on Agriculture, Nutrition and Forestry]]</div>
- |-
- | colspan="2" style="border-bottom:none; text-align:center;" |'''In&nbsp;office'''<br />January 3, 2005&nbsp;&ndash;&nbsp;January 3, 2007
- |-
- ! Preceded&nbsp;by
- | [[Thad Cochran]]
- |-
- ! Succeeded&nbsp;by
- | [[Tom Harkin]]
- |-
- |-
- |-
- |-
- |-
- |-
- |-
- |-
- |-
- |-
- |-
- |-
- |-
- | colspan="2" |<hr />
- |-
- ! Born
- | November 10, 1943<span style="display:none"> (<span class="bday">1943-11-10</span>)</span><span class="noprint"> (age&nbsp;67)</span><br />[[Warrenton, North Carolina|Warrenton]], [[North Carolina]]
- |-
- ! Political&nbsp;party
- | [[Republican Party (United States)|Republican]]
- |-
- ! Spouse(s)
- | Julianne Chambliss
- |-
- ! Residence
- | class="label" | [[Moultrie, Georgia]]
- |-
- ! [[Alma mater|Alma&nbsp;mater]]
- | [[University of Georgia]], [[University of Tennessee|University of Tennessee College of Law]]
- |-
- ! Occupation
- | Lawyer
- |-
- ! Religion
- | [[Episcopal Church in the United States of America|Episcopalian]]
- |-
- ! Website
- | [http://www.saxby.org www.Saxby.org]
- |-
- |}
+|-
+| colspan="2" style="border-bottom:none; text-align:center;" |'''In&nbsp;office'''<br />January 3, 2005&nbsp;&ndash;&nbsp;January 3, 2007
+|-
+! Preceded&nbsp;by
+| [[Thad Cochran]]
+|-
+! Succeeded&nbsp;by
+| [[Tom Harkin]]
+|-
+|-
+|-
+|-
+|-
+|-
+|-
+|-
+|-
+|-
+|-
+|-
+|-
+| colspan="2" |<hr />
+|-
+! Born
+| November 10, 1943<span style="display:none"> (<span class="bday">1943-11-10</span>)</span><span class="noprint"> (age&nbsp;67)</span><br />[[Warrenton, North Carolina|Warrenton]], [[North Carolina]]
+|-
+! Political&nbsp;party
+| [[Republican Party (United States)|Republican]]
+|-
+! Spouse(s)
+| Julianne Chambliss
+|-
+! Residence
+| class="label" | [[Moultrie, Georgia]]
+|-
+! [[Alma mater|Alma&nbsp;mater]]
+| [[University of Georgia]], [[University of Tennessee|University of Tennessee College of Law]]
+|-
+! Occupation
+| Lawyer
+|-
+! Religion
+| [[Episcopal Church in the United States of America|Episcopalian]]
+|-
+! Website
+| [http://www.saxby.org www.Saxby.org]
+|-
+|}
 
 '''Clarence Saxby Chambliss''' (born November 10, 1943) is the senior [[United States Senate|United States Senator]] from [[Georgia (U.S. state)|Georgia]]. He is a member of the [[U.S. Republican Party|Republican Party]]. In the 110th Congress, Chambliss serves as the ranking Republican member of the [[United States Senate Committee on Agriculture, Nutrition and Forestry]], chairing the committee during the 109th Congress (2005-2007).
 
@@ -216,137 +216,137 @@ On environmental issues, in 2003 the [[LCV]] gave Chambliss a 0% rating.<ref>{{c
 <div class="rellink<nowiki> </nowiki>boilerplate seealso">See also: [[:United States Senate election in Georgia, 2008|United States Senate election in Georgia, 2008]]</div>
 
 {| class="wikitable" style="margin:0.5em ; font-size:95%"
- |+ [[Georgia's 8th congressional district]]: Results 1994–2000<ref name="clerkresults">{{cite web |url=http://clerk.house.gov/member_info/electionInfo/index.html |title=Election Statistics |accessdate=2007-08-08 |publisher=Office of the Clerk of the House of Representatives }}</ref>
- !Year
- !
- !Democrat
- !Votes
- !Pct
- !
- !Republican
- !Votes
- !Pct
- !
- |-
- |[[U.S. House election, 1994|1994]]
- |
- | style="background:#B0CEFF" |Craig Mathis
- | style="background:#B0CEFF" align="right" |53,408
- | style="background:#B0CEFF" |37%
- |
- | style="background:#FFB6B6" |'''Saxby Chambliss'''
- | style="background:#FFB6B6" align="right" |89,591
- | style="background:#FFB6B6" |63%
- |
- |-
- |[[U.S. House election, 1996|1996]]
- |
- | style="background:#B0CEFF" |Jim Wiggins
- | style="background:#B0CEFF" align="right" |84,506
- | style="background:#B0CEFF" |47%
- |
- | style="background:#FFB6B6" |'''Saxby Chambliss'''
- | style="background:#FFB6B6" align="right" |93,619
- | style="background:#FFB6B6" |53%
- |
- |-
- |[[U.S. House election, 1998|1998]]
- |
- | style="background:#B0CEFF" |Ronald L. Cain
- | style="background:#B0CEFF" align="right" |53,079
- | style="background:#B0CEFF" |38%
- |
- | style="background:#FFB6B6" |'''Saxby Chambliss'''
- | style="background:#FFB6B6" align="right" |87,993
- | style="background:#FFB6B6" |62%
- |
- |-
- |[[U.S. House election, 2000|2000]]
- |
- | style="background:#B0CEFF" |[[Jim Marshall (U.S. politician)|Jim Marshall]]
- | style="background:#B0CEFF" align="right" |79,051
- | style="background:#B0CEFF" |41%
- |
- | style="background:#FFB6B6" |'''Saxby Chambliss'''
- | style="background:#FFB6B6" align="right" |113,380
- | style="background:#FFB6B6" |59%
- |
- |}
+|+ [[Georgia's 8th congressional district]]: Results 1994–2000<ref name="clerkresults">{{cite web |url=http://clerk.house.gov/member_info/electionInfo/index.html |title=Election Statistics |accessdate=2007-08-08 |publisher=Office of the Clerk of the House of Representatives }}</ref>
+!Year
+!
+!Democrat
+!Votes
+!Pct
+!
+!Republican
+!Votes
+!Pct
+!
+|-
+|[[U.S. House election, 1994|1994]]
+|
+| style="background:#B0CEFF" |Craig Mathis
+| style="background:#B0CEFF" align="right" |53,408
+| style="background:#B0CEFF" |37%
+|
+| style="background:#FFB6B6" |'''Saxby Chambliss'''
+| style="background:#FFB6B6" align="right" |89,591
+| style="background:#FFB6B6" |63%
+|
+|-
+|[[U.S. House election, 1996|1996]]
+|
+| style="background:#B0CEFF" |Jim Wiggins
+| style="background:#B0CEFF" align="right" |84,506
+| style="background:#B0CEFF" |47%
+|
+| style="background:#FFB6B6" |'''Saxby Chambliss'''
+| style="background:#FFB6B6" align="right" |93,619
+| style="background:#FFB6B6" |53%
+|
+|-
+|[[U.S. House election, 1998|1998]]
+|
+| style="background:#B0CEFF" |Ronald L. Cain
+| style="background:#B0CEFF" align="right" |53,079
+| style="background:#B0CEFF" |38%
+|
+| style="background:#FFB6B6" |'''Saxby Chambliss'''
+| style="background:#FFB6B6" align="right" |87,993
+| style="background:#FFB6B6" |62%
+|
+|-
+|[[U.S. House election, 2000|2000]]
+|
+| style="background:#B0CEFF" |[[Jim Marshall (U.S. politician)|Jim Marshall]]
+| style="background:#B0CEFF" align="right" |79,051
+| style="background:#B0CEFF" |41%
+|
+| style="background:#FFB6B6" |'''Saxby Chambliss'''
+| style="background:#FFB6B6" align="right" |113,380
+| style="background:#FFB6B6" |59%
+|
+|}
 
 {| class="wikitable" style="margin:0.5em ; font-size:95%"
- |+ [[List of United States Senators from Georgia|Georgia Senator (Class II)]]: 2002 results<ref name="clerkresults"/>
- !Year
- !
- !Democrat
- !Votes
- !Pct
- !
- !Republican
- !Votes
- !Pct
- !
- !3rd Party
- !Party
- !Votes
- !Pct
- !
- |-
- |[[U.S. Senate election, 2002|2002]]
- |
- | style="background:#B0CEFF" |[[Max Cleland]]
- | style="background:#B0CEFF" align="right" |932,422
- | style="background:#B0CEFF" |46%
- |
- | style="background:#FFB6B6" |<span style="white-space:nowrap;">'''Saxby Chambliss'''</span>
- | style="background:#FFB6B6" align="right" |1,071,352
- | style="background:#FFB6B6" |53%
- |
- | style="background:#ffff66" |Claude "Sandy" Thomas
- | style="background:#ffff66" |[[Libertarian Party (United States)|Libertarian]]
- | style="background:#ffff66" align="right" |27,830
- | style="background:#ffff66" align="right" |1%
- |
- |}
+|+ [[List of United States Senators from Georgia|Georgia Senator (Class II)]]: 2002 results<ref name="clerkresults"/>
+!Year
+!
+!Democrat
+!Votes
+!Pct
+!
+!Republican
+!Votes
+!Pct
+!
+!3rd Party
+!Party
+!Votes
+!Pct
+!
+|-
+|[[U.S. Senate election, 2002|2002]]
+|
+| style="background:#B0CEFF" |[[Max Cleland]]
+| style="background:#B0CEFF" align="right" |932,422
+| style="background:#B0CEFF" |46%
+|
+| style="background:#FFB6B6" |<span style="white-space:nowrap;">'''Saxby Chambliss'''</span>
+| style="background:#FFB6B6" align="right" |1,071,352
+| style="background:#FFB6B6" |53%
+|
+| style="background:#ffff66" |Claude "Sandy" Thomas
+| style="background:#ffff66" |[[Libertarian Party (United States)|Libertarian]]
+| style="background:#ffff66" align="right" |27,830
+| style="background:#ffff66" align="right" |1%
+|
+|}
 
 {| border="1" cellpadding="4" cellspacing="0" style="margin: 1em 1em 1em 0; background: #f9f9f9; border: 1px #aaa solid; border-collapse: collapse; font-size: 95%;"
- |- style="background-color:#E9E9E9"
- ! colspan="6" |2008 Georgia U.S. Senator general election runoff<ref name="Georgia Election Results"/>
- |- style="background-color:#E9E9E9"
- ! colspan="2" style="width: 130px" |Party
- ! style="width: 17em" |Candidate
- ! style="width: 5em" |Votes
- ! style="width: 3.5em" |%
- ! style="width: 3.5em" |±%
- |-
- |- class="vcard"
- ! style="background-color: <nowiki>#FF3333</nowiki>; width: 5px;" |
- | class="org" style="width: 130px" | [[Republican Party (United States)|Republican]]
- | class="fn" | Saxby Chambliss ([[incumbent]])
- | style="text-align: right; margin-right: 0.5em" | 1,226,528
- | style="text-align: right; margin-right: 0.5em" | 57.5%
- | style="text-align: right; margin-right: 0.5em" | 
- |-
- |- class="vcard"
- ! style="background-color: <nowiki>#3333FF</nowiki>; width: 5px;" |
- | class="org" style="width: 130px" | [[Democratic Party (United States)|Democratic]]
- | class="fn" | [[Jim Martin (Georgia politician)|Jim Martin]]
- | style="text-align: right; margin-right: 0.5em" | 907,916
- | style="text-align: right; margin-right: 0.5em" | 42.5%
- | style="text-align: right; margin-right: 0.5em" | 
- |-
- |- style="background-color:#F6F6F6"
- | colspan="3" style="text-align: right; margin-right: 0.5em" | '''Majority'''
- | style="text-align: right; margin-right: 0.5em" | 318,612
- | style="text-align: right; margin-right: 0.5em" | 14.9%
- | style="text-align: right; margin-right: 0.5em" | 
- |-
- |- style="background-color:#F6F6F6"
- | colspan="3" style="text-align: right; margin-right: 0.5em" | '''[[Voter turnout|Turnout]]'''
- | style="text-align: right; margin-right: 0.5em" | 2,134,444
- | style="text-align: right; margin-right: 0.5em" | 
- | style="text-align: right; margin-right: 0.5em" | 
- |-
- |}
+|- style="background-color:#E9E9E9"
+! colspan="6" |2008 Georgia U.S. Senator general election runoff<ref name="Georgia Election Results"/>
+|- style="background-color:#E9E9E9"
+! colspan="2" style="width: 130px" |Party
+! style="width: 17em" |Candidate
+! style="width: 5em" |Votes
+! style="width: 3.5em" |%
+! style="width: 3.5em" |±%
+|-
+|- class="vcard"
+! style="background-color: <nowiki>#FF3333</nowiki>; width: 5px;" |
+| class="org" style="width: 130px" | [[Republican Party (United States)|Republican]]
+| class="fn" | Saxby Chambliss ([[incumbent]])
+| style="text-align: right; margin-right: 0.5em" | 1,226,528
+| style="text-align: right; margin-right: 0.5em" | 57.5%
+| style="text-align: right; margin-right: 0.5em" | 
+|-
+|- class="vcard"
+! style="background-color: <nowiki>#3333FF</nowiki>; width: 5px;" |
+| class="org" style="width: 130px" | [[Democratic Party (United States)|Democratic]]
+| class="fn" | [[Jim Martin (Georgia politician)|Jim Martin]]
+| style="text-align: right; margin-right: 0.5em" | 907,916
+| style="text-align: right; margin-right: 0.5em" | 42.5%
+| style="text-align: right; margin-right: 0.5em" | 
+|-
+|- style="background-color:#F6F6F6"
+| colspan="3" style="text-align: right; margin-right: 0.5em" | '''Majority'''
+| style="text-align: right; margin-right: 0.5em" | 318,612
+| style="text-align: right; margin-right: 0.5em" | 14.9%
+| style="text-align: right; margin-right: 0.5em" | 
+|-
+|- style="background-color:#F6F6F6"
+| colspan="3" style="text-align: right; margin-right: 0.5em" | '''[[Voter turnout|Turnout]]'''
+| style="text-align: right; margin-right: 0.5em" | 2,134,444
+| style="text-align: right; margin-right: 0.5em" | 
+| style="text-align: right; margin-right: 0.5em" | 
+|-
+|}
 
 ==External links==
 
@@ -381,45 +381,45 @@ On environmental issues, in 2003 the [[LCV]] gave Chambliss a 0% rating.<ref>{{c
 *[http://www.sourcewatch.org/index.php?title=Saxby_Chambliss SourceWatch Congresspedia — Saxby Chambliss] profile
 
 {| class="wikitable succession-box" style="margin:0.5em auto; font-size:95%;clear:both;"
- |-
- ! colspan="3" style="background: #cccccc" | [[United States House of Representatives]]
- |- style="text-align:center;"
- | width="30%" align="center" rowspan="1" |Preceded&nbsp;by<br /><span style="font-weight: bold">[[J. Roy Rowland]]</span>
- | width="40%" style="text-align: center;" rowspan="1" |'''Member&nbsp;of&nbsp;the&nbsp;[[List of United States Representatives from Georgia|U.S.&nbsp;House&nbsp;of&nbsp;Representatives]] <br />from  [[Georgia's 8th congressional district]]<nowiki></nowiki>'''<br />1995 – 2003        
- | width="30%" align="center" rowspan="1" | Succeeded&nbsp;by<br /><span style="font-weight: bold">[[Mac Collins]]<ref name="sucessessordistrict"/></span>
- |-
- |-
- ! colspan="3" style="background: #cccccc" | [[United States Senate]]
- |- style="text-align: center;"
- |- style="text-align:center;"
- | width="30%" align="center" rowspan="1" |Preceded&nbsp;by<br /><span style="font-weight: bold">[[Max Cleland]]</span>
- | width="40%" style="text-align: center;" rowspan="1" |'''[[List of United States Senators from Georgia | United States Senator (Class 2) from Georgia]]<nowiki></nowiki>'''<br />2003 &ndash; present        <br /><small>Served alongside: '''[[Zell Miller]], [[Johnny Isakson]]'''</small>
- | width="30%" align="center" rowspan="1" |'''Incumbent'''
- |-
- |-
- ! colspan="3" style="background: #ccccff;" | Political offices
- |- style="text-align:center;"
- | width="30%" align="center" rowspan="1" |Preceded&nbsp;by<br /><span style="font-weight: bold">[[Thad Cochran]]<br /><small>R-[[Mississippi]]</small></span>
+|-
+! colspan="3" style="background: #cccccc" | [[United States House of Representatives]]
+|- style="text-align:center;"
+| width="30%" align="center" rowspan="1" |Preceded&nbsp;by<br /><span style="font-weight: bold">[[J. Roy Rowland]]</span>
+| width="40%" style="text-align: center;" rowspan="1" |'''Member&nbsp;of&nbsp;the&nbsp;[[List of United States Representatives from Georgia|U.S.&nbsp;House&nbsp;of&nbsp;Representatives]] <br />from  [[Georgia's 8th congressional district]]<nowiki></nowiki>'''<br />1995 – 2003        
+| width="30%" align="center" rowspan="1" | Succeeded&nbsp;by<br /><span style="font-weight: bold">[[Mac Collins]]<ref name="sucessessordistrict"/></span>
+|-
+|-
+! colspan="3" style="background: #cccccc" | [[United States Senate]]
+|- style="text-align: center;"
+|- style="text-align:center;"
+| width="30%" align="center" rowspan="1" |Preceded&nbsp;by<br /><span style="font-weight: bold">[[Max Cleland]]</span>
+| width="40%" style="text-align: center;" rowspan="1" |'''[[List of United States Senators from Georgia | United States Senator (Class 2) from Georgia]]<nowiki></nowiki>'''<br />2003 &ndash; present        <br /><small>Served alongside: '''[[Zell Miller]], [[Johnny Isakson]]'''</small>
+| width="30%" align="center" rowspan="1" |'''Incumbent'''
+|-
+|-
+! colspan="3" style="background: #ccccff;" | Political offices
+|- style="text-align:center;"
+| width="30%" align="center" rowspan="1" |Preceded&nbsp;by<br /><span style="font-weight: bold">[[Thad Cochran]]<br /><small>R-[[Mississippi]]</small></span>
 
 <small>
 </small>
- | width="40%" style="text-align: center;" rowspan="1" |'''Chairman of the [[United States Senate Committee on Agriculture, Nutrition and Forestry|Senate Agriculture Committee]]<nowiki></nowiki>'''<br />2005 – 2007        
- | width="30%" align="center" rowspan="1" | Succeeded&nbsp;by<br /><span style="font-weight: bold">[[Tom Harkin]]<br /><small>D-[[Iowa]]</small></span>
+| width="40%" style="text-align: center;" rowspan="1" |'''Chairman of the [[United States Senate Committee on Agriculture, Nutrition and Forestry|Senate Agriculture Committee]]<nowiki></nowiki>'''<br />2005 – 2007        
+| width="30%" align="center" rowspan="1" | Succeeded&nbsp;by<br /><span style="font-weight: bold">[[Tom Harkin]]<br /><small>D-[[Iowa]]</small></span>
 
 <small>
 </small>
- |-
- |-
- ! colspan="3" style="background: #ccffcc;" | [[United States order of precedence]]
- |- style="text-align:center;"
- | width="30%" align="center" rowspan="1" |Preceded&nbsp;by<br /><span style="font-weight: bold">[[Frank Lautenberg]]<br /><small>D-[[New Jersey]]</small></span>
+|-
+|-
+! colspan="3" style="background: #ccffcc;" | [[United States order of precedence]]
+|- style="text-align:center;"
+| width="30%" align="center" rowspan="1" |Preceded&nbsp;by<br /><span style="font-weight: bold">[[Frank Lautenberg]]<br /><small>D-[[New Jersey]]</small></span>
 
 <small>
 </small>
- | width="40%" style="text-align: center;" rowspan="1" |'''''[[List of current United States Senators by seniority|United States Senators by seniority]]''''''''<nowiki></nowiki>'''<br />61st        
- | width="30%" align="center" rowspan="1" | Succeeded&nbsp;by<br /><span style="font-weight: bold">[[Lindsey Graham]]<br /><small>R-[[South Carolina]]</small></span>
- |-
- |}
+| width="40%" style="text-align: center;" rowspan="1" |'''''[[List of current United States Senators by seniority|United States Senators by seniority]]'''''<nowiki/>'''<nowiki></nowiki>'''<br />61st        
+| width="30%" align="center" rowspan="1" | Succeeded&nbsp;by<br /><span style="font-weight: bold">[[Lindsey Graham]]<br /><small>R-[[South Carolina]]</small></span>
+|-
+|}
 
 <table class="navbox " cellspacing="0" style=";"><tr><td style="padding:2px;"><table cellspacing="0" class="nowraplinks collapsible autocollapse " style="width:100%;background:transparent;color:inherit;;"><tr><th style=";" colspan="3" class="navbox-title"><span style="float:left;width:6em;text-align:left;"><span class="noprint plainlinks navbar" style=""><span style="white-space:nowrap;word-spacing:-.12em;">[[Template:USSenGA|<span style=";;background:none transparent;border:none;font-size:100%;" title="View this template">v</span>]]<span style=";;background:none transparent;border:none;font-size:100%;">&#32;<b>&middot;</b>&#32;</span>[[Template talk:USSenGA|<span style=";;background:none transparent;border:none;font-size:100%;" title="Discuss this template">d</span>]]<span style=";;background:none transparent;border:none;font-size:100%;">&#32;<b>&middot;</b>&#32;</span>[http://en.wikipedia.org/w/index.php?title=Template:USSenGA&action=edit <span style=";;background:none transparent;border:none;font-size:100%;" title="Edit this template">e</span>]</span></span></span><span class="" style="font-size:110%;">[[List of United States Senators from Georgia|United States Senators from Georgia]]</span></th></tr><tr style="height:2px;"><td></td></tr><tr><td class="navbox-group" style=";;">Class 2</td><td style="text-align:left;border-left-width:2px;border-left-style:solid;width:100%;padding:0px;;;" class="navbox-list navbox-odd"><div style="padding:0em 0.25em">
 [[William Few|Few]] • [[James Jackson (politician)|Jackson]] • [[George Walton|Walton]] • [[Josiah Tattnall (Senator)|Tattnall]] • [[Abraham Baldwin|Baldwin]] • [[George Jones (U.S. Senator)|Jones]] • [[William H. Crawford|Crawford]] • [[William Bellinger Bulloch|Bulloch]] • [[William Wyatt Bibb|Bibb]] • [[George Troup|Troup]] • [[John Forsyth (Georgia)|Forsyth]] • [[Freeman Walker|Walker]] • [[Nicholas Ware|Ware]] • [[Thomas W. Cobb|Cobb]] • [[Oliver H. Prince|Prince]] • [[George Troup|Troup]] • [[John Pendleton King|King]] • [[Wilson Lumpkin|Lumpkin]] • [[John M. Berrien|Berrien]] • [[Robert M. Charlton|Charlton]] • [[Robert Toombs|Toombs]] • [[Homer V. M. Miller|H. Miller]] • [[Thomas M. Norwood|Norwood]] • [[Benjamin Harvey Hill|B. Hill]] • [[Middleton P. Barrow|Barrow]] • [[Alfred H. Colquitt|A. Colquitt]] • [[Patrick Walsh (politician)|Walsh]] • [[Augustus Octavius Bacon|Bacon]] • [[William Stanley West|West]] • [[Thomas W. Hardwick|Hardwick]] • [[William J. Harris|Harris]] • [[John S. Cohen|Cohen]] • [[Richard Russell, Jr.|Russell]] • [[David H. Gambrell|Gambrell]] • [[Sam Nunn|Nunn]] • [[Max Cleland|Cleland]] • [[Saxby Chambliss|Chambliss]]</div></td><td style="width:0%;padding:0px 0px 0px 2px;" rowspan="3">[[Image:Senate Seal.svg|80px|United States Senate]]</td></tr><tr style="height:2px"><td></td></tr><tr><td class="navbox-group" style=";;">Class 3</td><td style="text-align:left;border-left-width:2px;border-left-style:solid;width:100%;padding:0px;;;" class="navbox-list navbox-even"><div style="padding:0em 0.25em">

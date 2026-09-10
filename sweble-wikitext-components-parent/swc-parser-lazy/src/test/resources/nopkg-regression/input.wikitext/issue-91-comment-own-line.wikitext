@@ -1,0 +1,11 @@
+a
+<!-- after a paragraph -->
+
+b
+
+{|
+| c
+|}
+<!-- after a table -->
+
+d

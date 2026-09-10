@@ -7,9 +7,9 @@ the link title and will now be recognized -> BEWARE!
 ]]
 
 {|
- |* item 1
+|* item 1
 * item 2
- |}
+|}
 
 [[target|
 ]]

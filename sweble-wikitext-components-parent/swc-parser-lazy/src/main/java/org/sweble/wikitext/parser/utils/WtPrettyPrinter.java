@@ -17,6 +17,7 @@
 
 package org.sweble.wikitext.parser.utils;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -155,11 +156,49 @@ public class WtPrettyPrinter
 				}
 			}
 
-			p.print(needQuotes ? "=\"" : "=");
-			dispatch(n.getValue());
-			if (needQuotes)
-				p.print('"');
+			if (!needQuotes)
+			{
+				p.print('=');
+				dispatch(n.getValue());
+				return;
+			}
+
+			// A value containing double quotes is enclosed in single quotes.
+			// If it contains both kinds of quotes, the double quotes are
+			// escaped.
+			boolean hasDoubleQuote = textContains(n.getValue(), '"');
+			boolean hasSingleQuote = textContains(n.getValue(), '\'');
+			char quote = (hasDoubleQuote && !hasSingleQuote) ? '\'' : '"';
+
+			p.print('=');
+			p.print(quote);
+			if (hasDoubleQuote && hasSingleQuote)
+			{
+				for (WtNode c : n.getValue())
+				{
+					if (c.isNodeType(WtNode.NT_TEXT))
+						p.print(((WtText) c).getContent().replace("\"", "&quot;"));
+					else
+						dispatch(c);
+				}
+			}
+			else
+			{
+				dispatch(n.getValue());
+			}
+			p.print(quote);
 		}
+	}
+
+	private static boolean textContains(WtValue value, char ch)
+	{
+		for (WtNode c : value)
+		{
+			if (c.isNodeType(WtNode.NT_TEXT)
+					&& ((WtText) c).getContent().indexOf(ch) != -1)
+				return true;
+		}
+		return false;
 	}
 
 	public void visit(WtXmlEmptyTag n)
@@ -263,11 +302,11 @@ public class WtPrettyPrinter
 		if (indented)
 		{
 			// The surrounding definition list definition terminates the line
-			p.print(" |}");
+			p.print("|}");
 		}
 		else
 		{
-			p.println(" |}");
+			p.println("|}");
 			p.needNewlines(2);
 		}
 	}
@@ -286,7 +325,7 @@ public class WtPrettyPrinter
 	{
 		p.clearEatNewlinesAndIndents();
 		p.capNewlines(1, 1);
-		p.print(" |+");
+		p.print("|+");
 
 		if (!n.getXmlAttributes().isEmpty())
 		{
@@ -294,7 +333,7 @@ public class WtPrettyPrinter
 			p.print(" |");
 		}
 
-		p.eatNewlinesAndIndents(2);
+		eatNewlinesBeforeCellBody(n.getBody());
 		dispatch(n.getBody());
 		p.capNewlines(1, 1);
 	}
@@ -303,7 +342,7 @@ public class WtPrettyPrinter
 	{
 		p.clearEatNewlinesAndIndents();
 		p.capNewlines(1, 1);
-		p.print(" |");
+		p.print("|");
 
 		if (!n.getXmlAttributes().isEmpty())
 		{
@@ -311,7 +350,7 @@ public class WtPrettyPrinter
 			p.print(" |");
 		}
 
-		p.eatNewlinesAndIndents(2);
+		eatNewlinesBeforeCellBody(n.getBody());
 		dispatch(n.getBody());
 		p.capNewlines(1, 1);
 	}
@@ -320,7 +359,7 @@ public class WtPrettyPrinter
 	{
 		p.clearEatNewlinesAndIndents();
 		p.capNewlines(1, 1);
-		p.print(" !");
+		p.print("!");
 
 		if (!n.getXmlAttributes().isEmpty())
 		{
@@ -328,9 +367,37 @@ public class WtPrettyPrinter
 			p.print(" |");
 		}
 
-		p.eatNewlinesAndIndents(2);
+		eatNewlinesBeforeCellBody(n.getBody());
 		dispatch(n.getBody());
 		p.capNewlines(1, 1);
+	}
+
+	private void eatNewlinesBeforeCellBody(WtBody body)
+	{
+		// Preformatted text has to start on a line of its own. Only eat one of
+		// the two newlines it requests.
+		p.eatNewlinesAndIndents(startsWithPre(body) ? 1 : 2);
+	}
+
+	private static boolean startsWithPre(WtBody body)
+	{
+		for (WtNode c : body)
+		{
+			switch (c.getNodeType())
+			{
+				case WtNode.NT_NEWLINE:
+					break;
+				case WtNode.NT_TEXT:
+					if (!((WtText) c).getContent().trim().isEmpty())
+						return false;
+					break;
+				case WtNode.NT_SEMI_PRE:
+					return true;
+				default:
+					return false;
+			}
+		}
+		return false;
 	}
 
 	public void visit(WtTableRow n)
@@ -339,7 +406,7 @@ public class WtPrettyPrinter
 		{
 			p.clearEatNewlinesAndIndents();
 			p.capNewlines(1, 1);
-			p.print(" |-");
+			p.print("|-");
 
 			dispatch(n.getXmlAttributes());
 			p.println();
@@ -546,6 +613,8 @@ public class WtPrettyPrinter
 		List<String> flags = new ArrayList<String>();
 		flags.addAll(n.getFlags());
 		flags.addAll(n.getVariants());
+		if (n.getGarbage() != null)
+			flags.addAll(n.getGarbage());
 		for (int i = 0; i < flags.size(); ++i)
 		{
 			if (i > 0)
@@ -570,9 +639,12 @@ public class WtPrettyPrinter
 
 	public void visit(WtBold n)
 	{
-		p.print("'''");
+		// The ticks of an empty bold would not re-parse as an empty bold
+		if (isEmptyFormatting(n))
+			return;
+		printTicks('b', true);
 		iterate(n);
-		p.print("'''");
+		printTicks('b', false);
 	}
 
 	public void visit(WtDefinitionList n)
@@ -617,9 +689,109 @@ public class WtPrettyPrinter
 
 	public void visit(WtItalics n)
 	{
-		p.print("''");
+		// The ticks of an empty italics would not re-parse as an empty italics
+		if (isEmptyFormatting(n))
+			return;
+		printTicks('i', true);
 		iterate(n);
-		p.print("''");
+		printTicks('i', false);
+	}
+
+	/**
+	 * Checks whether a bold or italics contains nothing but other empty bold
+	 * or italics.
+	 */
+	private static boolean isEmptyFormatting(WtNode n)
+	{
+		for (WtNode c : n)
+		{
+			switch (c.getNodeType())
+			{
+				case WtNode.NT_BOLD:
+				case WtNode.NT_ITALICS:
+					if (!isEmptyFormatting(c))
+						return false;
+					break;
+				default:
+					return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Prints the ticks which open or close a bold ('b') or italics ('i').
+	 *
+	 * Ticks which directly follow other ticks or apostrophes form one run of
+	 * apostrophes when the output is parsed again. A run is only left intact
+	 * if the parser interprets it the same way as the separate runs. Otherwise
+	 * the ticks are separated by an empty nowiki.
+	 */
+	private void printTicks(char format, boolean open)
+	{
+		String before = formatting.toString();
+		if (open)
+			formatting.append(format);
+		else
+			formatting.setLength(formatting.length() - 1);
+		String after = formatting.toString();
+
+		int count = (format == 'b') ? 3 : 2;
+
+		p.flush();
+		if (out.getCount() != ticksRunEnd)
+		{
+			ticksRunApostrophes = out.getTrailingApostrophes();
+			ticksRunCount = 0;
+			ticksRunFormatting = before;
+		}
+
+		if (!isUnambiguousTicksRun(
+				ticksRunApostrophes,
+				ticksRunCount + count,
+				ticksRunFormatting,
+				after))
+		{
+			p.print("<nowiki/>");
+			ticksRunApostrophes = 0;
+			ticksRunCount = 0;
+			ticksRunFormatting = before;
+		}
+
+		p.print(StringTools.strrep('\'', count));
+		ticksRunCount += count;
+		ticksRunEnd = out.getCount();
+	}
+
+	/**
+	 * Checks whether the parser interprets a run of apostrophes which consists
+	 * of the given number of apostrophes from text followed by the given
+	 * number of ticks such that the bold/italics formatting changes from
+	 * <code>before</code> to <code>after</code>.
+	 */
+	private static boolean isUnambiguousTicksRun(
+			int apostrophes,
+			int ticks,
+			String before,
+			String after)
+	{
+		switch (ticks)
+		{
+			case 2:
+				return apostrophes == 0;
+			case 3:
+				// Four apostrophes are an apostrophe followed by bold ticks
+				return apostrophes <= 1;
+			case 5:
+				// Excess apostrophes in front of five ticks remain text
+				return (before.isEmpty() && after.equals("ib"))
+						|| (before.equals("i") && after.equals("b"))
+						|| (before.equals("b") && after.equals("i"))
+						|| (before.equals("ib") && after.isEmpty())
+						|| (before.equals("bi") && after.isEmpty());
+			default:
+				return false;
+		}
 	}
 
 	public void visit(WtLinkOptionAltText n)
@@ -771,9 +943,11 @@ public class WtPrettyPrinter
 
 	public void visit(WtParagraph n)
 	{
+		++insideParagraph;
 		p.needNewlines(2);
 		iterate(n);
 		p.needNewlines(2);
+		--insideParagraph;
 	}
 
 	public void visit(WtSemiPre n)
@@ -842,9 +1016,6 @@ public class WtPrettyPrinter
 		int i = 0;
 		for (WtNode rule : n)
 		{
-			if (rule instanceof WtLctRuleGarbage)
-				// Don't print garbage!
-				continue;
 			if (i++ > 0)
 				p.print(";");
 			dispatch(rule);
@@ -884,6 +1055,13 @@ public class WtPrettyPrinter
 
 	public void visit(WtXmlComment n)
 	{
+		if (insideParagraph == 0 && n.getSuffix().endsWith("\n"))
+		{
+			// A comment on a line of its own which is not part of a paragraph
+			// has to follow the preceding block directly. Otherwise it would
+			// become part of the following paragraph.
+			p.capNewlines(0, 1);
+		}
 		p.print(n.getPrefix());
 		p.print("<!--");
 		p.print(n.getContent());
@@ -898,12 +1076,20 @@ public class WtPrettyPrinter
 
 	public void visit(WtLctRuleGarbage n)
 	{
-		// Don't print garbage!
+		p.print(n.getContent());
 	}
 
 	public void visit(WtText n)
 	{
-		p.print(n.getContent());
+		String content = n.getContent();
+		if (!content.isEmpty() && content.charAt(0) == '\'')
+		{
+			// Apostrophes directly following ticks would become part of them
+			p.flush();
+			if (out.getCount() == ticksRunEnd)
+				p.print("<nowiki/>");
+		}
+		p.print(content);
 	}
 
 	// =========================================================================
@@ -923,17 +1109,33 @@ public class WtPrettyPrinter
 
 	protected final PrinterBase p;
 
+	private final OutputTracker out;
+
 	private final LinkedList<WtNode> scope = new LinkedList<WtNode>();
 
 	private boolean newlineAtEof = false;
 
 	private int insideList;
 
+	private int insideParagraph;
+
+	/** The open bold ('b') and italics ('i') formatting, outermost first. */
+	private final StringBuilder formatting = new StringBuilder();
+
+	private long ticksRunEnd = -1;
+
+	private int ticksRunApostrophes;
+
+	private int ticksRunCount;
+
+	private String ticksRunFormatting;
+
 	// =========================================================================
 
 	public WtPrettyPrinter(Writer writer)
 	{
-		this.p = new PrinterBase(writer);
+		this.out = new OutputTracker(writer);
+		this.p = new PrinterBase(this.out);
 		this.p.setMemoize(false);
 	}
 
@@ -966,5 +1168,63 @@ public class WtPrettyPrinter
 			p.println();
 		p.flush();
 		return result;
+	}
+
+	// =========================================================================
+
+	/**
+	 * Counts the characters written and the apostrophes at the end of the
+	 * output.
+	 */
+	private static final class OutputTracker
+			extends
+				Writer
+	{
+		private final Writer writer;
+
+		private long count = 0;
+
+		private int trailingApostrophes = 0;
+
+		public OutputTracker(Writer writer)
+		{
+			this.writer = writer;
+		}
+
+		public long getCount()
+		{
+			return count;
+		}
+
+		public int getTrailingApostrophes()
+		{
+			return trailingApostrophes;
+		}
+
+		@Override
+		public void write(char[] cbuf, int off, int len) throws IOException
+		{
+			writer.write(cbuf, off, len);
+			for (int i = off; i < off + len; ++i)
+			{
+				if (cbuf[i] == '\'')
+					++trailingApostrophes;
+				else
+					trailingApostrophes = 0;
+			}
+			count += len;
+		}
+
+		@Override
+		public void flush() throws IOException
+		{
+			writer.flush();
+		}
+
+		@Override
+		public void close() throws IOException
+		{
+			writer.close();
+		}
 	}
 }

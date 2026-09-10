@@ -35,42 +35,42 @@ The following text is inserted when '''Insert a table''' is clicked:
 </pre>
 
 {| class="wikitable"
- |-
- ! Header 1
- ! Header 2
- ! Header 3
- |-
- | row 1, cell 1
- | row 1, cell 2
- | row 1, cell 3
- |-
- | row 2, cell 1
- | row 2, cell 2
- | row 2, cell 3
- |-
- | row 3, cell 1
- | row 3, cell 2
- | row 3, cell 3
- |}
+|-
+! Header 1
+! Header 2
+! Header 3
+|-
+| row 1, cell 1
+| row 1, cell 2
+| row 1, cell 3
+|-
+| row 2, cell 1
+| row 2, cell 2
+| row 2, cell 3
+|-
+| row 3, cell 1
+| row 3, cell 2
+| row 3, cell 3
+|}
 
 The sample text ("Header 1" or "row 1, cell 1") is to be replaced with actual data.</div>
 
 == Pipe syntax tutorial ==
 
 {| border="3" style="margin-left: 3em;"
- |-
- ! scope="col" | Column heading 1 
- ! scope="col" | Column heading 2 
- ! scope="col" | Column heading 3
- |-
- ! scope="row" | Row heading 1
- | Cell 2 
- | Cell 3
- |-
- ! scope="row" | Row heading A
- | Cell B
- | Cell C
- |}
+|-
+! scope="col" | Column heading 1 
+! scope="col" | Column heading 2 
+! scope="col" | Column heading 3
+|-
+! scope="row" | Row heading 1
+| Cell 2 
+| Cell 3
+|-
+! scope="row" | Row heading A
+| Cell B
+| Cell C
+|}
 
 Although HTML table syntax also works, special [[wikicode]] can be used as a shortcut to create a table.  The pipe ([[w:vertical bar|vertical bar]]) codes function exactly the same as [[w:HTML table|HTML table]] markup, so a knowledge of HTML table code will help in understanding pipe code.  The shortcuts are as follows:
 
@@ -130,9 +130,9 @@ Although HTML table syntax also works, special [[wikicode]] can be used as a sho
 which is probably not what you want:
 
 {| border="1"
- |-
- | format modifier |These all |(including the pipes)|go into |the first cell
- |}
+|-
+| format modifier |These all |(including the pipes)|go into |the first cell
+|}
 
 However, the format modifier is useful:
 
@@ -144,11 +144,11 @@ However, the format modifier is useful:
  <nowiki>|}</nowiki>
 
 {| border="1"
- |-
- | Cell 1 (no modifier&nbsp;— not aligned)
- |-
- | style="text-align: right;" | Cell 2 (right aligned)
- |}
+|-
+| Cell 1 (no modifier&nbsp;— not aligned)
+|-
+| style="text-align: right;" | Cell 2 (right aligned)
+|}
 
 Just remember: no more than 2 single pipes on a line!
 
@@ -204,19 +204,19 @@ The final table would display like this:
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| border="1"
- |+ The table's caption
- ! scope="col" | Column heading 1 
- ! scope="col" | Column heading 2 
- ! scope="col" | Column heading 3
- |-
- ! scope="row" | Row heading 1
- | Cell 2 
- | Cell 3
- |-
- ! scope="row" | Row heading A
- | Cell B
- | Cell C
- |}
+|+ The table's caption
+! scope="col" | Column heading 1 
+! scope="col" | Column heading 2 
+! scope="col" | Column heading 3
+|-
+! scope="row" | Row heading 1
+| Cell 2 
+| Cell 3
+|-
+! scope="row" | Row heading A
+| Cell B
+| Cell C
+|}
 
 </div>
 The table parameters and cell parameters are the same as in [[w:HTML|HTML]], see  http://www.w3.org/TR/html401/struct/tables.html#edef-TABLE and [[w:Table (HTML)|Table (HTML)]]. However, the <code>thead</code>, <code>tbody</code>, <code>tfoot</code>, <code>colgroup</code>, and <code>col</code> elements are currently not [[Help:HTML in wikitext#Permitted HTML|supported in MediaWiki]].
@@ -257,13 +257,13 @@ As it appears in a browser (note that there are no borders):
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {|
- |-
- | A
- | B
- |-
- | C
- | D
- |}
+|-
+| A
+| B
+|-
+| C
+| D
+|}
 
 </div>
 
@@ -301,38 +301,38 @@ As it appears in a browser (see ''[[Help:User style]]''):
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| class="wikitable" style="text-align: center; width: 200px; height: 200px;"
- |+ Multiplication table
- |-
- ! scope="col" | × 
- ! scope="col" | 1 
- ! scope="col" | 2 
- ! scope="col" | 3
- |-
- ! scope="row" | 1
- | 1 
- | 2 
- | 3
- |-
- ! scope="row" | 2
- | 2 
- | 4 
- | 6
- |-
- ! scope="row" | 3
- | 3 
- | 6 
- | 9
- |-
- ! scope="row" | 4
- | 4 
- | 8 
- | 12
- |-
- ! scope="row" | 5
- | 5 
- | 10 
- | 15
- |}
+|+ Multiplication table
+|-
+! scope="col" | × 
+! scope="col" | 1 
+! scope="col" | 2 
+! scope="col" | 3
+|-
+! scope="row" | 1
+| 1 
+| 2 
+| 3
+|-
+! scope="row" | 2
+| 2 
+| 4 
+| 6
+|-
+! scope="row" | 3
+| 3 
+| 6 
+| 9
+|-
+! scope="row" | 4
+| 4 
+| 8 
+| 12
+|-
+! scope="row" | 5
+| 5 
+| 10 
+| 15
+|}
 
 </div>
 
@@ -355,12 +355,12 @@ As it appears in a browser:
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {|
- |-
- | style="background: red; color: white" | abc
- | def
- | style="background: red;" | <span style="color: white;"> ghi </span>
- | jkl
- |}
+|-
+| style="background: red; color: white" | abc
+| def
+| style="background: red;" | <span style="color: white;"> ghi </span>
+| jkl
+|}
 
 </div>
 
@@ -383,19 +383,19 @@ As it appears in a browser:
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| style="background: yellow; color: green"
- |-
- | abc 
- | def 
- | ghi
- |- style="background: red; color: white"
- | jkl 
- | mno 
- | pqr
- |-
- | stu 
- | style="background: silver" | vwx 
- | yz
- |}
+|-
+| abc 
+| def 
+| ghi
+|- style="background: red; color: white"
+| jkl 
+| mno 
+| pqr
+|-
+| stu 
+| style="background: silver" | vwx 
+| yz
+|}
 
 </div>
 
@@ -426,19 +426,19 @@ As it appears in a browser:
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| style="width:75%; height:200px" border="1"
- |-
- | abc 
- | def 
- | ghi
- |- style="height: 100px;"
- | jkl 
- | style="width: 200px;" | mno 
- | pqr
- |-
- | stu 
- | vwx 
- | yz
- |}
+|-
+| abc 
+| def 
+| ghi
+|- style="height: 100px;"
+| jkl 
+| style="width: 200px;" | mno 
+| pqr
+|-
+| stu 
+| vwx 
+| yz
+|}
 
 </div>
 
@@ -464,19 +464,19 @@ The wiki markup code:
 <div style="background: white; border: 1px solid black; padding: 1em;">
 
 {| border="1" cellpadding="2"
- |-
- ! scope="col" width="50" | Name
- ! scope="col" style="width: 225px;" | Effect
- ! scope="col" style="width: 225px;" | Games Found In
- |-
- |Poké Ball 
- | Regular Poké Ball 
- | All Versions
- |-
- |Great Ball 
- | Better than a Poké Ball 
- | All Versions
- |}
+|-
+! scope="col" width="50" | Name
+! scope="col" style="width: 225px;" | Effect
+! scope="col" style="width: 225px;" | Games Found In
+|-
+|Poké Ball 
+| Regular Poké Ball 
+| All Versions
+|-
+|Great Ball 
+| Better than a Poké Ball 
+| All Versions
+|}
 
 </div>
 
@@ -496,37 +496,37 @@ To set column widths in a table without headers, specify the width in the first 
 <div style="background: white; border: 1px solid black; padding: 1em;">
 
 {| border="1" cellpadding="2"
- |-
- | style="width: 100pt;" | This column is 100 points wide
- | style="width: 200pt;" | This column is 200 points wide
- | style="width: 300pt;" | This column is 300 points wide
- |-
- | blah 
- | blih 
- | bluh
- |}
+|-
+| style="width: 100pt;" | This column is 100 points wide
+| style="width: 200pt;" | This column is 200 points wide
+| style="width: 300pt;" | This column is 300 points wide
+|-
+| blah 
+| blih 
+| bluh
+|}
 
 </div>
 
 One application of setting the widths is aligning columns of consecutive tables:
 
 {| border="1" cellpadding="2"
- |-
- ! scope="col" style="width: 350px;" | Country
- ! scope="col" style="width: 225px;" | Capital
- |-
- | The Netherlands 
- | Amsterdam
- |}
+|-
+! scope="col" style="width: 350px;" | Country
+! scope="col" style="width: 225px;" | Capital
+|-
+| The Netherlands 
+| Amsterdam
+|}
 
 {| border="1" cellpadding="2"
- |-
- ! scope="col" style="width: 350px;" | Country
- ! scope="col" style="width: 225px;" | Capital
- |-
- | France 
- | Paris
- |}
+|-
+! scope="col" style="width: 350px;" | Country
+! scope="col" style="width: 225px;" | Capital
+|-
+| France 
+| Paris
+|}
 
 =====Nowrap=====
 
@@ -535,44 +535,44 @@ In a table that spans the entire width of a page, cells narrower than the widest
 Before:
 
 {| border="1"
- |-
- ! scope="col" | Episode
- ! scope="col" | Date
- ! scope="col" | Summary
- |-
- |"The Journey Begins"
- |January 1, 2010
- |[[Lorem ipsum]] dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
- |-
- |"When Episodes Attack"
- |January 8, 2010
- |Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
- |-
- |"So Long"
- |January 15, 2010
- |Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
- |}
+|-
+! scope="col" | Episode
+! scope="col" | Date
+! scope="col" | Summary
+|-
+|"The Journey Begins"
+|January 1, 2010
+|[[Lorem ipsum]] dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+|-
+|"When Episodes Attack"
+|January 8, 2010
+|Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+|-
+|"So Long"
+|January 15, 2010
+|Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+|}
 
 After:
 
 {| border="1"
- |-
- ! scope="col" | Episode
- ! scope="col" | Date
- ! scope="col" | Summary
- |-
- |"The Journey Begins"
- |January 1, 2010
- |Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
- |-
- | style="white-space:nowrap" |"When Episodes Attack"
- |January 8, 2010
- |Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
- |-
- |"So Long"
- | style="white-space:nowrap" |January 15, 2010
- |Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
- |}
+|-
+! scope="col" | Episode
+! scope="col" | Date
+! scope="col" | Summary
+|-
+|"The Journey Begins"
+|January 1, 2010
+|Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+|-
+| style="white-space:nowrap" |"When Episodes Attack"
+|January 8, 2010
+|Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+|-
+|"So Long"
+| style="white-space:nowrap" |January 15, 2010
+|Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+|}
 
 === Setting borders ===
 
@@ -594,19 +594,19 @@ Table borders default to a complex shaded double-line (the default in HTML); how
 Note the bottom-row texts are centered by 'align="center"' while star-images were not centered.
 
 {| cellpadding="2" style="border: 1px solid darkgrey; margin-left: 4em;"
- |-
- ! style="width: 140px;" | Left
- ! style="width: 150px;" | Middle
- ! style="width: 130px;" | Right
- |- border="0"
- | [[File:StarIconBronze.png|120px]]
- | [[File:StarIconGold.png|120px|Caption when mouse-over image]]
- | [[File:StarIconGreen.png|120px|Green stellar icon]]
- |- align="center"
- | Bronze star 
- | Gold star 
- | Green star
- |}
+|-
+! style="width: 140px;" | Left
+! style="width: 150px;" | Middle
+! style="width: 130px;" | Right
+|- border="0"
+| [[File:StarIconBronze.png|120px]]
+| [[File:StarIconGold.png|120px|Caption when mouse-over image]]
+| [[File:StarIconGreen.png|120px|Green stellar icon]]
+|- align="center"
+| Bronze star 
+| Gold star 
+| Green star
+|}
 
 As long as the "Image:" specs omit the parameter "thumb|" they will not show the caption lines in the table (only during mouse-over). The border color "darkgray" matches typical tables or infoboxes in articles; however, it could be any color name (such as style="border: 1px solid darkgreen;") or use a hex-color (such as: #DDCCBB).
 
@@ -632,19 +632,19 @@ A column format-specifier (enclosed in "|...|") can have a style-parameter to se
 Note only the image cells, here, have individual borders, not the text.
 
 {| cellpadding="2" style="border: 1px solid darkgrey; margin-left:4em;"
- |-
- ! style="width:140px;" |Left 
- ! style="width:150px;" |Middle 
- ! style="width:130px;" |Right
- |- align="center"
- | style="border: 1px solid blue;" |[[File:StarIconBronze.png|120px]]
- | style="border: 1px solid #777;" |[[File:StarIconGold.png|120px|Caption when mouse-over image]]
- | style="border: 1px solid #2a5;" |[[File:StarIconGreen.png|120px|Green stellar icon]]
- |- align="center"
- |Bronze star 
- | Gold star 
- | Green star
- |}
+|-
+! style="width:140px;" |Left 
+! style="width:150px;" |Middle 
+! style="width:130px;" |Right
+|- align="center"
+| style="border: 1px solid blue;" |[[File:StarIconBronze.png|120px]]
+| style="border: 1px solid #777;" |[[File:StarIconGold.png|120px|Caption when mouse-over image]]
+| style="border: 1px solid #2a5;" |[[File:StarIconGreen.png|120px|Green stellar icon]]
+|- align="center"
+|Bronze star 
+| Gold star 
+| Green star
+|}
 
 The lower hex-colors (such as: #616161) are closer to black. Typically, all borders in a table would be one specific color.
 
@@ -653,15 +653,15 @@ The lower hex-colors (such as: #616161) are closer to black. Typically, all bord
 By default data in tables is vertically centrally aligned, which results in odd-looking layouts like this:
 
 {| border="1" cellpadding="2" style="width:400px; margin-left:6em;"
- |-
- ! scope="row" style="width:10%;" | Row heading
- | style="width:70%;" |A longer piece of text. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
- | style="width:20%;" |short text
- |-
- ! scope="row" | Row heading
- | Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.<br /><span style="color: #13a;">Imagine someone scrolling down the page, seeing the tops of "empty" columns, and wondering why they're empty. Use "'''valign=top'''" to align text at the top of columns.</span>
- | short text
- |}
+|-
+! scope="row" style="width:10%;" | Row heading
+| style="width:70%;" |A longer piece of text. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+| style="width:20%;" |short text
+|-
+! scope="row" | Row heading
+| Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.<br /><span style="color: #13a;">Imagine someone scrolling down the page, seeing the tops of "empty" columns, and wondering why they're empty. Use "'''valign=top'''" to align text at the top of columns.</span>
+| short text
+|}
 
 To fix this, apply the valign="top" attribute to the rows (unfortunately it seems to be necessary to apply this individually to every single row). For example:
 <pre style="display: inline-block;">
@@ -678,15 +678,15 @@ To fix this, apply the valign="top" attribute to the rows (unfortunately it seem
 </pre>
 
 {| border="1" cellpadding="2" style="width: 400px; margin-left: 6em;"
- |- valign="top"
- ! scope="row" style="width: 10%;" | Row heading
- | style="width: 70%;" | A longer piece of text. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
- | style="width: 20%;" | short text
- |- valign="top"
- ! scope="row" | Row heading
- | Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.<br /><span style="color: #14a;">Imagine someone scrolling down the page, seeing the tops of "empty" columns, and wondering why they're empty. Use "'''valign=top'''" to align text at the top of columns.</span>
- | short text
- |}
+|- valign="top"
+! scope="row" style="width: 10%;" | Row heading
+| style="width: 70%;" | A longer piece of text. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+| style="width: 20%;" | short text
+|- valign="top"
+! scope="row" | Row heading
+| Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.<br /><span style="color: #14a;">Imagine someone scrolling down the page, seeing the tops of "empty" columns, and wondering why they're empty. Use "'''valign=top'''" to align text at the top of columns.</span>
+| short text
+|}
 
 === Positioning ===
 
@@ -736,29 +736,29 @@ As it appears in a browser:
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| border="1" cellpadding="1" cellspacing="0" style="margin: auto;"
- |+ '''An example table'''
- |-
- ! style="background: #efefef;" | First header
- ! colspan="2" style="background: #ffdead;" | Second header
- |-
- | upper left
- | &nbsp;
- | rowspan="2" style="border-bottom: 3px solid gray; vertical-align: top;" |right side
- |-
- | style="border-bottom: 3px solid gray;" | lower left
- | style="border-bottom: 3px solid gray;" | lower middle
- |-
- | colspan="3" style="text-align: center;" |
+|+ '''An example table'''
+|-
+! style="background: #efefef;" | First header
+! colspan="2" style="background: #ffdead;" | Second header
+|-
+| upper left
+| &nbsp;
+| rowspan="2" style="border-bottom: 3px solid gray; vertical-align: top;" |right side
+|-
+| style="border-bottom: 3px solid gray;" | lower left
+| style="border-bottom: 3px solid gray;" | lower middle
+|-
+| colspan="3" style="text-align: center;" |
 
 {| border="0"
- |+ ''A table in a table''
- |- style="text-align: center;"
- | [[File:Wiki.png]]
- | style="width: 150px;" | [[File:Wiki.png]]
- |-
- | colspan="2" style="text-align: center; border-top: 1px solid red;  border-right: 1px solid red; border-bottom: 2px solid red;  border-left: 1px solid red;" |Two Wikipedia logos
- |}
- |}
+|+ ''A table in a table''
+|- style="text-align: center;"
+| [[File:Wiki.png]]
+| style="width: 150px;" | [[File:Wiki.png]]
+|-
+| colspan="2" style="text-align: center; border-top: 1px solid red;  border-right: 1px solid red; border-bottom: 2px solid red;  border-left: 1px solid red;" |Two Wikipedia logos
+|}
+|}
 
 </div>
 
@@ -793,14 +793,14 @@ This paragraph is before the table.  Lorem ipsum dolor sit
 amet, consectetur adipisicing elit, sed do eiusmod...
 
 {| style="float: right;" border="1"
- |-
- | Col 1, row 1
- | rowspan="2" | Col 2, row 1 (and 2)
- | Col 3, row 1
- |-
- | Col 1, row 2
- | Col 3, row 2
- |}
+|-
+| Col 1, row 1
+| rowspan="2" | Col 2, row 1 (and 2)
+| Col 3, row 1
+|-
+| Col 1, row 2
+| Col 3, row 2
+|}
 
 Note the floating-table to the right.
 
@@ -824,20 +824,20 @@ A table can be used to wrap an image, so that the table can float towards the ce
 The text inside the floating-table is sized by style="font-size: 86%;". That floating-image table floats a typical image-box, but allows adjusting the left-hand margin of the image (see temple-example floating below).
 
 {| class="infobox" style="width: 90px;"
- |-
- ! colspan="2" | Infobox A
- |-
- | colspan="2" | This sample infobox shows how the floating image-box aligns toward the center.
- |}
+|-
+! colspan="2" | Infobox A
+|-
+| colspan="2" | This sample infobox shows how the floating image-box aligns toward the center.
+|}
 
 {| style="float: right; border: 1px solid #BBB; margin: .46em 0 0 .2em;"
- |- style="font-size: 86%;"
- | valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|180px]]<br />&nbsp;Temple of [[Bel (mythology)|Bel]]&nbsp; (floating).
- |}
+|- style="font-size: 86%;"
+| valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|180px]]<br />&nbsp;Temple of [[Bel (mythology)|Bel]]&nbsp; (floating).
+|}
 
 {| style="float: right; clear:right; border: 1px solid black;"
- | valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|thumb|right|This table shows the implicit margins of  Images using "right".]]
- |}
+| valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|thumb|right|This table shows the implicit margins of  Images using "right".]]
+|}
 
 The caption-text can be omitted, or remove the parameter "thumb|" so the caption is hidden until "mouse-over display". Unfortunately the parameter "thumb|" (used for displaying the caption) also controls the auto-thumbnailing to re-size images by user-preferences size. In April 2009, it was not possible to have auto-thumbnail sizing while also concealing the caption: parameter "thumb|" triggers both actions and forces the caption to display.
 
@@ -850,19 +850,19 @@ Note the ''order of precedence'': first come infoboxes or images using "right|",
 If multiple single image-tables are stacked, they will float to align across the page, depending on page-width. The text will be squeezed to allow as many floating-tables as can fit, as auto-aligned, then wrap whatever text (can still fit) at the left-hand side.
 
 {| style="float: right; margin-left:0.2em; border: 1px solid #BBB;"
- |- style="font-size: 87%;"
- | valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|105px]]<br />...by float: right
- |}
+|- style="font-size: 87%;"
+| valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|105px]]<br />...by float: right
+|}
 
 {| style="float: right; margin-left:0.2em; border: 1px solid #BBB;"
- |- style="font-size: 87%;"
- | valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|105px]]<br /> ...images wrap...
- |}
+|- style="font-size: 87%;"
+| valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|105px]]<br /> ...images wrap...
+|}
 
 {| style="float: right; margin-left:0.2em; border: 1px solid #BBB;"
- |- style="font-size: 87%;"
- | valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|105px]]<br />All these...
- |}
+|- style="font-size: 87%;"
+| valign="top" |[[File:DuraEuropos-TempleOfBel.jpg|105px]]<br />All these...
+|}
 
 That auto-aligning feature can be used to create a "floating-gallery" of images: a set of 20 floating-tables will wrap (backward, right-to-left) as if each table were a word of text to wrap across and down the page. To wrap in the typical direction (wrapping left-to-right) define all those floating-tables, instead, as left-side tables using the top parameter style="float:left; margin:0.46em 0.2em". Multiple floating-images empower more flexible typesetting of images around the text.
 
@@ -912,41 +912,41 @@ Seven different (blue) tables are shown nested inside the cells of a table. Auto
 '''As it appears in a browser''':
 
 {| border="1"
- |-
- | α
- | style="text-align: center;" | cell2
+|-
+| α
+| style="text-align: center;" | cell2
 
 {| border="2" style="background: #ABCDEF;"
- |-
- | NESTED
- |-
- | TABLE
- |}
- | style="vertical-align: bottom;" | the original table again
- | style="width: 100px;" |
+|-
+| NESTED
+|-
+| TABLE
+|}
+| style="vertical-align: bottom;" | the original table again
+| style="width: 100px;" |
 
 {| border="2" style="background: #ABCDEF;"
- |-
- | A
- |}
+|-
+| A
+|}
 
 {| border="2" style="background: #ABCDEF;"
- |-
- | B 
- | B
- |}
- | style="width: 50px;" |
+|-
+| B 
+| B
+|}
+| style="width: 50px;" |
 
 {| border="2" style="background: #ABCDEF; float:left;"
- |-
- | C
- |}
+|-
+| C
+|}
 
 {| border="2" style="background: #ABCDEF; float: right;"
- |-
- | D
- |}
- |}
+|-
+| D
+|}
+|}
 
 === Combined use of COLSPAN and ROWSPAN ===
 
@@ -974,24 +974,24 @@ Seven different (blue) tables are shown nested inside the cells of a table. Auto
 '''As it appears in a browser''':
 
 {| border="1" cellpadding="5" cellspacing="0"
- |-
- | Column 1 
- | Column 2 
- | Column 3
- |-
- | rowspan="2" | A
- | colspan="2" style="text-align: center;" | B
- |-
- | C 
- | D
- |-
- | E
- | rowspan="2" colspan="2" style="text-align: center;" | F
- |-
- | G 
- |-
- | colspan="3" style="text-align: center;" | H
- |}
+|-
+| Column 1 
+| Column 2 
+| Column 3
+|-
+| rowspan="2" | A
+| colspan="2" style="text-align: center;" | B
+|-
+| C 
+| D
+|-
+| E
+| rowspan="2" colspan="2" style="text-align: center;" | F
+|-
+| G 
+|-
+| colspan="3" style="text-align: center;" | H
+|}
 
 Note that using <code>rowspan="2"</code> for cell '''G''' combined with <code>rowspan="3"</code> for cell '''F''' to get another row below '''G''' and '''F''' won't work, because all (implicit) cells would be empty.
 Likewise complete columns are not displayed if all their cells are empty. Borders between non-empty and empty cells might be also not displayed (depending on the browser), use <code>&amp;nbsp;</code> to fill an empty cell with dummy content.
@@ -1017,19 +1017,19 @@ Centered tables can be achieved, but they will not "float"; that is to say, no t
 '''As it appears in a browser''':
 
 {| class="wikitable" style="margin: 1em auto 1em auto;"
- |+ '''Cells left-aligned, table centered'''
- ! Duis 
- ! aute 
- ! irure
- |-
- | dolor  
- | in reprehenderit 
- | in voluptate velit
- |-
- | esse cillum dolore 
- | eu fugiat nulla 
- | pariatur.
- |}
+|+ '''Cells left-aligned, table centered'''
+! Duis 
+! aute 
+! irure
+|-
+| dolor  
+| in reprehenderit 
+| in voluptate velit
+|-
+| esse cillum dolore 
+| eu fugiat nulla 
+| pariatur.
+|}
 
 === Setting parameters ===
 
@@ -1046,11 +1046,11 @@ At the start of a cell, add your parameter followed by a single pipe. For exampl
 As it appears in a browser:
 
 {| style="color:white"
- |-
- | style="background:red;" |cell1 
- | style="width:300px; background:blue;" |cell2 
- | style="background:green;" |cell3
- |}
+|-
+| style="background:red;" |cell1 
+| style="width:300px; background:blue;" |cell2 
+| style="background:green;" |cell3
+|}
 
 === Tiny tables within a text line ===
 
@@ -1085,16 +1085,16 @@ As it appears in a browser:
 <div style="background:white; border: 1px solid darkgrey;">
 
 {| cellpadding="0" cellspacing="0"
- |-
- | align="right" | 432 
- | .1
- |-
- | align="right" | 43 
- | .21
- |-
- | align="right" | 4 
- | .321
- |}
+|-
+| align="right" | 432 
+| .1
+|-
+| align="right" | 43 
+| .21
+|-
+| align="right" | 4 
+| .321
+|}
 
 </div>
 
@@ -1124,30 +1124,30 @@ As it appears in a browser:
 <div style="background:white; border: 1px solid darkgrey;">
 
 {| border="1" cellpadding="4" cellspacing="2"
- |
+|
 
 {| cellpadding="0" cellspacing="0" style="width: 100px;"
- |-
- | style="text-align: right; width: 50%;" | 432 
- | style="width: 50%;" | .1
- |}
- |-
- |
+|-
+| style="text-align: right; width: 50%;" | 432 
+| style="width: 50%;" | .1
+|}
+|-
+|
 
 {| cellpadding="0" cellspacing="0" style="width:100px;"
- |-
- | style="text-align: right; width: 50%;" | 43 
- | style="width: 50%;" | .21
- |}
- |-
- |
+|-
+| style="text-align: right; width: 50%;" | 43 
+| style="width: 50%;" | .21
+|}
+|-
+|
 
 {| cellpadding="0" cellspacing="0" style="width:100px;"
- |-
- | style="text-align: right; width: 50%;" | 4 
- | style="width: 50%;" | .321
- |}
- |}
+|-
+| style="text-align: right; width: 50%;" | 4 
+| style="width: 50%;" | .321
+|}
+|}
 
 </div>
 
@@ -1203,38 +1203,38 @@ Instead of remembering table parameters, you just include an appropriate style c
 <div style="background:white; border:0 solid rgb(153, 153, 153); padding:1em;">
 
 {| cellpadding="2"
- |+ Multiplication table
- |-
- ! scope="col" | ×
- ! scope="col" | 1
- ! scope="col" | 2
- ! scope="col" | 3
- |-
- ! scope="row" | 1
- | 1 
- | 2 
- | 3
- |-
- ! scope="row" | 2
- | 2 
- | 4 
- | 6
- |-
- ! scope="row" | 3
- | 3 
- | 6 
- | 9
- |-
- ! scope="row" | 4
- | 4 
- | 8 
- | 12
- |-
- ! scope="row" | 5
- | 5 
- | 10 
- | 15
- |}
+|+ Multiplication table
+|-
+! scope="col" | ×
+! scope="col" | 1
+! scope="col" | 2
+! scope="col" | 3
+|-
+! scope="row" | 1
+| 1 
+| 2 
+| 3
+|-
+! scope="row" | 2
+| 2 
+| 4 
+| 6
+|-
+! scope="row" | 3
+| 3 
+| 6 
+| 9
+|-
+! scope="row" | 4
+| 4 
+| 8 
+| 12
+|-
+! scope="row" | 5
+| 5 
+| 10 
+| 15
+|}
 
 </div></td></tr><tr>
 <td colspan="3" style="text-align: center;">becomes this:</td></tr>
@@ -1268,38 +1268,38 @@ Instead of remembering table parameters, you just include an appropriate style c
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| class="wikitable"
- |+ Multiplication table
- |-
- ! scope="col" | ×
- ! scope="col" | 1
- ! scope="col" | 2
- ! scope="col" | 3
- |-
- ! scope="row" | 1
- | 1 
- | 2 
- | 3
- |-
- ! scope="row" | 2
- | 2 
- | 4 
- | 6
- |-
- ! scope="row" | 3
- | 3 
- | 6 
- | 9
- |-
- ! scope="row" | 4
- | 4 
- | 8 
- | 12
- |-
- ! scope="row" | 5
- | 5 
- | 10 
- | 15
- |}
+|+ Multiplication table
+|-
+! scope="col" | ×
+! scope="col" | 1
+! scope="col" | 2
+! scope="col" | 3
+|-
+! scope="row" | 1
+| 1 
+| 2 
+| 3
+|-
+! scope="row" | 2
+| 2 
+| 4 
+| 6
+|-
+! scope="row" | 3
+| 3 
+| 6 
+| 9
+|-
+! scope="row" | 4
+| 4 
+| 8 
+| 12
+|-
+! scope="row" | 5
+| 5 
+| 10 
+| 15
+|}
 
 </div></td></tr></table>
 
@@ -1338,38 +1338,38 @@ simply by replacing inline CSS for the table by <code>class="wikitable"</code>. 
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| class="wikitable" style="font-style:italic; font-size:120%; border: 3px dashed red;"
- |+ Multiplication table
- |-
- ! scope="col" | ×
- ! scope="col" | 1
- ! scope="col" | 2
- ! scope="col" | 3
- |-
- ! scope="row" | 1
- | 1 
- | 2 
- | 3
- |-
- ! scope="row" | 2
- | 2 
- | 4 
- | 6
- |-
- ! scope="row" | 3
- | 3 
- | 6 
- | 9
- |-
- ! scope="row" | 4
- | 4 
- | 8 
- | 12
- |-
- ! scope="row" | 5
- | 5 
- | 10 
- | 15
- |}
+|+ Multiplication table
+|-
+! scope="col" | ×
+! scope="col" | 1
+! scope="col" | 2
+! scope="col" | 3
+|-
+! scope="row" | 1
+| 1 
+| 2 
+| 3
+|-
+! scope="row" | 2
+| 2 
+| 4 
+| 6
+|-
+! scope="row" | 3
+| 3 
+| 6 
+| 9
+|-
+! scope="row" | 4
+| 4 
+| 8 
+| 12
+|-
+! scope="row" | 5
+| 5 
+| 10 
+| 15
+|}
 
 </div>
 
@@ -1394,13 +1394,13 @@ Classes can also be used to collapse tables, so they are hidden by default.  Use
 Gives:
 
 {| class="wikitable collapsible collapsed"
- |-
- ! Header
- |-
- | Content which starts hidden
- |-
- | more hidden content
- |}
+|-
+! Header
+|-
+| Content which starts hidden
+|-
+| more hidden content
+|}
 
 == Sorting ==
 
@@ -1442,38 +1442,38 @@ A long form of abbreviated content can be put as legend outside the table.
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| class="wikitable sortable"
- |+ Sortable table
- |-
- ! scope="col" | Alphabetic
- ! scope="col" | Numeric
- ! scope="col" | Date
- ! scope="col" class="unsortable" | Unsortable
- |-
- | d 
- | 20 
- | 2008-11-24 
- | This
- |-
- | b 
- | 8 
- | 2004-03-01 
- | column
- |-
- | a 
- | 6 
- | 1979-07-23 
- | cannot
- |-
- | c 
- | 4 
- | 1492-12-08 
- | be
- |-
- | e 
- | 0 
- | 1601-08-13 
- | sorted.
- |}
+|+ Sortable table
+|-
+! scope="col" | Alphabetic
+! scope="col" | Numeric
+! scope="col" | Date
+! scope="col" class="unsortable" | Unsortable
+|-
+| d 
+| 20 
+| 2008-11-24 
+| This
+|-
+| b 
+| 8 
+| 2004-03-01 
+| column
+|-
+| a 
+| 6 
+| 1979-07-23 
+| cannot
+|-
+| c 
+| 4 
+| 1492-12-08 
+| be
+|-
+| e 
+| 0 
+| 1601-08-13 
+| sorted.
+|}
 
 </div>
 
@@ -1510,38 +1510,38 @@ It is possible to collapse a sortable table. To do so, you need to use the code
 <div style="background: white; border: 1px solid rgb(153, 153, 153); padding: 1em;">
 
 {| class="wikitable sortable collapsible"
- |+ Sortable and collapsible table
- |-
- ! scope="col" | Alphabetic
- ! scope="col" | Numeric
- ! scope="col" | Date
- ! scope="col" class="unsortable" | Unsortable
- |-
- | d 
- | 20 
- | 2008-11-24 
- | This
- |-
- | b 
- | 8 
- | 2004-03-01 
- | column
- |-
- | a 
- | 6 
- | 1979-07-23 
- | cannot
- |-
- | c 
- | 4 
- | 1492-12-08 
- | be
- |-
- | e 
- | 0 
- | 1601-08-13 
- | sorted.
- |}
+|+ Sortable and collapsible table
+|-
+! scope="col" | Alphabetic
+! scope="col" | Numeric
+! scope="col" | Date
+! scope="col" class="unsortable" | Unsortable
+|-
+| d 
+| 20 
+| 2008-11-24 
+| This
+|-
+| b 
+| 8 
+| 2004-03-01 
+| column
+|-
+| a 
+| 6 
+| 1979-07-23 
+| cannot
+|-
+| c 
+| 4 
+| 1492-12-08 
+| be
+|-
+| e 
+| 0 
+| 1601-08-13 
+| sorted.
+|}
 
 </div>
 
@@ -1581,23 +1581,23 @@ Using [[m:help:table/example row template]] ([[m:help talk:table/example row tem
 gives:
 
 {| class="wikitable sortable"
- |-
- ! scope="col" | a
- ! scope="col" | b
- ! scope="col" | a/b
- |-
- |  50
- |200
- |0.25
- |-
- |   8
- | 11
- |0.72727272727273
- |-
- |1000
- | 81
- |12.345679012346
- |}
+|-
+! scope="col" | a
+! scope="col" | b
+! scope="col" | a/b
+|-
+|  50
+|200
+|0.25
+|-
+|   8
+| 11
+|0.72727272727273
+|-
+|1000
+| 81
+|12.345679012346
+|}
 
 == Conditional table row ==
 
@@ -1634,15 +1634,15 @@ For a conditional row in a table, we can have:
 Which gives the following table: (note how the second row is missing)
 
 {| class="wikitable"
- |-
- ! scope="row" |  row one, column one
- |row one, column two
+|-
+! scope="row" |  row one, column one
+|row one, column two
 
   
- |-
- ! scope="row" | row three, column one
- | row three, column two
- |}
+|-
+! scope="row" | row three, column one
+| row three, column two
+|}
 
 == Other table syntax ==
 
@@ -1658,35 +1658,35 @@ See also [[w:HTML element#Tables|HTML element#Tables]]. Note however that the <c
 === Comparison of table syntax ===
 
 {| class="wikitable"
- | 
- ! scope="col" | XHTML
- ! scope="col" | Wiki-pipe
- |-
- ! scope="row" | Table
- | <pre><table></table></pre>
- | <pre>{|
+| 
+! scope="col" | XHTML
+! scope="col" | Wiki-pipe
+|-
+! scope="row" | Table
+| <pre><table></table></pre>
+| <pre>{|
 |}</pre>
- |-
- ! scope="row" | Caption
- | <pre><caption>caption</caption></pre>
- | <pre>|+ caption</pre>
- |-
- ! scope="row" | Row
- | <pre><tr></tr></pre>
- | <pre>|-</pre>
- |-
- ! scope="row" | Data cell
- | <pre><td>cell1</td><td>cell2</td>
+|-
+! scope="row" | Caption
+| <pre><caption>caption</caption></pre>
+| <pre>|+ caption</pre>
+|-
+! scope="row" | Row
+| <pre><tr></tr></pre>
+| <pre>|-</pre>
+|-
+! scope="row" | Data cell
+| <pre><td>cell1</td><td>cell2</td>
 <td>cell3</td></pre>
- | <pre>| cell1 || cell2
+| <pre>| cell1 || cell2
 | cell3</pre>
- |-
- ! scope="row" | Header cell
- | <pre><th scope="col">column heading</th></pre><br /><pre><th scope="row">row heading</th></pre>
- | <pre>! scope="col" | column heading</pre><br /><pre>! scope="row" | row heading</pre>
- |-
- ! scope="row" rowspan="2" | Sample table
- | colspan="2" |<table style="margin: auto;" border="1" cellspacing="0" cellpadding="3">
+|-
+! scope="row" | Header cell
+| <pre><th scope="col">column heading</th></pre><br /><pre><th scope="row">row heading</th></pre>
+| <pre>! scope="col" | column heading</pre><br /><pre>! scope="row" | row heading</pre>
+|-
+! scope="row" rowspan="2" | Sample table
+| colspan="2" |<table style="margin: auto;" border="1" cellspacing="0" cellpadding="3">
  <tr>
  <td>1</td>
  <td>2</td>
@@ -1696,8 +1696,8 @@ See also [[w:HTML element#Tables|HTML element#Tables]]. Note however that the <c
  <td>4</td>
  </tr>
 </table>
- |-
- | <pre><table>
+|-
+| <pre><table>
  <tr>
  <td>1</td>
  <td>2</td>
@@ -1707,29 +1707,29 @@ See also [[w:HTML element#Tables|HTML element#Tables]]. Note however that the <c
  <td>4</td>
  </tr>
 </table></pre>
- | <pre>{|
+| <pre>{|
 | 1 || 2
 |-
 | 3 || 4
 |}</pre>
- |- style="vertical-align: top;"
- ! scope="row" | Pros
- |
+|- style="vertical-align: top;"
+! scope="row" | Pros
+|
 
 * Can preview or debug with any XHTML editor
 * Can be indented for easier reading
 * Well-known
 * Insensitive to newlines
 * No characters like "|" which can collide with template and parser function syntax
- |
+|
 
 * Easy to write
 * Easy to read
 * Takes little space
 * Can be learned quickly
- |- style="vertical-align: top;"
- ! scope="row" | Cons
- |
+|- style="vertical-align: top;"
+! scope="row" | Cons
+|
 
 * Tedious
 * Takes a lot of space
@@ -1737,7 +1737,7 @@ See also [[w:HTML element#Tables|HTML element#Tables]]. Note however that the <c
 * Accidentally putting "tr" for "td" can cause confusion for hours.
 * Indented code might not match nesting.
 * In rare cases, newlines can break cells, causing severe confusion since newlines usually are ok.
- |
+|
 
 * Unfamiliar syntax
 * Rigid structure
@@ -1745,11 +1745,11 @@ See also [[w:HTML element#Tables|HTML element#Tables]]. Note however that the <c
 * Text (as in HTML tags) may be easier for some people to read than series of pipes, plus signs, dashes, etc.
 * Requires using [[Template:!]] to pass a "|" in a parameter.
 * Sensitive to newlines; see [[Help:Newlines and spaces]].
- |-
- ! scope="col" | 
- ! scope="col" | XHTML
- ! scope="col" | Wiki-pipe
- |}
+|-
+! scope="col" | 
+! scope="col" | XHTML
+! scope="col" | Wiki-pipe
+|}
 
 See also [[Template talk:For#Tables]].
 
@@ -1844,16 +1844,16 @@ A summary is produced by adding a summary attribute after the start of the table
 produces:
 
 {| summary="Artistic renderings of Germania became more triumphant and monumental."
- | 
+| 
 
 [[File:Philipp Veit 008.jpg|thumb|upright|alt=Robed woman, seated, with sword on her lap|Philipp Veit, ''Germania'', 1834–36]]
- | 
+| 
 
 [[File:Image Germania (painting).jpg|thumb|upright|alt=Robed woman, standing, holding a sword|Philipp Veit, ''Germania'', 1848]]
- | 
+| 
 
 [[File:Niederwald memorial 2.JPG|thumb|upright|alt=Monument of robed woman, standing, holding a crown in one hand and a partly sheathed sword in another|Johannes Schilling, ''Germania'', 1871–83]]
- |}
+|}
 
 == Square monitors ==
 
@@ -1883,77 +1883,77 @@ Type this:
 For this:
 
 {| style="background:none; margin: auto;"
- |-
- | 
+|-
+| 
 
 [[File:Some_window_blinds.JPG|192x155px|thumb|left|Various window shades]]
- | 
+| 
 
 [[File:Vert-blinds-2145-rs.jpg|192x170px|thumb|left|Vertical blinds]]
- | 
+| 
 
 [[File:Gardine.jpg|192x155px|thumb|left|This is not a blind]]
- |}
+|}
 
 {| style="background:none; margin: auto;"
- |-
- | 
+|-
+| 
 
 [[File:Vorhang.jpg|192x155px|thumb|left|Solid shade]]
- | 
+| 
 
 [[File:Jalousie-1.jpg|328x55px|thumb|left|Horizonal blinds]]
- |}
+|}
 
 {| style="background:none; margin: auto;"
- |-
- | 
+|-
+| 
 
 [[File:Some window blinds.JPG|205px|thumb|left|Shade, shutters; vertical & horizontal blinds.]]
- | 
+| 
 
 [[File:Miniblinds detail of mechanism.jpg|388px|thumb|left|Detail of turning rod (blind stick) attachment on miniblinds]]
- |}
+|}
 
 == Vertically oriented column headers ==
 
 Sometimes it is desirable (such as in a table predominantly made of numbers) to rotate text such that it proceeds from top to bottom or bottom to top instead of from left to right or right to left. Currently, browser support for this type of styling as a component of HTML or CSS is sporadic (Internet Explorer is one of the few browsers that supports this in cascading stylesheets, albeit in a non-standard way). An alternative solution that works in most if not all browsers is to use images in place of the text. For instance, the following table uses SVG images instead of text to produce the rotated column headings:
 
 {| class="wikitable" style="text-align: center;"
- |- style="vertical-align: bottom;"
- ! style="width:3em;" | [[File:wpvg_hd_date_page.svg|link=]]
- ! style="width:3em;" | [[File:wpvg_vg_project.svg|link=Wikipedia:WikiProject Video games]]
- ! style="width:3em;" | [[File:wpvg_vg_talk.svg|link=Wikipedia talk:WikiProject Video games]]
- ! style="width:3em;" | [[File:wpvg_vg_portal.svg|link=Portal:Video games]]
- ! style="width:3em;" | [[File:wpvg_vg_article_guidelines.svg|link=Wikipedia:WikiProject Video games/Article guidelines]]
- ! style="width:3em;" | [[File:wpvg_vg_templates.svg|link=Wikipedia:WikiProject Video games/Templates]]
- ! style="width:3em;" | [[File:wpvg_vg_sources.svg|link=Wikipedia:WikiProject Video games/Sources]]
- ! style="width:3em;" | [[File:wpvg_vg_assessment.svg|link=Wikipedia:WikiProject Video games/Assessment]]
- ! style="width:3em;" | [[File:wpvg_vg_cleanup.svg|link=Wikipedia:WikiProject Video games/Cleanup]]
- ! style="width:3em;" | [[File:wpvg_vg_requests.svg|link=Wikipedia:WikiProject Video games/Requests]]
- |-
- ! 05/08
- | 4266 
- | 7828 
- | 7282 
- | 1105 
- | 224 
- | 161 
- | 916 
- | 506 
- | 231
- |-
- ! 04/08
- | 4127 
- | 6190 
- | 6487 
- | 1139 
- | 241 
- | 205 
- | 1165 
- | 478 
- | 301
- |}
+|- style="vertical-align: bottom;"
+! style="width:3em;" | [[File:wpvg_hd_date_page.svg|link=]]
+! style="width:3em;" | [[File:wpvg_vg_project.svg|link=Wikipedia:WikiProject Video games]]
+! style="width:3em;" | [[File:wpvg_vg_talk.svg|link=Wikipedia talk:WikiProject Video games]]
+! style="width:3em;" | [[File:wpvg_vg_portal.svg|link=Portal:Video games]]
+! style="width:3em;" | [[File:wpvg_vg_article_guidelines.svg|link=Wikipedia:WikiProject Video games/Article guidelines]]
+! style="width:3em;" | [[File:wpvg_vg_templates.svg|link=Wikipedia:WikiProject Video games/Templates]]
+! style="width:3em;" | [[File:wpvg_vg_sources.svg|link=Wikipedia:WikiProject Video games/Sources]]
+! style="width:3em;" | [[File:wpvg_vg_assessment.svg|link=Wikipedia:WikiProject Video games/Assessment]]
+! style="width:3em;" | [[File:wpvg_vg_cleanup.svg|link=Wikipedia:WikiProject Video games/Cleanup]]
+! style="width:3em;" | [[File:wpvg_vg_requests.svg|link=Wikipedia:WikiProject Video games/Requests]]
+|-
+! 05/08
+| 4266 
+| 7828 
+| 7282 
+| 1105 
+| 224 
+| 161 
+| 916 
+| 506 
+| 231
+|-
+! 04/08
+| 4127 
+| 6190 
+| 6487 
+| 1139 
+| 241 
+| 205 
+| 1165 
+| 478 
+| 301
+|}
 
 Normally, one problem with this approach is that readers are directed to different pages when they click on the images. To eliminate this problem—or to direct readers to a ''different'' page—you can use the <code>link</code> parameter. A column-header can be coded as follows:
 
@@ -1987,13 +1987,13 @@ A simple framed gallery can be formatted using class="wikitable" to generate the
 Note the result below (with thin-lined cells):
 
 {| class="wikitable"
- |-
- |[[File:Worms 01.jpg|265px]]
- |[[File:Worms Wappen 2005-05-27.jpg|235px]]
- |-
- |Nibelungen Bridge to Worms<br />across the [[Rhine]]
- |Worms and its sister cities
- |}
+|-
+|[[File:Worms 01.jpg|265px]]
+|[[File:Worms Wappen 2005-05-27.jpg|235px]]
+|-
+|Nibelungen Bridge to Worms<br />across the [[Rhine]]
+|Worms and its sister cities
+|}
 
 Another issue about the standard "&lt;gallery>" tag, in 2007-2008, was that it put 4 images per line, overrunning the right margin of a wiki article displayed in portrait-style width (like 800x600), unless the gallery had only 3 images. However, a wikitable uses typical image-links with sizes, such as <nowiki>"[[</nowiki>Image:XXX.jpg|130px]]" so 4 images could be displayed on a wikitable line within a 600px width (for 800x600 resolution screens).
 
@@ -2012,17 +2012,17 @@ Another issue about the standard "&lt;gallery>" tag, in 2007-2008, was that it p
  |}<!--end wikitable--></nowiki>
 
 {| class="wikitable"
- |-
- |[[File:Worms 01.jpg|130px]]
- |[[File:Worms Wappen 2005-05-27.jpg|125px]]
- |[[File:Liberty-statue-with-manhattan.jpg|125px]]
- |[[File:New-York-Jan2005.jpg|115px]]
- |-
- |Nibelungen Bridge to Worms
- |Worms and its sister cities
- |Statue of Liberty
- |New York City
- |}
+|-
+|[[File:Worms 01.jpg|130px]]
+|[[File:Worms Wappen 2005-05-27.jpg|125px]]
+|[[File:Liberty-statue-with-manhattan.jpg|125px]]
+|[[File:New-York-Jan2005.jpg|115px]]
+|-
+|Nibelungen Bridge to Worms
+|Worms and its sister cities
+|Statue of Liberty
+|New York City
+|}
 
 Another advantage about wikitable images, compared to "&lt;gallery>" formatting, is the ability to "square" each image when similar heights are needed, so consider putting 2-number image sizes (such as "199x95px"), where the 2nd number limits height:
 
@@ -2043,17 +2043,17 @@ Another advantage about wikitable images, compared to "&lt;gallery>" formatting,
 Note the 3 images sized "199x95px" appear identical height, of 95px (4th image purposely smaller). The "95px" forces height, while "199x" fits the various widths (could even be "999x"):
 
 {| class="wikitable"
- |-
- |[[File:Liberty-statue-with-manhattan.jpg|199x95px]]
- |[[File:New-York-Jan2005.jpg|199x95px]]
- |[[File:Gold star on blue.gif|199x95px]]
- |[[File:Worms 01.jpg|100x95px]]
- |-
- |Statue of Liberty
- |New York City
- |Star on blue
- |Bridge to Worms
- |}
+|-
+|[[File:Liberty-statue-with-manhattan.jpg|199x95px]]
+|[[File:New-York-Jan2005.jpg|199x95px]]
+|[[File:Gold star on blue.gif|199x95px]]
+|[[File:Worms 01.jpg|100x95px]]
+|-
+|Statue of Liberty
+|New York City
+|Star on blue
+|Bridge to Worms
+|}
 
 Therefore, the use of size "199x95px" (or "999x95px") produces the auto-height-sizing beyond the "&lt;gallery>" tag, and with the option to set taller thumbnails ("199x105px"), or even to have some images purposely smaller than other images of "95px" height.  A very short height ("70px") allows many more images across the table:
 
@@ -2071,14 +2071,14 @@ Therefore, the use of size "199x95px" (or "999x95px") produces the auto-height-s
 The above wikitable-coding produces the result below, of 6 columns:
 
 {| class="wikitable"
- |-
- |[[File:Liberty-statue-with-manhattan.jpg|199x70px]]
- |[[File:Gold star on blue.gif|199x70px]]
- |[[File:New-York-Jan2005.jpg|199x70px]]
- |[[File:Gold star on deep red.gif|199x70px]]
- |[[File:Worms 01.jpg|199x70px]]
- |[[File:Gold star on blue.gif|199x70px]]
- |}
+|-
+|[[File:Liberty-statue-with-manhattan.jpg|199x70px]]
+|[[File:Gold star on blue.gif|199x70px]]
+|[[File:New-York-Jan2005.jpg|199x70px]]
+|[[File:Gold star on deep red.gif|199x70px]]
+|[[File:Worms 01.jpg|199x70px]]
+|[[File:Gold star on blue.gif|199x70px]]
+|}
 
 Once images have been placed in a wikitable, control of formatting can be adjusted when more images are added.
 
@@ -2105,15 +2105,15 @@ In the example below, note how Col2 uses &lt;center>, but Col3 uses "&amp;nbsp;"
 The above coding generates the table below: note the middle garden image is centered (but not the left image), and the right image has 2 spaces before " &nbsp;View...":
 
 {| class="wikitable"
- |-
- |[[File:Domtoren vanaf Brigittenstraat.jpg|299x125px]]
- |<div class="center">[[File:Utrecht 003.jpg|299x125px]]</div>
- |&nbsp;[[File:Uitzicht vanaf de Domtoren.jpg|299x125px]]&nbsp;
- |-
- |Dom tower from Brigittenstraat
- |Cloister garth of the Utrecht Dom Church
- |&nbsp;&nbsp;<small>View from bell tower</small>
- |}
+|-
+|[[File:Domtoren vanaf Brigittenstraat.jpg|299x125px]]
+|<div class="center">[[File:Utrecht 003.jpg|299x125px]]</div>
+|&nbsp;[[File:Uitzicht vanaf de Domtoren.jpg|299x125px]]&nbsp;
+|-
+|Dom tower from Brigittenstraat
+|Cloister garth of the Utrecht Dom Church
+|&nbsp;&nbsp;<small>View from bell tower</small>
+|}
 
 Also note that the tag "&lt;small>" made a smaller text-size caption. However, fonts also can be sized by percent (style="font-size: 87%;"), where the actual percent-size as displayed depends on the various sizes allowed for a particular font.
 <pre>

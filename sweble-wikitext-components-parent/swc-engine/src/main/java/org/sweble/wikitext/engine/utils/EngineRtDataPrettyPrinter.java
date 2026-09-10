@@ -43,7 +43,7 @@ public class EngineRtDataPrettyPrinter
 		else
 		{
 			p.print("<nowiki>");
-			p.print(n.getContent());
+			p.verbatim(n.getContent());
 			p.print("</nowiki>");
 		}
 	}

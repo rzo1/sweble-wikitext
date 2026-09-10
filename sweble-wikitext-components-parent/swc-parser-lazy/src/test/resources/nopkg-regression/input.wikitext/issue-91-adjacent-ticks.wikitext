@@ -1,0 +1,5 @@
+'''''bold italic'' bold'''
+
+'''''bold italic''' italic''
+
+''italic'''''bold'''

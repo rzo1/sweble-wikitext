@@ -2,11 +2,11 @@
 ; Term
 : Definition
 :{| class="wikitable"
- ! Header
- |-
- | Cell
- |} after table
+! Header
+|-
+| Cell
+|} after table
 ::{|
- | Nested
- |}
+| Nested
+|}
 : Last

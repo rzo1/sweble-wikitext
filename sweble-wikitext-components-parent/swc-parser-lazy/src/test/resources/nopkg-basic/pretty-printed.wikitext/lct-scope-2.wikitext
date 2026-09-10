@@ -1,5 +1,5 @@
 
 {|
- |A-{Cell1
- |Cell2}-B
- |}
+|A-{Cell1
+|Cell2}-B
+|}
