@@ -299,6 +299,57 @@ public class CoreParserFunctionsTest
 		assertEquals("", expand("{{NSE:0}}"));
 	}
 
+	@Test
+	public void testNsAcceptsUnderscores() throws Exception
+	{
+		assertEquals("User talk", expand("{{ns:User_talk}}"));
+		assertEquals("User_talk", expand("{{nse:User_talk}}"));
+		assertEquals("File talk", expand("{{ns:image_talk}}"));
+	}
+
+	// =========================================================================
+	// == TALKSPACE, SUBJECTSPACE, NAMESPACENUMBER
+
+	@Test
+	public void testNamespaceVariablesOfCurrentPage() throws Exception
+	{
+		assertEquals("Talk", expand("{{TALKSPACE}}"));
+		assertEquals("", expand("{{SUBJECTSPACE}}"));
+		assertEquals("0", expand("{{NAMESPACENUMBER}}"));
+
+		assertEquals("Help talk", expand("Help talk:Foo bar", "{{TALKSPACE}}"));
+		assertEquals("Help_talk", expand("Help talk:Foo bar", "{{TALKSPACEE}}"));
+		assertEquals("Help", expand("Help talk:Foo bar", "{{SUBJECTSPACE}}"));
+		assertEquals("Help", expand("Help talk:Foo bar", "{{SUBJECTSPACEE}}"));
+		assertEquals("Help", expand("Help talk:Foo bar", "{{ARTICLESPACEE}}"));
+		assertEquals("13", expand("Help talk:Foo bar", "{{NAMESPACENUMBER}}"));
+	}
+
+	@Test
+	public void testNamespaceVariablesWithTitleArgument() throws Exception
+	{
+		assertEquals("User talk", expand("{{TALKSPACE:User:Foo}}"));
+		assertEquals("User talk", expand("{{TALKSPACE:User talk:Foo}}"));
+		assertEquals("User_talk", expand("{{TALKSPACEE:User:Foo}}"));
+		assertEquals("Talk", expand("{{TALKSPACE:Foo}}"));
+		assertEquals("User", expand("{{SUBJECTSPACE:User talk:Foo}}"));
+		assertEquals("User", expand("{{ARTICLESPACE:User talk:Foo}}"));
+		assertEquals("User", expand("{{SUBJECTSPACEE:User talk:Foo}}"));
+		assertEquals("", expand("{{SUBJECTSPACE:Talk:Foo}}"));
+		assertEquals("3", expand("{{NAMESPACENUMBER:User talk:Foo}}"));
+		assertEquals("Wikipedia talk", expand("{{TALKSPACE:{{ns:4}}:Foo}}"));
+	}
+
+	@Test
+	public void testNamespaceVariablesOfPagesWithoutTalkPage() throws Exception
+	{
+		assertEquals("", expand("{{TALKSPACE:Special:Foo}}"));
+		assertEquals("", expand("{{TALKSPACEE:Media:Foo.png}}"));
+		assertEquals("Special", expand("{{SUBJECTSPACE:Special:Foo}}"));
+		assertEquals("Media", expand("{{SUBJECTSPACEE:Media:Foo.png}}"));
+		assertEquals("-1", expand("{{NAMESPACENUMBER:Special:Foo}}"));
+	}
+
 	// =========================================================================
 	// == SERVER, SERVERNAME, SCRIPTPATH
 
@@ -420,7 +471,12 @@ public class CoreParserFunctionsTest
 
 	private String expand(String wikitext) throws Exception
 	{
-		PageId pageId = new PageId(PageTitle.make(config, "Test"), -1);
+		return expand("Test", wikitext);
+	}
+
+	private String expand(String title, String wikitext) throws Exception
+	{
+		PageId pageId = new PageId(PageTitle.make(config, title), -1);
 
 		EngProcessedPage page = engine.expand(pageId, wikitext, new MapCallback());
 
