@@ -68,20 +68,23 @@ public class XPath
 				while (results.hasNext())
 					r.add(results.next());
 
-				System.err.println("Found " + r.size() + " matching nodes.");
+				System.err.println("Found " + r.size() + " results.");
 
 				StringBuilder b = new StringBuilder();
 
 				int i = 1;
 				for (Object o : r)
 				{
-					WtNode n = (WtNode) o;
 					b.append('(');
 					b.append(query);
 					b.append(")[");
 					b.append(i);
 					b.append("]:\n\"\"\"");
-					b.append(WtRtDataPrinter.print(n));
+					// Queries can also yield numbers, strings or attribute values
+					if (o instanceof WtNode)
+						b.append(WtRtDataPrinter.print((WtNode) o));
+					else
+						b.append(String.valueOf(o));
 					b.append("\"\"\"\n\n");
 					++i;
 				}

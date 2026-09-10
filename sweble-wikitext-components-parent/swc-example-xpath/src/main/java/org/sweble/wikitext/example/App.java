@@ -37,7 +37,7 @@ public class App
 
 	public static void main(String[] args) throws IOException, LinkTargetException, EngineException
 	{
-		if (args.length < 1)
+		if (args.length != 2)
 		{
 			System.err.println("Usage: java -jar swc-example-xpath-VERSION.jar TITLE QUERY");
 			System.err.println();

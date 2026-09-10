@@ -43,27 +43,28 @@ public class App
 {
 	public static void main(String[] args) throws IOException, LinkTargetException, EngineException
 	{
-		if (args.length < 1)
-		{
-			System.err.println("Usage: java -jar swc-example-basic-VERSION.jar [--html|--text] TITLE");
-			System.err.println();
-			System.err.println("  The program will look for a file called `TITLE.wikitext',");
-			System.err.println("  parse the file and write an HTML version to `TITLE.html'.");
-			return;
-		}
-
 		boolean renderHtml = true;
 
 		int i = 0;
-		if (args[i].equalsIgnoreCase("--html"))
+		if (args.length > 0 && args[i].equalsIgnoreCase("--html"))
 		{
 			renderHtml = true;
 			++i;
 		}
-		else if (args[i].equalsIgnoreCase("--text"))
+		else if (args.length > 0 && args[i].equalsIgnoreCase("--text"))
 		{
 			renderHtml = false;
 			++i;
+		}
+
+		if (args.length != i + 1)
+		{
+			System.err.println("Usage: java -jar swc-example-basic-VERSION.jar [--html|--text] TITLE");
+			System.err.println();
+			System.err.println("  The program will look for a file called `TITLE.wikitext',");
+			System.err.println("  parse the file and write an HTML version to `TITLE.html'");
+			System.err.println("  or a text version to `TITLE.text'.");
+			return;
 		}
 
 		String fileTitle = args[i];
