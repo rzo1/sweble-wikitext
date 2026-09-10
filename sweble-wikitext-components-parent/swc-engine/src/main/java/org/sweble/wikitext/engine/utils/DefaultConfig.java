@@ -914,11 +914,11 @@ public class DefaultConfig
 				"safesubst",
 				false,
 				Arrays.asList("SAFESUBST:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"msgnw",
 				false,
 				Arrays.asList("MSGNW:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"img_thumbnail",
 				true,
@@ -1006,11 +1006,11 @@ public class DefaultConfig
 				"img_alt",
 				true,
 				Arrays.asList("alt=$1")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"int",
 				false,
 				Arrays.asList("INT:")));
-		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"sitename",
 				true,
@@ -1019,7 +1019,6 @@ public class DefaultConfig
 				"ns",
 				false,
 				Arrays.asList("NS:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"nse",
 				false,
@@ -1032,10 +1031,12 @@ public class DefaultConfig
 				"localurle",
 				false,
 				Arrays.asList("LOCALURLE:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"articlepath",
 				false,
 				Arrays.asList("ARTICLEPATH")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"server",
 				false,
@@ -1048,14 +1049,17 @@ public class DefaultConfig
 				"scriptpath",
 				false,
 				Arrays.asList("SCRIPTPATH")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"stylepath",
 				false,
 				Arrays.asList("STYLEPATH")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"grammar",
 				false,
 				Arrays.asList("GRAMMAR:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"gender",
 				false,
@@ -1108,16 +1112,15 @@ public class DefaultConfig
 				"revisionuser",
 				true,
 				Arrays.asList("REVISIONUSER")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"plural",
 				false,
 				Arrays.asList("PLURAL:")));
-		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"fullurl",
 				false,
 				Arrays.asList("FULLURL:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"fullurle",
 				false,
@@ -1130,7 +1133,6 @@ public class DefaultConfig
 				"canonicalurle",
 				false,
 				Arrays.asList("CANONICALURLE:")));
-		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"lcfirst",
 				false,
@@ -1152,10 +1154,12 @@ public class DefaultConfig
 				"raw",
 				false,
 				Arrays.asList("RAW:")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"displaytitle",
 				true,
-				Arrays.asList("DISPLAYTITLE")));
+				Arrays.asList("DISPLAYTITLE:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"rawsuffix",
 				true,
@@ -1169,11 +1173,11 @@ public class DefaultConfig
 				"urlencode",
 				false,
 				Arrays.asList("URLENCODE:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"anchorencode",
 				false,
-				Arrays.asList("ANCHORENCODE")));
+				Arrays.asList("ANCHORENCODE:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"currenttimestamp",
 				true,
@@ -1200,20 +1204,20 @@ public class DefaultConfig
 				"numberofadmins",
 				true,
 				Arrays.asList("NUMBEROFADMINS")));
+		*/
 		c.addI18nAlias(new I18nAliasImpl(
 				"formatnum",
 				false,
-				Arrays.asList("FORMATNUM")));
-		*/
+				Arrays.asList("FORMATNUM:")));
 		c.addI18nAlias(new I18nAliasImpl(
 				"padleft",
 				false,
 				Arrays.asList("PADLEFT:")));
-		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"padright",
 				false,
-				Arrays.asList("PADRIGHT")));
+				Arrays.asList("PADRIGHT:")));
+		/*
 		c.addI18nAlias(new I18nAliasImpl(
 				"special",
 				false,
@@ -1334,28 +1338,36 @@ public class DefaultConfig
 		addParserFunctionGroup(c, ConvertPnfExt.group(c), skipGroupsWithMissingAliases);
 	}
 
+	/**
+	 * Registers a group of parser functions.
+	 *
+	 * @param skipGroupsWithMissingAliases
+	 *            If true, only the parser functions the configuration has an
+	 *            alias for are registered (a wiki may not know every parser
+	 *            function of a group). A group without any such parser
+	 *            function is skipped.
+	 */
 	protected void addParserFunctionGroup(
 			WikiConfigImpl c,
 			ParserFunctionGroup group,
 			boolean skipGroupsWithMissingAliases)
 	{
-		boolean skip = false;
-		if (skipGroupsWithMissingAliases)
-		{
-			for (ParserFunctionBase pfn : group.getParserFunctions())
-			{
-				I18nAliasImpl alias = c.getI18nAliasById(pfn.getId());
-				if (alias == null)
-				{
-					skip = true;
-					break;
-				}
-			}
-		}
-		if (!skip)
+		if (!skipGroupsWithMissingAliases)
 		{
 			c.addParserFunctionGroup(group);
+			return;
 		}
+
+		ParserFunctionGroup known = new ParserFunctionGroup(group.getName());
+		for (ParserFunctionBase pfn : group.getParserFunctions())
+		{
+			I18nAliasImpl alias = c.getI18nAliasById(pfn.getId());
+			if (alias != null)
+				known.addParserFunction(pfn);
+		}
+
+		if (!known.getParserFunctions().isEmpty())
+			c.addParserFunctionGroup(known);
 	}
 
 	protected void addTagExtensions(WikiConfigImpl c)

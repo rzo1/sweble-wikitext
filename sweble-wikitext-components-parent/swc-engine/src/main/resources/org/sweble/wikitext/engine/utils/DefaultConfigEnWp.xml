@@ -719,6 +719,9 @@
         <interwiki prefix="Ĉej" local="false" trans="false" url="http://esperanto.blahus.cz/cxej/vikio/index.php/$1"/>
     </interwikis>
     <i18nAliases>
+        <i18nAlias id="anchorencode" caseSensitive="false">
+            <alias>ANCHORENCODE:</alias>
+        </i18nAlias>
         <i18nAlias id="basepagename" caseSensitive="true">
             <alias>BASEPAGENAME</alias>
             <alias>BASEPAGENAME:</alias>
@@ -726,6 +729,12 @@
         <i18nAlias id="basepagenamee" caseSensitive="true">
             <alias>BASEPAGENAMEE</alias>
             <alias>BASEPAGENAMEE:</alias>
+        </i18nAlias>
+        <i18nAlias id="canonicalurl" caseSensitive="false">
+            <alias>CANONICALURL:</alias>
+        </i18nAlias>
+        <i18nAlias id="canonicalurle" caseSensitive="false">
+            <alias>CANONICALURLE:</alias>
         </i18nAlias>
         <i18nAlias id="contentlanguage" caseSensitive="true">
             <alias>CONTENTLANG</alias>
@@ -746,11 +755,17 @@
             <alias>DEFAULTSORT:</alias>
             <alias>DEFAULTSORTKEY:</alias>
         </i18nAlias>
+        <i18nAlias id="displaytitle" caseSensitive="true">
+            <alias>DISPLAYTITLE:</alias>
+        </i18nAlias>
         <i18nAlias id="expr" caseSensitive="false">
             <alias>#expr:</alias>
         </i18nAlias>
         <i18nAlias id="filepath" caseSensitive="false">
             <alias>FILEPATH:</alias>
+        </i18nAlias>
+        <i18nAlias id="formatnum" caseSensitive="false">
+            <alias>FORMATNUM:</alias>
         </i18nAlias>
         <i18nAlias id="fullpagename" caseSensitive="true">
             <alias>FULLPAGENAME</alias>
@@ -762,6 +777,12 @@
         </i18nAlias>
         <i18nAlias id="fullurl" caseSensitive="false">
             <alias>FULLURL:</alias>
+        </i18nAlias>
+        <i18nAlias id="fullurle" caseSensitive="false">
+            <alias>FULLURLE:</alias>
+        </i18nAlias>
+        <i18nAlias id="grammar" caseSensitive="false">
+            <alias>GRAMMAR:</alias>
         </i18nAlias>
         <i18nAlias id="if" caseSensitive="false">
             <alias>#if:</alias>
@@ -778,11 +799,23 @@
         <i18nAlias id="ifexpr" caseSensitive="false">
             <alias>#ifexpr:</alias>
         </i18nAlias>
+        <i18nAlias id="int" caseSensitive="false">
+            <alias>INT:</alias>
+        </i18nAlias>
         <i18nAlias id="lc" caseSensitive="false">
             <alias>LC:</alias>
         </i18nAlias>
         <i18nAlias id="lcfirst" caseSensitive="false">
             <alias>LCFIRST:</alias>
+        </i18nAlias>
+        <i18nAlias id="localurl" caseSensitive="false">
+            <alias>LOCALURL:</alias>
+        </i18nAlias>
+        <i18nAlias id="localurle" caseSensitive="false">
+            <alias>LOCALURLE:</alias>
+        </i18nAlias>
+        <i18nAlias id="msgnw" caseSensitive="false">
+            <alias>MSGNW:</alias>
         </i18nAlias>
         <i18nAlias id="namespace" caseSensitive="true">
             <alias>NAMESPACE</alias>
@@ -795,8 +828,14 @@
         <i18nAlias id="ns" caseSensitive="false">
             <alias>NS:</alias>
         </i18nAlias>
+        <i18nAlias id="nse" caseSensitive="false">
+            <alias>NSE:</alias>
+        </i18nAlias>
         <i18nAlias id="padleft" caseSensitive="false">
             <alias>PADLEFT:</alias>
+        </i18nAlias>
+        <i18nAlias id="padright" caseSensitive="false">
+            <alias>PADRIGHT:</alias>
         </i18nAlias>
         <i18nAlias id="pagename" caseSensitive="true">
             <alias>PAGENAME</alias>
@@ -805,6 +844,9 @@
         <i18nAlias id="pagenamee" caseSensitive="true">
             <alias>PAGENAMEE</alias>
             <alias>PAGENAMEE:</alias>
+        </i18nAlias>
+        <i18nAlias id="plural" caseSensitive="false">
+            <alias>PLURAL:</alias>
         </i18nAlias>
         <i18nAlias id="protectionlevel" caseSensitive="true">
             <alias>PROTECTIONLEVEL:</alias>
@@ -822,6 +864,15 @@
         </i18nAlias>
         <i18nAlias id="safesubst" caseSensitive="false">
             <alias>SAFESUBST:</alias>
+        </i18nAlias>
+        <i18nAlias id="scriptpath" caseSensitive="false">
+            <alias>SCRIPTPATH</alias>
+        </i18nAlias>
+        <i18nAlias id="server" caseSensitive="false">
+            <alias>SERVER</alias>
+        </i18nAlias>
+        <i18nAlias id="servername" caseSensitive="false">
+            <alias>SERVERNAME</alias>
         </i18nAlias>
         <i18nAlias id="sitename" caseSensitive="true">
             <alias>SITENAME</alias>
@@ -950,25 +1001,39 @@
     </i18nAliases>
     <pfnGroups>
         <pfnGroup name="Built-in Parser Functions">
+            <pfn class="org.sweble.wikitext.engine.ext.builtin.BuiltInParserFunctions$ParserFunctionMsgnw"/>
             <pfn class="org.sweble.wikitext.engine.ext.builtin.BuiltInParserFunctions$ParserFunctionSafeSubst"/>
         </pfnGroup>
         <pfnGroup name="Core - Parser Functions - Formatting">
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsFormatting$FormatnumPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsFormatting$LcPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsFormatting$LcFirstPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsFormatting$PadLeftPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsFormatting$PadRightPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsFormatting$UcPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsFormatting$UcFirstPfn"/>
         </pfnGroup>
-        <pfnGroup name="Core - Parser Functions - Localization"/>
+        <pfnGroup name="Core - Parser Functions - Localization">
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsLocalization$GrammarPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsLocalization$IntPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsLocalization$PluralPfn"/>
+        </pfnGroup>
         <pfnGroup name="Core - Parser Functions - Miscellaneous">
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsMiscellaneous$TagPfn"/>
         </pfnGroup>
         <pfnGroup name="Core - Parser Functions - Namespaces">
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsNamespaces$NsPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsNamespaces$NsePfn"/>
         </pfnGroup>
         <pfnGroup name="Core - Parser Functions - URL data">
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$AnchorencodePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$CanonicalurlPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$CanonicalurlePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$FilepathPfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$FullurlPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$FullurlePfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$LocalurlPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$LocalurlePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnFunctionsUrlData$UrlencodePfn"/>
         </pfnGroup>
         <pfnGroup name="Core - Variables - Behavior Switches">
@@ -1023,7 +1088,11 @@
         <pfnGroup name="Core - Variables - Technical Metadata">
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesTechnicalMetadata$ContentLanguagePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesTechnicalMetadata$DefaultsortPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesTechnicalMetadata$DisplaytitlePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesTechnicalMetadata$ProtectionLevelPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesTechnicalMetadata$ScriptpathPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesTechnicalMetadata$ServerPfn"/>
+            <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesTechnicalMetadata$ServernamePfn"/>
             <pfn class="org.sweble.wikitext.engine.ext.core.CorePfnVariablesTechnicalMetadata$SitenamePfn"/>
         </pfnGroup>
         <pfnGroup name="Extension - Convert">

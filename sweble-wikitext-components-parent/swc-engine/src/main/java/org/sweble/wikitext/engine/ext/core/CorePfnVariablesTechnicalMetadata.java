@@ -17,6 +17,8 @@
 
 package org.sweble.wikitext.engine.ext.core;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import org.sweble.wikitext.engine.ExpansionFrame;
@@ -38,14 +40,34 @@ public class CorePfnVariablesTechnicalMetadata
 	{
 		super("Core - Variables - Technical Metadata");
 		addParserFunction(new SitenamePfn(wikiConfig));
+		addParserFunction(new ServerPfn(wikiConfig));
+		addParserFunction(new ServernamePfn(wikiConfig));
+		addParserFunction(new ScriptpathPfn(wikiConfig));
 		addParserFunction(new ContentLanguagePfn(wikiConfig));
 		addParserFunction(new ProtectionLevelPfn(wikiConfig));
+		addParserFunction(new DisplaytitlePfn(wikiConfig));
 		addParserFunction(new DefaultsortPfn(wikiConfig));
 	}
 
 	public static CorePfnVariablesTechnicalMetadata group(WikiConfig wikiConfig)
 	{
 		return new CorePfnVariablesTechnicalMetadata(wikiConfig);
+	}
+
+	/**
+	 * Returns the URL of the wiki's script (MediaWiki's $wgServer followed by
+	 * $wgScript) or {@code null} if the configured URL is not valid.
+	 */
+	private static URL getWikiUrl(ExpansionFrame frame)
+	{
+		try
+		{
+			return new URL(frame.getWikiConfig().getWikiUrl());
+		}
+		catch (MalformedURLException e)
+		{
+			return null;
+		}
 	}
 
 	// =========================================================================
@@ -87,10 +109,146 @@ public class CorePfnVariablesTechnicalMetadata
 
 	// =========================================================================
 	// ==
-	// == TODO: {{SERVER}}
-	// == TODO: {{SERVERNAME}}
+	// == {{SERVER}}
+	// ==
+	// =========================================================================
+
+	/**
+	 * Scheme and host of the wiki's URL (MediaWiki's $wgServer).
+	 */
+	public static final class ServerPfn
+			extends
+				CorePfnVariable
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public ServerPfn()
+		{
+			super("server");
+		}
+
+		public ServerPfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "server");
+		}
+
+		@Override
+		public WtNode invoke(
+				WtTemplate var,
+				ExpansionFrame frame,
+				List<? extends WtNode> args)
+		{
+			URL url = getWikiUrl(frame);
+			if (url == null)
+				return var;
+
+			return nf().text(url.getProtocol() + "://" + url.getAuthority());
+		}
+	}
+
+	// =========================================================================
+	// ==
+	// == {{SERVERNAME}}
+	// ==
+	// =========================================================================
+
+	/**
+	 * The host of the wiki's URL (MediaWiki's $wgServerName).
+	 */
+	public static final class ServernamePfn
+			extends
+				CorePfnVariable
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public ServernamePfn()
+		{
+			super("servername");
+		}
+
+		public ServernamePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "servername");
+		}
+
+		@Override
+		public WtNode invoke(
+				WtTemplate var,
+				ExpansionFrame frame,
+				List<? extends WtNode> args)
+		{
+			URL url = getWikiUrl(frame);
+			if (url == null)
+				return var;
+
+			return nf().text(url.getHost());
+		}
+	}
+
+	// =========================================================================
+	// ==
 	// == TODO: {{DIRMARK}}, {{DIRECTIONMARK}}
-	// == TODO: {{SCRIPTPATH}}
+	// ==
+	// =========================================================================
+
+	// =========================================================================
+	// ==
+	// == {{SCRIPTPATH}}
+	// ==
+	// =========================================================================
+
+	/**
+	 * The directory of the wiki's script (MediaWiki's $wgScriptPath), e.g.
+	 * "/w" for "https://en.wikipedia.org/w/index.php" or "" if the script is
+	 * in the root directory.
+	 */
+	public static final class ScriptpathPfn
+			extends
+				CorePfnVariable
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public ScriptpathPfn()
+		{
+			super("scriptpath");
+		}
+
+		public ScriptpathPfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "scriptpath");
+		}
+
+		@Override
+		public WtNode invoke(
+				WtTemplate var,
+				ExpansionFrame frame,
+				List<? extends WtNode> args)
+		{
+			URL url = getWikiUrl(frame);
+			if (url == null)
+				return var;
+
+			String path = url.getPath();
+			if (path.endsWith(".php"))
+				path = path.substring(0, path.lastIndexOf('/'));
+			while (path.endsWith("/"))
+				path = path.substring(0, path.length() - 1);
+
+			return nf().text(path);
+		}
+	}
+
+	// =========================================================================
+	// ==
 	// == TODO: {{STYLEPATH}}
 	// == TODO: {{CURRENTVERSION}}
 	// ==
@@ -187,9 +345,43 @@ public class CorePfnVariablesTechnicalMetadata
 	// ==
 	// == Affects page content
 	// == --------------------
-	// == TODO: {{DISPLAYTITLE:title}}
+	// == {{DISPLAYTITLE:title}}
 	// ==
 	// =========================================================================
+
+	/**
+	 * Like in MediaWiki the parser function itself renders nothing.
+	 *
+	 * TODO: Record the display title of the page.
+	 */
+	public static final class DisplaytitlePfn
+			extends
+				CorePfnVariable
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public DisplaytitlePfn()
+		{
+			super("displaytitle");
+		}
+
+		public DisplaytitlePfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "displaytitle");
+		}
+
+		@Override
+		public WtNode invoke(
+				WtTemplate var,
+				ExpansionFrame frame,
+				List<? extends WtNode> args)
+		{
+			return nf().list();
+		}
+	}
 
 	// =========================================================================
 	// ==

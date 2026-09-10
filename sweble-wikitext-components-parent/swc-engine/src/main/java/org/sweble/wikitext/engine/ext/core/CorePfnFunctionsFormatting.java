@@ -17,7 +17,11 @@
 
 package org.sweble.wikitext.engine.ext.core;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,6 +51,8 @@ public class CorePfnFunctionsFormatting
 		addParserFunction(new UcPfn(wikiConfig));
 		addParserFunction(new UcFirstPfn(wikiConfig));
 		addParserFunction(new PadLeftPfn(wikiConfig));
+		addParserFunction(new PadRightPfn(wikiConfig));
+		addParserFunction(new FormatnumPfn(wikiConfig));
 	}
 
 	public static CorePfnFunctionsFormatting group(WikiConfig wikiConfig)
@@ -104,7 +110,7 @@ public class CorePfnFunctionsFormatting
 				@Override
 				public String apply(String text)
 				{
-					return text.toLowerCase();
+					return text.toLowerCase(Locale.ROOT);
 				}
 			}).go(args.get(0));
 
@@ -153,7 +159,8 @@ public class CorePfnFunctionsFormatting
 				{
 					if (text.isEmpty())
 						return text;
-					return text.substring(0, 1).toLowerCase() + text.substring(1);
+					int end = text.offsetByCodePoints(0, 1);
+					return text.substring(0, end).toLowerCase(Locale.ROOT) + text.substring(end);
 				}
 			}).go(args.get(0));
 
@@ -200,7 +207,7 @@ public class CorePfnFunctionsFormatting
 				@Override
 				public String apply(String text)
 				{
-					return text.toUpperCase();
+					return text.toUpperCase(Locale.ROOT);
 				}
 			}).go(args.get(0));
 
@@ -249,7 +256,8 @@ public class CorePfnFunctionsFormatting
 				{
 					if (text.isEmpty())
 						return text;
-					return text.substring(0, 1).toUpperCase() + text.substring(1);
+					int end = text.offsetByCodePoints(0, 1);
+					return text.substring(0, end).toUpperCase(Locale.ROOT) + text.substring(end);
 				}
 			}).go(args.get(0));
 
@@ -262,10 +270,17 @@ public class CorePfnFunctionsFormatting
 	// == {{padleft:xyz|stringlength}}
 	// == {{padleft:xyz|strlen|char}}
 	// == {{padleft:xyz|strlen|string}}
+	// == {{padright:xyz|stringlength}}
+	// == {{padright:xyz|strlen|char}}
+	// == {{padright:xyz|strlen|string}}
 	// ==
 	// =========================================================================
 
-	public static final class PadLeftPfn
+	/**
+	 * Base class of padleft and padright, like MediaWiki's
+	 * CoreParserFunctions::pad().
+	 */
+	public static abstract class PadPfn
 			extends
 				CorePfnFunction
 	{
@@ -280,15 +295,20 @@ public class CorePfnFunctionsFormatting
 		/**
 		 * For un-marshaling only.
 		 */
-		public PadLeftPfn()
+		protected PadPfn(String name)
 		{
-			super(PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "padleft");
+			super(PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, name);
 		}
 
-		public PadLeftPfn(WikiConfig wikiConfig)
+		protected PadPfn(WikiConfig wikiConfig, String name)
 		{
-			super(wikiConfig, PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "padleft");
+			super(wikiConfig, PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, name);
 		}
+
+		/**
+		 * Returns true if the padding goes in front of the text.
+		 */
+		protected abstract boolean isPadLeft();
 
 		@Override
 		public WtNode invoke(
@@ -371,7 +391,7 @@ public class CorePfnFunctionsFormatting
 				padding.append(padStr, 0, padStr.offsetByCodePoints(0, count));
 			}
 
-			return nf().text(padding + text);
+			return nf().text(isPadLeft() ? padding + text : text + padding);
 		}
 
 		/**
@@ -411,11 +431,278 @@ public class CorePfnFunctionsFormatting
 		}
 	}
 
+	public static final class PadLeftPfn
+			extends
+				PadPfn
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public PadLeftPfn()
+		{
+			super("padleft");
+		}
+
+		public PadLeftPfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "padleft");
+		}
+
+		@Override
+		protected boolean isPadLeft()
+		{
+			return true;
+		}
+	}
+
+	public static final class PadRightPfn
+			extends
+				PadPfn
+	{
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public PadRightPfn()
+		{
+			super("padright");
+		}
+
+		public PadRightPfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, "padright");
+		}
+
+		@Override
+		protected boolean isPadLeft()
+		{
+			return false;
+		}
+	}
+
 	// =========================================================================
 	// ==
-	// == TODO: {{padright:xyz|stringlength}}
-	// ==       {{padright:xyz|strlen|char}}
-	// ==       {{padright:xyz|strlen|string}}
+	// == {{formatnum:unformatted num}}
+	// == {{formatnum:formatted num|R}}
+	// == {{formatnum:unformatted num|NOSEP}}
+	// == {{formatnum:unformatted num|LOSSLESS}}
 	// ==
 	// =========================================================================
+
+	/**
+	 * Formats numbers like MediaWiki's CoreParserFunctions::formatnum() for
+	 * an English wiki: Digits are grouped with ',', '.' is the decimal
+	 * separator and '-' is replaced by the minus sign U+2212.
+	 *
+	 * TODO: The configuration has no place for the digit and separator
+	 * transformation tables of other languages, neither for the localized
+	 * names of the modifiers R, NOSEP and LOSSLESS.
+	 */
+	public static final class FormatnumPfn
+			extends
+				CorePfnFunction
+	{
+		private static final long serialVersionUID = 1L;
+
+		private static final String RAW_SUFFIX = "R";
+
+		private static final String NO_SEPARATORS_SUFFIX = "NOSEP";
+
+		private static final String LOSSLESS_SUFFIX = "LOSSLESS";
+
+		private static final String MINUS_SIGN = "−";
+
+		private static final String INFINITY = "∞";
+
+		private static final String NAN = "NaN";
+
+		/**
+		 * PHP's is_numeric().
+		 */
+		private static final Pattern PHP_NUMERIC_RX = Pattern.compile(
+				"[ \\t\\n\\r\\u000B\\f]*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?[ \\t\\n\\r\\u000B\\f]*");
+
+		/**
+		 * A number whose count of integer and fraction digits is kept.
+		 */
+		private static final Pattern PLAIN_NUMBER_RX = Pattern.compile(
+				"-?([0-9]*)(\\.([0-9]*))?");
+
+		/**
+		 * The numbers in a string which is not a number.
+		 */
+		private static final Pattern EMBEDDED_NUMBER_RX = Pattern.compile(
+				"(-(?=[0-9.]))?([0-9]+|(?=\\.[0-9]))(\\.[0-9]*)?([Ee][-+]?[0-9]+)?");
+
+		/**
+		 * For un-marshaling only.
+		 */
+		public FormatnumPfn()
+		{
+			super(PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "formatnum");
+		}
+
+		public FormatnumPfn(WikiConfig wikiConfig)
+		{
+			super(wikiConfig, PfnArgumentMode.EXPANDED_AND_TRIMMED_VALUES, "formatnum");
+		}
+
+		@Override
+		public WtNode invoke(
+				WtTemplate pfn,
+				ExpansionFrame frame,
+				List<? extends WtNode> args)
+		{
+			if (args.size() < 1)
+				return nf().list();
+
+			boolean raw = false;
+			boolean noSeparators = false;
+			boolean lossless = false;
+			for (int i = 1; i < Math.min(args.size(), 3); ++i)
+			{
+				String modifier;
+				try
+				{
+					modifier = tu().astToText(args.get(i)).trim();
+				}
+				catch (StringConversionException e)
+				{
+					continue;
+				}
+
+				if (RAW_SUFFIX.equals(modifier))
+					raw = true;
+				else if (NO_SEPARATORS_SUFFIX.equalsIgnoreCase(modifier))
+					noSeparators = true;
+				else if (LOSSLESS_SUFFIX.equalsIgnoreCase(modifier))
+					lossless = true;
+			}
+
+			final ApplyToText.Functor formatter;
+			if (raw)
+			{
+				formatter = new ApplyToText.Functor()
+				{
+					@Override
+					public String apply(String number)
+					{
+						return parseFormattedNumber(number);
+					}
+				};
+			}
+			else
+			{
+				final boolean fNoSeparators = noSeparators;
+				final boolean fLossless = lossless;
+				formatter = new ApplyToText.Functor()
+				{
+					@Override
+					public String apply(String number)
+					{
+						String formatted = formatNum(number, fNoSeparators);
+						if (fLossless && !number.equals(parseFormattedNumber(formatted)))
+							return number;
+						return formatted;
+					}
+				};
+			}
+
+			WtNode arg0 = args.get(0);
+			try
+			{
+				return nf().text(formatter.apply(tu().astToText(arg0)));
+			}
+			catch (StringConversionException e)
+			{
+				// Like MediaWiki's markerSkipCallback(): Only the text is
+				// formatted.
+				new ApplyToText(formatter).go(arg0);
+				return arg0;
+			}
+		}
+
+		/**
+		 * Like MediaWiki's Language::formatNum() and
+		 * Language::formatNumNoSeparators().
+		 */
+		static String formatNum(String number, boolean noSeparators)
+		{
+			if (number.isEmpty())
+				return number;
+			if (number.equals("NAN"))
+				return NAN;
+			if (number.equals("INF"))
+				return INFINITY;
+			if (number.equals("-INF"))
+				return MINUS_SIGN + INFINITY;
+
+			if (!PHP_NUMERIC_RX.matcher(number).matches())
+			{
+				// For backwards compatibility the numbers in a string which is
+				// not a number are formatted one by one.
+				Matcher m = EMBEDDED_NUMBER_RX.matcher(number);
+				StringBuffer b = new StringBuffer();
+				while (m.find())
+				{
+					String found = m.group();
+					String formatted = PHP_NUMERIC_RX.matcher(found).matches() ?
+							formatNum(found, noSeparators) :
+							found;
+					m.appendReplacement(b, Matcher.quoteReplacement(formatted));
+				}
+				m.appendTail(b);
+				return b.toString();
+			}
+
+			// "-0" is not formatted so that the sign is not lost
+			if (!noSeparators && !number.equals("-0"))
+				number = groupDigits(number);
+
+			return number.replace("-", MINUS_SIGN);
+		}
+
+		/**
+		 * Formats a number like PHP's NumberFormatter for the locale "en",
+		 * which MediaWiki configures to keep the count of integer and
+		 * fraction digits of a plain number.
+		 */
+		private static String groupDigits(String number)
+		{
+			DecimalFormat fmt = new DecimalFormat(
+					"#,##0.###",
+					DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+			fmt.setRoundingMode(RoundingMode.HALF_EVEN);
+
+			Matcher m = PLAIN_NUMBER_RX.matcher(number);
+			if (m.matches())
+			{
+				int fractionDigits = (m.group(3) != null) ? m.group(3).length() : 0;
+				fmt.setMinimumIntegerDigits(m.group(1).length());
+				fmt.setDecimalSeparatorAlwaysShown(m.group(2) != null);
+				fmt.setMinimumFractionDigits(fractionDigits);
+				fmt.setMaximumFractionDigits(fractionDigits);
+			}
+
+			return fmt.format(Double.parseDouble(number.trim()));
+		}
+
+		/**
+		 * Like MediaWiki's Language::parseFormattedNumber() for English.
+		 */
+		static String parseFormattedNumber(String number)
+		{
+			if (number.equals(NAN))
+				return "NAN";
+			if (number.equals(INFINITY))
+				return "INF";
+			number = number.replace(MINUS_SIGN, "-");
+			if (number.equals("-" + INFINITY))
+				return "-INF";
+			return number.replace(",", "");
+		}
+	}
 }
