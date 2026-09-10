@@ -287,34 +287,13 @@ public abstract class DumpReader
 
 		String header = new String(b, 0, read);
 
-		if (header.contains("xmlns=\"http://www.mediawiki.org/xml/export-0.5/\""))
+		for (ExportSchemaVersion version : ExportSchemaVersion.values())
 		{
-			return ExportSchemaVersion.V0_5;
+			if (header.contains("xmlns=\"" + version.getMediaWikiNamespace() + "\""))
+				return version;
 		}
-		else if (header.contains("xmlns=\"http://www.mediawiki.org/xml/export-0.6/\""))
-		{
-			return ExportSchemaVersion.V0_6;
-		}
-		else if (header.contains("xmlns=\"http://www.mediawiki.org/xml/export-0.7/\""))
-		{
-			return ExportSchemaVersion.V0_7;
-		}
-		else if (header.contains("xmlns=\"http://www.mediawiki.org/xml/export-0.8/\""))
-		{
-			return ExportSchemaVersion.V0_8;
-		}
-		else if (header.contains("xmlns=\"http://www.mediawiki.org/xml/export-0.9/\""))
-		{
-			return ExportSchemaVersion.V0_9;
-		}
-		else if (header.contains("xmlns=\"http://www.mediawiki.org/xml/export-0.10/\""))
-		{
-			return ExportSchemaVersion.V0_10;
-		}
-		else
-		{
-			throw new IllegalArgumentException("Unknown xmlns");
-		}
+
+		throw new IllegalArgumentException("Unknown xmlns");
 	}
 
 	/**
