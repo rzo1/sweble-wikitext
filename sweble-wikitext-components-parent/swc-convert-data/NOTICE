@@ -1,0 +1,26 @@
+SWC - Sweble Convert Unit Data
+
+This artifact contains the unit data of the {{convert}} parser function of
+swc-engine (org/sweble/wikitext/convert-data/convert-data.txt). The data is
+derived from
+
+	Module:Convert/data, English Wikipedia
+	https://en.wikipedia.org/wiki/Module:Convert/data
+	revision 1333042286
+
+by the Wikipedia contributors. The authors are listed in the page history:
+
+	https://en.wikipedia.org/w/index.php?title=Module:Convert/data&action=history
+
+The original work is licensed under the Creative Commons
+Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0), and so is
+this derived data. To view a copy of this license, visit
+
+	https://creativecommons.org/licenses/by-sa/4.0/
+
+Changes: the Lua tables of the original were converted into a tab-separated
+text format by ConvertDataGenerator (in the tests of swc-engine).
+
+This license only applies to the contents of this artifact. The rest of
+Sweble, including swc-engine, is licensed under the Apache License,
+Version 2.0.

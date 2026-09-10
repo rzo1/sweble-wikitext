@@ -163,6 +163,13 @@
 				<version>${project.version}</version>
 			</dependency>
 
+			<!-- Sweble Wikitext Components - Unit data of {{convert}} (CC BY-SA 4.0) -->
+			<dependency>
+				<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
+				<artifactId>swc-convert-data</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
 			<!-- Sweble Wikitext Components - Dump Reader -->
 			<dependency>
 				<groupId>io.github.rzo1.org.sweble.wikitext</groupId>

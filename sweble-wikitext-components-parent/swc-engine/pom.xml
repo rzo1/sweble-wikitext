@@ -108,6 +108,14 @@
 			<artifactId>swc-parser-lazy</artifactId>
 		</dependency>
 
+		<!-- Unit data of {{convert}}. It is licensed under CC BY-SA 4.0 and
+		     therefore optional: users of {{convert}} add it themselves. -->
+		<dependency>
+			<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
+			<artifactId>swc-convert-data</artifactId>
+			<optional>true</optional>
+		</dependency>
+
 		<!-- =============================================================== -->
 		<!-- Testing - Testing - Testing - Testing - Testing - Testing - Tes -->
 		<!-- =============================================================== -->
@@ -159,6 +167,21 @@
 				</configuration>
 			</plugin>
 
+			<!-- swc-convert-data only contains a resource -->
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>analyze-dependency-usage</id>
+						<configuration>
+							<ignoredUnusedDeclaredDependencies>
+								<ignoredUnusedDeclaredDependency>io.github.rzo1.org.sweble.wikitext:swc-convert-data</ignoredUnusedDeclaredDependency>
+							</ignoredUnusedDeclaredDependencies>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<!-- Maven Shade Plugin -->
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -172,6 +195,12 @@
 							<shadedArtifactAttached>true</shadedArtifactAttached>
 							<shadedClassifierName>jar-with-dependencies</shadedClassifierName>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<artifactSet>
+								<excludes>
+									<!-- CC BY-SA 4.0: keep it out of the Apache licensed jar -->
+									<exclude>io.github.rzo1.org.sweble.wikitext:swc-convert-data</exclude>
+								</excludes>
+							</artifactSet>
 						</configuration>
 					</execution>
 				</executions>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2011 The Open Source Research Group,
+                   University of Erlangen-Nürnberg
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>io.github.rzo1.org.sweble.wikitext</groupId>
+		<artifactId>sweble-wikitext-components-parent</artifactId>
+		<version>4.1.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>swc-convert-data</artifactId>
+	<packaging>jar</packaging>
+	<name>SWC - Sweble Convert Unit Data</name>
+	<inceptionYear>2026</inceptionYear>
+	<description>
+		The unit data of the {{convert}} parser function of swc-engine, derived
+		from Module:Convert/data of the English Wikipedia. Unlike the rest of
+		Sweble it is licensed under CC BY-SA 4.0, see the NOTICE file.
+	</description>
+
+	<!-- =================================================================== -->
+	<!-- Properties - Properties - Properties - Properties - Properties - Pr -->
+	<!-- =================================================================== -->
+
+	<properties>
+		<swc-parent.path>../</swc-parent.path>
+	</properties>
+
+	<build>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>${project.basedir}</directory>
+				<targetPath>META-INF</targetPath>
+				<includes>
+					<include>NOTICE</include>
+				</includes>
+			</resource>
+		</resources>
+
+		<!-- =============================================================== -->
+		<!-- Plugins - Plugins - Plugins - Plugins - Plugins - Plugins - Plu -->
+		<!-- =============================================================== -->
+
+		<plugins>
+
+			<!-- Check and format license headers -->
+			<plugin>
+				<groupId>com.mycila</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<configuration>
+					<excludes combine.children="append">
+						<!-- Derived from Wikipedia (CC BY-SA 4.0), see the NOTICE file -->
+						<exclude>src/main/resources/**/convert-data.txt</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<!-- =================================================================== -->
+	<!-- Profiles - Profiles - Profiles - Profiles - Profiles - Profiles - P -->
+	<!-- =================================================================== -->
+
+	<profiles>
+
+		<!-- Maven Central requires a sources and a javadoc jar. There is no
+		     Java code, so the source and javadoc plugins don't create them:
+		     the sources jar holds the data, the javadoc jar the NOTICE. -->
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-jar-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-data-as-sources-jar</id>
+								<phase>package</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<classifier>sources</classifier>
+								</configuration>
+							</execution>
+							<execution>
+								<id>attach-notice-as-javadoc-jar</id>
+								<phase>package</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<classifier>javadoc</classifier>
+									<includes>
+										<include>META-INF/NOTICE</include>
+									</includes>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<!-- =================================================================== -->
+	<!-- More Project Information - More Project Information - More Project  -->
+	<!-- =================================================================== -->
+
+	<licenses>
+		<license>
+			<name>Creative Commons Attribution-ShareAlike 4.0 International</name>
+			<url>https://creativecommons.org/licenses/by-sa/4.0/</url>
+			<distribution>repo</distribution>
+			<comments>Derived from https://en.wikipedia.org/wiki/Module:Convert/data, see the NOTICE file</comments>
+		</license>
+	</licenses>
+</project>

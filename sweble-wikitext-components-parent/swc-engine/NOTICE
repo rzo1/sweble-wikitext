@@ -2,5 +2,12 @@ Some test cases used in this software rely on articles written in Wikitext that
 were taken from the English Wikipedia. These articles are licensed under the
 Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license which can be found 
 at http://creativecommons.org/licenses/by-sa/3.0/. Each directory that contains
-such files holds a NOTICE file which gives detailed information about the 
+such files holds a NOTICE file which gives detailed information about the
 origin of the articles.
+
+The unit data of the {{convert}} parser function is not part of this artifact.
+It is derived from Module:Convert/data of the English Wikipedia, licensed under
+the Creative Commons Attribution-ShareAlike 4.0 International License
+(CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/) and ships in
+the separate artifact swc-convert-data, whose NOTICE file gives the details.
+Without that artifact {{convert}} reports an error.

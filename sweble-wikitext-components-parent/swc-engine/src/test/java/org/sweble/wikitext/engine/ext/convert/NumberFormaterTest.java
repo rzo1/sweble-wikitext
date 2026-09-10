@@ -99,6 +99,53 @@ public class NumberFormaterTest
 	}
 
 	@Test
+	public void testSeparatorOptions()
+	{
+		// as in the output of {{convert}} with comma=off, comma=5 and
+		// comma=gaps on English Wikipedia (September 2026)
+		NumberFormater.Options off = new NumberFormater.Options();
+		off.noComma = true;
+		assertEquals("12345", NumberFormater.withSeparator("12345", off));
+
+		NumberFormater.Options comma5 = new NumberFormater.Options();
+		comma5.comma5 = true;
+		assertEquals("1234", NumberFormater.withSeparator("1234", comma5));
+		assertEquals("12,345", NumberFormater.withSeparator("12345", comma5));
+		assertEquals("123,456.789", NumberFormater.withSeparator("123456.789", comma5));
+
+		NumberFormater.Options gaps = new NumberFormater.Options();
+		gaps.gaps = true;
+		assertEquals("<span style=\"white-space: nowrap\">12<span style=\"margin-left: 0.25em\">345.6789</span></span>",
+				NumberFormater.withSeparator("12345.6789", gaps));
+		assertEquals("<span style=\"white-space: nowrap\">12.345<span style=\"margin-left: 0.25em\">6789</span></span>",
+				NumberFormater.withSeparator("12.3456789", gaps));
+		assertEquals("123", NumberFormater.withSeparator("123", gaps));
+	}
+
+	@Test
+	public void testLuaNumberFormats()
+	{
+		// C's "%g" and Lua's tostring() ("%.14g")
+		assertEquals("62", NumberFormater.toGeneral(62, 6));
+		assertEquals("4.5", NumberFormater.toGeneral(4.5, 6));
+		assertEquals("1e+06", NumberFormater.toGeneral(1e6, 6));
+		assertEquals("1.5e-05", NumberFormater.toGeneral(1.5e-5, 6));
+		assertEquals("39", NumberFormater.luaToString(39.0));
+		assertEquals("39.370078740157", NumberFormater.luaToString(39.37007874015748));
+	}
+
+	@Test
+	public void testFractionMarkup()
+	{
+		// like {{convert|2+1/2|in|cm}} on English Wikipedia (with "⁄" for "&frasl;")
+		assertEquals("<span class=\"frac\">2<span class=\"sr-only\">+</span><span class=\"num\">1</span>⁄"
+				+ "<span class=\"den\">2</span></span>", NumberFormater.parseValue("2+1/2").getShow());
+		assertEquals(2.5, NumberFormater.parseValue("2+1/2").getValue(), EPSILON);
+		// "12.1+3/4" hands are 12 hands 1.75 inches
+		assertEquals(12.175, NumberFormater.parseValue("12.1+3/4").getAltValue(), EPSILON);
+	}
+
+	@Test
 	public void testParseNumber1()
 	{
 		assertEquals(1d, NumberFormater.parseNumber("1"), EPSILON);

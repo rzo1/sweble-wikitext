@@ -21,6 +21,8 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,7 +56,7 @@ public final class NumberFormater
 			Pattern.compile("^([\\d.]+)[eE]([+-]?\\d+)");
 
 	private static final Pattern FRACTION_RX =
-			Pattern.compile("^\\s*(\\+?)\\s*(.*?)\\s*(\\d+)\\s*(?:/+|⁄)\\s*(\\d+)\\s*$");
+			Pattern.compile("^\\s*(\\+?)\\s*(.*?)\\s*(\\d+)\\s*(/+|⁄)\\s*(\\d+)\\s*$");
 
 	private static final Pattern FRACTION_PREFIX_RX =
 			Pattern.compile("^(\\d+)(\\.?\\d?)\\s*([+-])$");
@@ -224,6 +226,21 @@ public final class NumberFormater
 	public static ParsedNumber parseValue(final String text)
 			throws NumberFormatException
 	{
+		return parseValue(text, Options.DEFAULT, null);
+	}
+
+	/**
+	 * @param options The options to format the value for display.
+	 * @param roundInput Null or the precision to which the displayed value is
+	 * rounded (option "adj=ri0" etc.).
+	 * @see #parseValue(String)
+	 */
+	static ParsedNumber parseValue(
+			final String text,
+			final Options options,
+			final Integer roundInput)
+			throws NumberFormatException
+	{
 		final String trimmed = text.trim();
 		String clean = trimmed.replace(",", ""); // remove thousand separators
 		if (clean.isEmpty())
@@ -237,6 +254,9 @@ public final class NumberFormater
 		String show = null;
 		int denominator = 0;
 		double value;
+		double altValue = Double.NaN;
+		String[] fraction = null;
+		int fractionStyle = 0;
 
 		if (NOT_A_NUMBER_RX.matcher(clean).matches())
 		{
@@ -318,17 +338,20 @@ public final class NumberFormater
 				}
 
 				double numerator = Double.parseDouble(m.group(3));
-				double denominatorValue = Double.parseDouble(m.group(4));
+				double denominatorValue = Double.parseDouble(m.group(5));
 				denominator = (int) Math.min(denominatorValue, Integer.MAX_VALUE);
 				value = whole + numerator / denominatorValue;
 				if (!isFinite(value))
 				{
 					throw invalidNumber(trimmed);
 				}
+				// For the hand unit, "12.1+3/4" means 12 hands 1.75 inches.
+				altValue = whole + numerator / (denominatorValue * 10);
 
-				show = (isNegative ? MINUS : "") + leadingPlus
-						+ (wholeStr.isEmpty() ? "" : withSeparator(wholeStr) + "+")
-						+ m.group(3) + "⁄" + m.group(4);
+				// one or two slashes select the style
+				fractionStyle = (m.group(4).length() == 1) ? 1 : 2;
+				fraction = new String[] { leadingPlus + wholeStr, m.group(3), m.group(5) };
+				show = formatFraction(isNegative, fraction[0], fraction[1], fraction[2], fractionStyle, options);
 				singular = (value <= 1);
 			}
 		}
@@ -339,26 +362,96 @@ public final class NumberFormater
 		}
 
 		boolean isScientific = false;
+		String rounded = null;
 		if (show == null)
 		{
 			singular = (value == 1);
 			Matcher m = E_NOTATION_RX.matcher(clean);
 			if (m.find())
 			{
-				show = properSign + withExponent(m.group(1), m.group(2));
+				String significand = m.group(1);
+				if (roundInput != null)
+				{
+					significand = toFixed(Double.parseDouble(significand) + 2e-14, roundInput);
+				}
+				show = properSign + withExponent(significand, m.group(2), options);
 				isScientific = true;
 			} else
 			{
-				show = properSign + withSeparator(clean);
+				if (roundInput != null)
+				{
+					rounded = toFixed(value + 2e-14, roundInput);
+					singular = (Double.parseDouble(rounded) == 1);
+				}
+				show = properSign + withSeparator((rounded != null) ? rounded : clean, options);
 			}
 		}
 
 		if (isNegative && value != 0)
 		{
 			value = -value;
+			altValue = -(Double.isNaN(altValue) ? value : altValue);
+		}
+		if (Double.isNaN(altValue))
+		{
+			altValue = value;
 		}
 
-		return new ParsedNumber(value, clean, show, singular, denominator, isScientific);
+		ParsedNumber result = new ParsedNumber(value, clean, show, singular, denominator, isScientific);
+		result.altValue = altValue;
+		result.negative = isNegative;
+		result.sign = properSign;
+		result.rounded = rounded;
+		result.fraction = fraction;
+		result.fractionStyle = fractionStyle;
+		return result;
+	}
+
+	/**
+	 * Formats a fraction like Module:Convert (format_fraction()), which uses
+	 * the markup of {{frac}} or {{sfrac}}.
+	 *
+	 * @param negative Whether the value is negative.
+	 * @param whole The unsigned whole number before the fraction or "".
+	 * @param numerator The numerator.
+	 * @param denominator The denominator.
+	 * @param style 1 for a fraction with a slash like {{frac}} or 2 for a
+	 * stacked fraction like {{sfrac}}.
+	 * @param options The options to format the whole number.
+	 * @return The fraction as wikitext.
+	 */
+	static String formatFraction(
+			boolean negative,
+			String whole,
+			String numerator,
+			String denominator,
+			int style,
+			Options options)
+	{
+		final String sign = negative ? MINUS : "";
+		final boolean hasWhole = (whole != null && !whole.isEmpty());
+		final String wholeShow = hasWhole ? withSeparator(whole, options) : null;
+		if (style == 2)
+		{
+			if (!hasWhole)
+			{
+				return "<span class=\"sfrac tion\">" + sign + "<span class=\"num\">" + numerator
+						+ "</span><span class=\"sr-only\">/</span><span class=\"den\">" + denominator
+						+ "</span></span>";
+			}
+			return "<span class=\"sfrac\">" + sign + wholeShow
+					+ "<span class=\"sr-only\">+</span><span class=\"tion\"><span class=\"num\">" + numerator
+					+ "</span><span class=\"sr-only\">/</span><span class=\"den\">" + denominator
+					+ "</span></span></span>";
+		}
+		if (!hasWhole)
+		{
+			return "<span class=\"frac\">" + sign + "<span class=\"num\">" + numerator
+					+ "</span>⁄<span class=\"den\">" + denominator + "</span></span>";
+		}
+		return "<span class=\"frac\">" + sign + wholeShow
+				+ "<span class=\"sr-only\">+</span><span class=\"num\">" + numerator
+				+ "</span>⁄<span class=\"den\">" + denominator + "</span></span>";
 	}
 
 	private static NumberFormatException invalidNumber(String text)
@@ -392,6 +485,19 @@ public final class NumberFormater
 	 */
 	static FormattedNumber formatRounded(double value, int precision, boolean isScientific)
 	{
+		return formatRounded(value, precision, isScientific, Options.DEFAULT);
+	}
+
+	/**
+	 * @param options The options to format the value.
+	 * @see #formatRounded(double, int, boolean)
+	 */
+	static FormattedNumber formatRounded(
+			double value,
+			int precision,
+			boolean isScientific,
+			Options options)
+	{
 		if (precision > MAX_PRECISION)
 		{
 			throw new IllegalArgumentException("Precision \"" + precision + "\" is too large");
@@ -415,7 +521,7 @@ public final class NumberFormater
 				exponent = show.length() + digits;
 			}
 		}
-		return formatShow(show, exponent, isNegative, isScientific);
+		return formatShow(show, exponent, isNegative, isScientific, options);
 	}
 
 	/**
@@ -438,6 +544,21 @@ public final class NumberFormater
 	 */
 	static FormattedNumber formatSigFig(double value, int sigFig, boolean isScientific)
 	{
+		String[] digits = makeSigFig(Math.abs(value), sigFig);
+		return formatShow(digits[0], Integer.valueOf(digits[1]), value < 0, isScientific, Options.DEFAULT);
+	}
+
+	/**
+	 * Rounds a value to the given number of significant figures (make_sigfig()
+	 * in Module:Convert).
+	 *
+	 * @param absValue The value (not negative).
+	 * @param sigFig The number of significant figures.
+	 * @return The digits (with an implied dot before them) and the exponent
+	 * to shift the implied dot.
+	 */
+	static String[] makeSigFig(double absValue, int sigFig)
+	{
 		if (sigFig <= 0)
 		{
 			sigFig = 1;
@@ -446,8 +567,6 @@ public final class NumberFormater
 			sigFig = MAX_SIG_FIG;
 		}
 
-		boolean isNegative = value < 0;
-		double absValue = Math.abs(value);
 		String digits;
 		int exponent;
 		if (absValue == 0)
@@ -472,7 +591,7 @@ public final class NumberFormater
 				exponent += 1;
 			}
 		}
-		return formatShow(digits, exponent, isNegative, isScientific);
+		return new String[] { digits, String.valueOf(exponent) };
 	}
 
 	/**
@@ -491,6 +610,20 @@ public final class NumberFormater
 			Integer exponent,
 			boolean isNegative,
 			boolean isScientific)
+	{
+		return formatShow(show, exponent, isNegative, isScientific, Options.DEFAULT);
+	}
+
+	/**
+	 * @param options The options to format the value.
+	 * @see #formatShow(String, Integer, boolean, boolean)
+	 */
+	static FormattedNumber formatShow(
+			String show,
+			Integer exponent,
+			boolean isNegative,
+			boolean isScientific,
+			Options options)
 	{
 		final boolean singular;
 		if (exponent != null)
@@ -565,11 +698,12 @@ public final class NumberFormater
 					significand = show.charAt(0) + "." + show.substring(1);
 				}
 				return new FormattedNumber(
-						sign + withExponent(significand, String.valueOf(exponent - 1)),
+						sign + withExponent(significand, String.valueOf(exponent - 1), options),
 						"." + show,
 						exponent,
 						true,
-						singular);
+						singular,
+						sign);
 			}
 			if (exponent >= show.length())
 			{
@@ -587,7 +721,7 @@ public final class NumberFormater
 		{
 			sign = ""; // don't show minus if result is negative but rounds to zero
 		}
-		return new FormattedNumber(sign + withSeparator(show), show, null, false, singular);
+		return new FormattedNumber(sign + withSeparator(show, options), show, null, false, singular, sign);
 	}
 
 	/**
@@ -609,31 +743,171 @@ public final class NumberFormater
 	 */
 	public static String withSeparator(String text)
 	{
+		return withSeparator(text, Options.DEFAULT);
+	}
+
+	/**
+	 * Inserts separators like Module:Convert (with_separator()) according to
+	 * the "comma" option.
+	 *
+	 * @param text Unsigned number with optional '.' decimal mark.
+	 * @param options The options.
+	 * @return The formatted number (which uses markup with comma=gaps).
+	 */
+	static String withSeparator(String text, Options options)
+	{
 		if (text.endsWith("."))
 		{
 			text = text.substring(0, text.length() - 1);
 		}
-		int dot = text.indexOf('.');
-		int lenLeft = (dot >= 0) ? dot : text.length();
-		if (lenLeft < 4)
+		if (text.length() < 4 || options.noComma)
 		{
 			return text;
 		}
 
-		StringBuilder sb = new StringBuilder();
-		int first = (lenLeft % 3 == 0) ? 3 : lenLeft % 3;
-		sb.append(text, 0, first);
-		for (int pos = first; pos < lenLeft; pos += 3)
+		// digit_groups() in Module:Convert
+		int dot = text.indexOf('.');
+		int lenLeft = (dot >= 0) ? dot : text.length();
+		int lenRight = (dot >= 0) ? text.length() - dot - 1 : -1;
+		List<Integer> groups = new ArrayList<Integer>();
+		int run = lenLeft;
+		int n;
+		if (run < 4 || (run == 4 && options.comma5))
 		{
-			sb.append(',').append(text, pos, pos + 3);
+			n = options.gaps ? run : text.length();
+		} else
+		{
+			n = (run % 3 == 0) ? 3 : run % 3;
 		}
-		sb.append(text.substring(lenLeft));
-		return sb.toString();
+		while (run > 0)
+		{
+			groups.add(n);
+			run -= n;
+			n = 3;
+		}
+		if (lenRight >= 0)
+		{
+			if (groups.isEmpty())
+			{
+				groups.add(0);
+			}
+			int last = groups.size() - 1;
+			if (options.gaps && lenRight > 3)
+			{
+				boolean want4 = !options.gaps3; // no gap before a trailing single digit
+				boolean isFirst = true;
+				run = lenRight;
+				while (run > 0)
+				{
+					n = (want4 && run == 4) ? 4 : Math.min(run, 3);
+					if (isFirst)
+					{
+						isFirst = false;
+						groups.set(last, groups.get(last) + 1 + n);
+					} else
+					{
+						groups.add(n);
+					}
+					run -= n;
+				}
+			} else
+			{
+				groups.set(last, groups.get(last) + 1 + lenRight);
+			}
+		}
+
+		List<String> parts = new ArrayList<String>(groups.size());
+		int pos = 0;
+		for (int length : groups)
+		{
+			int end = Math.min(pos + length, text.length());
+			parts.add(text.substring(Math.min(pos, end), end));
+			pos += length;
+		}
+
+		if (options.gaps)
+		{
+			if (parts.size() <= 1)
+			{
+				return parts.isEmpty() ? "" : parts.get(0);
+			}
+			final String gap = "<span style=\"margin-left: 0.25em\">";
+			StringBuilder sb = new StringBuilder("<span style=\"white-space: nowrap\">");
+			sb.append(parts.get(0));
+			for (int k = 1; k < parts.size(); k++)
+			{
+				sb.append(gap).append(parts.get(k)).append("</span>");
+			}
+			return sb.append("</span>").toString();
+		}
+		return String.join(",", parts);
 	}
 
-	private static String withExponent(String significand, String exponent)
+	static String withExponent(String significand, String exponent, Options options)
 	{
-		return withSeparator(significand) + "×10" + asSuperscriptNumber(exponent);
+		return withSeparator(significand, options) + "×10" + asSuperscriptNumber(exponent);
+	}
+
+	/**
+	 * Formats a number like C's printf("%.*g") (which Module:Convert uses via
+	 * Lua's string.format() and tostring()).
+	 *
+	 * @param value The value.
+	 * @param precision The number of significant digits.
+	 * @return The formatted number (without trailing zeros).
+	 */
+	static String toGeneral(double value, int precision)
+	{
+		if (value == 0)
+		{
+			return "0";
+		}
+		BigDecimal bd = new BigDecimal(Math.abs(value)).round(new MathContext(precision, RoundingMode.HALF_EVEN));
+		int exponent = bd.precision() - bd.scale() - 1;
+		String sign = (value < 0) ? "-" : "";
+		if (exponent < -4 || exponent >= precision)
+		{
+			String digits = bd.unscaledValue().toString();
+			digits = digits.replaceFirst("0+$", "");
+			String mantissa = digits.substring(0, 1)
+					+ ((digits.length() > 1) ? "." + digits.substring(1) : "");
+			String exp = String.valueOf(Math.abs(exponent));
+			return sign + mantissa + "e" + ((exponent < 0) ? "-" : "+") + ((exp.length() < 2) ? "0" : "") + exp;
+		}
+		String plain = bd.setScale(Math.max(precision - 1 - exponent, 0), RoundingMode.HALF_EVEN).toPlainString();
+		if (plain.indexOf('.') >= 0)
+		{
+			plain = plain.replaceFirst("0+$", "").replaceFirst("\\.$", "");
+		}
+		return sign + plain;
+	}
+
+	/**
+	 * @return The value as Lua's tostring() converts it (like "%.14g").
+	 */
+	static String luaToString(double value)
+	{
+		return toGeneral(value, 14);
+	}
+
+	/**
+	 * Options which change how numbers are formatted.
+	 */
+	static final class Options
+	{
+		static final Options DEFAULT = new Options();
+
+		/** No separators (comma=off). */
+		boolean noComma;
+
+		/** Separators only for numbers with five or more digits (comma=5). */
+		boolean comma5;
+
+		/** Gaps instead of commas (comma=gaps). */
+		boolean gaps;
+
+		/** Gaps in groups of three digits only (comma=gaps3). */
+		boolean gaps3;
 	}
 
 	private static String zeros(int count)
@@ -705,6 +979,12 @@ public final class NumberFormater
 		private final boolean singular;
 		private final int denominator;
 		private final boolean scientific;
+		private double altValue;
+		private boolean negative;
+		private String sign;
+		private String rounded;
+		private String[] fraction;
+		private int fractionStyle;
 
 		private ParsedNumber(
 				double value,
@@ -771,6 +1051,58 @@ public final class NumberFormater
 		{
 			return scientific;
 		}
+
+		/**
+		 * @return The value for the hand unit, which differs from the value
+		 * if a fraction is used ("12.1+3/4" means 12 hands 1.75 inches).
+		 */
+		public double getAltValue()
+		{
+			return altValue;
+		}
+
+		/**
+		 * @return True if the value is negative (or "−0").
+		 */
+		boolean isNegative()
+		{
+			return negative;
+		}
+
+		/**
+		 * @return The sign as shown: "", "+" or "−".
+		 */
+		String getSign()
+		{
+			return sign;
+		}
+
+		/**
+		 * @return The unsigned rounded value (with the adj=ri option) or null.
+		 */
+		String getRounded()
+		{
+			return rounded;
+		}
+
+		/**
+		 * @return The unsigned whole number (including a leading "+"),
+		 * numerator and denominator of a fraction, or null if the value is
+		 * not a fraction.
+		 */
+		String[] getFraction()
+		{
+			return fraction;
+		}
+
+		/**
+		 * @return 1 for a fraction like "1/2", 2 for a stacked fraction like
+		 * "1//2" or 0 if the value is not a fraction.
+		 */
+		int getFractionStyle()
+		{
+			return fractionStyle;
+		}
 	}
 
 	/**
@@ -783,19 +1115,47 @@ public final class NumberFormater
 		private final Integer exponent;
 		private final boolean scientific;
 		private final boolean singular;
+		private final String sign;
 
 		private FormattedNumber(
 				String show,
 				String clean,
 				Integer exponent,
 				boolean scientific,
-				boolean singular)
+				boolean singular,
+				String sign)
 		{
 			this.show = show;
 			this.clean = clean;
 			this.exponent = exponent;
 			this.scientific = scientific;
 			this.singular = singular;
+			this.sign = sign;
+		}
+
+		/**
+		 * @return The unsigned value (e.g. "1234.5"), or if scientific
+		 * notation is used, the digits with an implied dot before them.
+		 */
+		String getClean()
+		{
+			return clean;
+		}
+
+		/**
+		 * @return The exponent for the clean digits or null.
+		 */
+		Integer getExponent()
+		{
+			return exponent;
+		}
+
+		/**
+		 * @return The sign as shown: "" or "−".
+		 */
+		String getSign()
+		{
+			return sign;
 		}
 
 		/**
