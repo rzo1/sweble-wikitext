@@ -20,6 +20,7 @@ package org.sweble.wikitext.parser.postprocessor;
 import de.fau.cs.osr.utils.visitor.VisitorLogic;
 import org.sweble.wikitext.parser.WtRtData;
 import org.sweble.wikitext.parser.nodes.*;
+import org.sweble.wikitext.parser.utils.WtRtDataPrinter;
 
 import java.util.ListIterator;
 
@@ -235,10 +236,13 @@ public final class TreeBuilderInBody
 			break;
 			*/
 			case CAPTION:
-				//			case COL:
-				//			case COLGROUP:
+			case COL:
+			case COLGROUP:
+			case TBODY:
 			case TD:
+			case TFOOT:
 			case TH:
+			case THEAD:
 			case TR:
 				startTagR50(n);
 				break;
@@ -345,6 +349,7 @@ public final class TreeBuilderInBody
 			case INT_LINK:
 			case EXT_LINK:
 			case URL:
+			case LCT_VAR_CONV:
 
 			case B:
 			case BIG:
@@ -505,9 +510,9 @@ public final class TreeBuilderInBody
 				// Although native WtNode tables elements are always correctly 
 				// nested by the parser, it is possible that the TreeBuilder
 				// leaves the table/row/cell scope before all the tables/... 
-				// children were processed. And in that case, we can end up 
+				// children were processed. And in that case, we can end up
 				// here...
-				startTagR50(n);
+				nativeTableElementR50(n);
 				break;
 
 			case NT_XML_ELEMENT:
@@ -523,10 +528,13 @@ public final class TreeBuilderInBody
 	{
 		// insertAnHtmlElement
 		WtNode newNode = getFactory().createNewElement(n);
-		tb.getStack().push(newNode);
+		tb.pushOnStack(newNode);
 		tb.setRootNode((WtParsedWikitextPage) newNode);
 
 		iterate(n);
+
+		// Text after an unclosed table is still pending
+		tb.flushPendingTableText();
 
 		// 12.2.5.4.7  R10
 		// 12.2.5.4.17 R05
@@ -590,60 +598,66 @@ public final class TreeBuilderInBody
 		startTagR37(n);
 	}
 
+	/*
+	 * The content of a native element can switch the insertion mode (e.g. an
+	 * unclosed table). Synthetic end tags are therefore dispatched through the
+	 * current insertion mode like any other token.
+	 */
+
 	public void visit(WtBold n)
 	{
 		startTagR28(n);
 		iterate(n);
-		endTagR30(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	public void visit(WtItalics n)
 	{
 		startTagR28(n);
 		iterate(n);
-		endTagR30(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	public void visit(WtListItem n)
 	{
 		startTagR16(n);
 		iterate(n);
-		endTagR23(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	public void visit(WtOrderedList n)
 	{
 		startTagR12(n);
 		iterate(n);
-		endTagR20(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	public void visit(WtUnorderedList n)
 	{
 		startTagR12(n);
 		iterate(n);
-		endTagR20(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	public void visit(WtDefinitionList n)
 	{
 		startTagR12(n);
 		iterate(n);
-		endTagR20(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	public void visit(WtDefinitionListDef n)
 	{
 		startTagR17(n);
 		iterate(n);
-		endTagR24(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	public void visit(WtDefinitionListTerm n)
 	{
 		startTagR17(n);
 		iterate(n);
-		endTagR24(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	public void visit(WtInternalLink n)
@@ -866,13 +880,15 @@ public final class TreeBuilderInBody
 		// Almost: tb.insertAnHtmlElement(heading);
 		WtHeading newNode = (WtHeading) getFactory().createNewElement(heading);
 		((WtSection) tb.getCurrentNode()).setHeading(newNode);
-		tb.getStack().push(newNode);
+		tb.pushOnStack(newNode);
 		// ---
 
 		iterate(heading);
 		if (!tb.isInStackOfOpenElements(newNode))
 			//throw new AssertionError("Section heading was removed from stack prematurely!");
 			return false;
+
+		closeTablesOpenedIn(newNode);
 
 		// Almost: endTagR20(getFactory().synEndTag(heading));
 		tb.generateImpliedEndTags();
@@ -913,7 +929,7 @@ public final class TreeBuilderInBody
 		// Almost: tb.insertAnHtmlElement(heading);
 		WtBody newNode = (WtBody) getFactory().createNewElement(body);
 		((WtSection) tb.getCurrentNode()).setBody(newNode);
-		tb.getStack().push(newNode);
+		tb.pushOnStack(newNode);
 		// ---
 
 		iterate(body);
@@ -946,7 +962,7 @@ public final class TreeBuilderInBody
 	{
 		startTagR28(n);
 		iterate(n.getText());
-		endTagR30(getFactory().createSyntheticEndTag(n));
+		dispatch(getFactory().createSyntheticEndTag(n));
 	}
 
 	// =====================================================================
@@ -1494,6 +1510,7 @@ public final class TreeBuilderInBody
 					// definitely get to step 9.4 next. Make sure, we know
 					// which node was "above" node before node was removed.
 					stackIter.remove();
+					tb.nodeRemovedFromStack(node);
 					continue inner;
 				}
 				else if (node == fe)
@@ -1611,6 +1628,105 @@ public final class TreeBuilderInBody
 	{
 		tb.error(n, "12.2.5.4.7 - R50");
 		tb.ignore(n);
+	}
+
+	/**
+	 * R50 for native table elements (captions, rows, header cells and cells).
+	 * They can show up in body if their table was closed prematurely, e.g. by
+	 * a stray &lt;/table> end tag. Like a start tag the element itself is
+	 * ignored. However, unlike a start tag, a native element also contains its
+	 * content which must not get lost. The markup of the element is kept as
+	 * ignored node to preserve the round trip information.
+	 */
+	private void nativeTableElementR50(WtNode n)
+	{
+		tb.error(n, "12.2.5.4.7 - R50");
+
+		int bodyIndex = n.size() - 1;
+		WtNode body = n.get(bodyIndex);
+
+		WtRtData rtd = n.getRtd();
+		boolean hasRtd = (rtd != null)
+				&& !rtd.isSuppress()
+				&& (rtd.size() == n.size() + 1);
+
+		WtRtData bodyRtd = body.getRtd();
+		boolean hasBodyRtd = (bodyRtd != null)
+				&& !bodyRtd.isSuppress()
+				&& (bodyRtd.size() == 2);
+
+		StringBuilder markup = new StringBuilder();
+		if (hasRtd)
+		{
+			for (int i = 0; i < bodyIndex; ++i)
+			{
+				markup.append(printRtdField(rtd.getField(i)));
+				markup.append(WtRtDataPrinter.print(n.get(i)));
+			}
+			markup.append(printRtdField(rtd.getField(bodyIndex)));
+		}
+		if (hasBodyRtd)
+			markup.append(printRtdField(bodyRtd.getField(0)));
+		insertMarkup(markup.toString());
+
+		iterate(body);
+
+		markup = new StringBuilder();
+		if (hasBodyRtd)
+			markup.append(printRtdField(bodyRtd.getField(1)));
+		if (hasRtd)
+			markup.append(printRtdField(rtd.getField(bodyIndex + 1)));
+		insertMarkup(markup.toString());
+	}
+
+	private String printRtdField(Object[] field)
+	{
+		WtIgnored glue = tb.getConfig().getNodeFactory().ignored("");
+		glue.setRtd(field);
+		return WtRtDataPrinter.print(glue);
+	}
+
+	private void insertMarkup(String markup)
+	{
+		if (!markup.isEmpty())
+			tokenR03(tb.getConfig().getNodeFactory().ignored(markup));
+	}
+
+	/**
+	 * Closes all tables that were opened inside the given element (a section
+	 * heading) and are still open. Otherwise the table would swallow the rest
+	 * of the page and the section structure would break.
+	 */
+	private void closeTablesOpenedIn(WtNode container)
+	{
+		while (true)
+		{
+			WtNode table = null;
+			for (WtNode node : tb.getStack())
+			{
+				if (node == container)
+					break;
+
+				if (getNodeType(node) == TABLE)
+				{
+					table = node;
+					break;
+				}
+			}
+
+			if (table == null)
+				return;
+
+			dispatch(getFactory().createMissingRepairEndTag(TABLE));
+
+			if (tb.isInStackOfOpenElements(table))
+			{
+				// The end tag did not reach the table
+				tb.flushPendingTableText();
+				tb.popFromStackUntilIncludingRef(table);
+				tb.resetInsertionMode();
+			}
+		}
 	}
 
 	/**

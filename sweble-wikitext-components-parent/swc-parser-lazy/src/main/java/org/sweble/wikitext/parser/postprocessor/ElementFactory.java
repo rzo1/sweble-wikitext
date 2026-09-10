@@ -154,14 +154,14 @@ public class ElementFactory
 	/**
 	 * Only used by adoption agency algorithm to create the adopting node.
 	 *
-	 * I'm not sure if the adopter is a repair element. I think it is, but we
-	 * probably have to render it fully, otherwise things could get messy. After
-	 * all the adoption agency algorithm completely rearranges nodes thus
-	 * messing up faulty wikitext.
+	 * The start tag of the formatting element is already printed by the
+	 * formatting element itself. Therefore, the adopter must not copy the
+	 * start tag's RTD information. The adopter only receives the RTD of the
+	 * end tag that triggered the adoption agency algorithm.
 	 */
 	public WtNode createAdopterElement(WtNode template)
 	{
-		WtNode newElement = createNewElement(template);
+		WtNode newElement = create(template, true);
 
 		/**
 		 * Don't treat it as repair element. Those won't be rendered which might

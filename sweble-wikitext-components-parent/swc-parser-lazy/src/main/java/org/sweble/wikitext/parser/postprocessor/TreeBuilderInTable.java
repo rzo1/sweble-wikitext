@@ -23,7 +23,9 @@ import static org.sweble.wikitext.parser.postprocessor.ElementType.COLGROUP;
 import static org.sweble.wikitext.parser.postprocessor.ElementType.TABLE;
 import static org.sweble.wikitext.parser.postprocessor.ElementType.TBODY;
 import static org.sweble.wikitext.parser.postprocessor.ElementType.TD;
+import static org.sweble.wikitext.parser.postprocessor.ElementType.TFOOT;
 import static org.sweble.wikitext.parser.postprocessor.ElementType.TH;
+import static org.sweble.wikitext.parser.postprocessor.ElementType.THEAD;
 import static org.sweble.wikitext.parser.postprocessor.ElementType.TR;
 
 import org.sweble.wikitext.parser.nodes.WtNewline;
@@ -35,7 +37,6 @@ import org.sweble.wikitext.parser.nodes.WtTableHeader;
 import org.sweble.wikitext.parser.nodes.WtTableRow;
 import org.sweble.wikitext.parser.nodes.WtText;
 import org.sweble.wikitext.parser.nodes.WtXmlComment;
-import org.sweble.wikitext.parser.nodes.WtXmlElement;
 import org.sweble.wikitext.parser.nodes.WtXmlEmptyTag;
 import org.sweble.wikitext.parser.nodes.WtXmlEndTag;
 import org.sweble.wikitext.parser.nodes.WtXmlStartTag;
@@ -162,6 +163,10 @@ public final class TreeBuilderInTable
 				break;
 			case COL:
 				startTagR06(n);
+				break;
+			case TABLE:
+				// The self-closing flag is ignored for table elements
+				startTagR09(n);
 				break;
 			default:
 				anythingElseR16(n);
@@ -396,6 +401,19 @@ public final class TreeBuilderInTable
 
 		public void visit(WtNode n)
 		{
+			flushPendingTableCharTokens();
+
+			dispatch(n);
+		}
+
+		/**
+		 * Inserts the pending character tokens and switches back to the
+		 * original insertion mode. Usually that happens when the next
+		 * non-character token arrives. It has to be done explicitly if no more
+		 * tokens will arrive.
+		 */
+		void flushPendingTableCharTokens()
+		{
 			WtText textNode = getFactory().text(tb.getPendingTableCharTokens());
 			if (StringTools.isWhitespace(textNode.getContent()))
 			{
@@ -408,8 +426,6 @@ public final class TreeBuilderInTable
 			}
 
 			tb.resetToOriginalInsertionMode();
-
-			dispatch(n);
 		}
 
 		public void visit(WtText n)
@@ -865,54 +881,54 @@ public final class TreeBuilderInTable
 		/**
 		 * Iterate through the elements of the "new" table that we already
 		 * processed to see if the table already has a row attached.
+		 *
+		 * Only element nodes are inspected. Anything else (whitespace,
+		 * comments or transclusions that were not foster parented) can end up
+		 * in the table or its sections and is skipped.
 		 */
 		private boolean hasRows(WtTable table)
 		{
 			for (WtNode n : table.getBody())
 			{
-				switch (n.getNodeType())
+				if (isRow(n))
+					return true;
+
+				if (isTableSection(n))
 				{
-					case WtNode.NT_TABLE_IMPLICIT_TBODY:
-						for (WtNode rows : n)
-						{
-							if (getNodeType(rows) == TR)
-								return true;
-						}
-						return false;
-					case WtNode.NT_TEXT:
-						// Whitespace only text can be part of the table.
-						// Non-whitespace text should have been hoisted in
-						// front of the table already -> no need to check.
-						continue;
-					case WtNode.NT_TABLE_CAPTION:
-					case WtNode.NT_XML_COMMENT:
-						continue;
-					case WtNode.NT_XML_ELEMENT:
-						switch (getNodeType(n))
-						{
-							case CAPTION:
-							case COLGROUP:
-								continue;
-							case TBODY:
-							case TFOOT:
-							case THEAD:
-								for (WtNode rows : ((WtXmlElement) n).getBody())
-								{
-									if (getNodeType(rows) == TR)
-										return true;
-								}
-								continue;
-							default:
-								break;
-						}
-						// FALL THROUGH
-					default:
-						// Any other garbage should have been hoisted in front
-						// of the table already.
-						throw new AssertionError();
+					for (WtNode row : tb.getContentOfNode(n))
+					{
+						if (isRow(row))
+							return true;
+					}
 				}
 			}
 			return false;
+		}
+
+		private boolean isRow(WtNode n)
+		{
+			switch (n.getNodeType())
+			{
+				case WtNode.NT_TABLE_ROW:
+					return true;
+				case WtNode.NT_XML_ELEMENT:
+					return getNodeType(n) == TR;
+				default:
+					return false;
+			}
+		}
+
+		private boolean isTableSection(WtNode n)
+		{
+			switch (n.getNodeType())
+			{
+				case WtNode.NT_TABLE_IMPLICIT_TBODY:
+					return true;
+				case WtNode.NT_XML_ELEMENT:
+					return isNodeOneOf(n, TBODY, TFOOT, THEAD);
+				default:
+					return false;
+			}
 		}
 
 		private void rule04(WtNode n)

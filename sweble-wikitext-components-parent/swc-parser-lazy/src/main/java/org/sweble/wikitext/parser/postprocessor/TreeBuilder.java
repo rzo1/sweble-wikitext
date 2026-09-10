@@ -46,10 +46,12 @@ import static org.sweble.wikitext.parser.postprocessor.StackScope.LIST_ITEM_SCOP
 import static org.sweble.wikitext.parser.postprocessor.StackScope.TABLE_SCOPE;
 
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.sweble.wikitext.parser.ParserConfig;
 import org.sweble.wikitext.parser.WtRtData;
@@ -57,6 +59,7 @@ import org.sweble.wikitext.parser.comparer.WtComparer;
 import org.sweble.wikitext.parser.nodes.WikitextNodeFactory;
 import org.sweble.wikitext.parser.nodes.WtBody;
 import org.sweble.wikitext.parser.nodes.WtContentNode.WtAbsentContentNode;
+import org.sweble.wikitext.parser.nodes.WtEmptyImmutableNode;
 import org.sweble.wikitext.parser.nodes.WtExternalLink;
 import org.sweble.wikitext.parser.nodes.WtImEndTag;
 import org.sweble.wikitext.parser.nodes.WtImStartTag;
@@ -100,10 +103,27 @@ import de.fau.cs.osr.utils.visitor.VisitorLogic;
  * to use, reproduce and create derivative works of this document.
  * 
  * TODO: Round trip information has to get fixed!
+ *
+ * <b>Stack requirements:</b> The tree built by the tree builder is at most
+ * {@link #MAX_TREE_DEPTH} elements deep, even if the page contains thousands
+ * of nested (unclosed) HTML elements. Beyond that depth elements are inserted
+ * as siblings and the round trip information of their end tags is printed
+ * out of order. However, the TicksAnalyzer and the TreeBuilder visit the AST
+ * produced by the parser recursively. Deeply nested native wikitext elements
+ * (e.g. lists that are nested hundreds of levels deep) therefore need a large
+ * thread stack: roughly 2 KB per nesting level. A 1 MB stack suffices for
+ * about 400 levels, a 4 MB stack for about 2000 levels. Process such pages in
+ * a thread with a larger stack (or use -Xss).
  */
 public class TreeBuilder
 {
 	static final boolean DEBUG = false;
+
+	/**
+	 * Maximum depth of the element tree built by the tree builder (see
+	 * insertElement()). Blink uses the same limit.
+	 */
+	static final int MAX_TREE_DEPTH = 512;
 
 	private static final WtNode MARKER = null;
 
@@ -146,6 +166,20 @@ public class TreeBuilder
 	private String pendingTableCharTokens = null;
 
 	private boolean fosterParentingMode = false;
+
+	/**
+	 * For every element on the stack of open elements that terminates the
+	 * button scope, the number of p elements that were opened above it. The
+	 * first entry belongs to the most recent such element. Allows to check
+	 * whether a p element is in button scope without scanning the stack.
+	 */
+	private final LinkedList<int[]> paragraphsInButtonScope = new LinkedList<int[]>();
+
+	/**
+	 * Cached keys of formatting elements for the Noah's Ark clause.
+	 */
+	private final Map<WtNode, FormattingElementKey> formattingElementKeys =
+			new IdentityHashMap<WtNode, FormattingElementKey>();
 
 	private final WikitextNodeFactory nf;
 
@@ -423,6 +457,18 @@ public class TreeBuilder
 		return text;
 	}
 
+	/**
+	 * The "in table text" insertion mode collects character tokens until the
+	 * next non-character token arrives. If no more tokens will arrive (for
+	 * example at the end of the page), the collected text has to be flushed
+	 * explicitly or it would get lost.
+	 */
+	void flushPendingTableText()
+	{
+		if (logic.getImpl() == inTableTextMode)
+			((TreeBuilderInTableText) inTableTextMode).flushPendingTableCharTokens();
+	}
+
 	// =========================================================================
 
 	WtNodeList getContentOfNode(WtNode node)
@@ -550,9 +596,7 @@ public class TreeBuilder
 		if (e0 == e1)
 			return true;
 
-		ElementType t0 = getNodeType(e0);
-		ElementType t1 = getNodeType(e1);
-		if (t0 != t1)
+		if (!isSameTag(e0, e1))
 			return false;
 
 		if (e0.getNodeType() == WtNode.NT_XML_ELEMENT)
@@ -613,7 +657,8 @@ public class TreeBuilder
 			WtNodeList v1 = a.getValue();
 
 			if (v0 == v1)
-				return true;
+				// e.g. both attributes have no value
+				continue;
 
 			if (!WtComparer.compareNoThrow(v0, v1, false, false))
 				return false;
@@ -684,17 +729,45 @@ public class TreeBuilder
 	WtNode insertAnHtmlElement(WtNode sample)
 	{
 		WtNode newNode = factory.createNewElement(sample);
-		appendToCurrentNode(newNode);
-		getStack().push(newNode);
+		insertElement(newNode);
 		return newNode;
 	}
 
 	WtNode insertAnHtmlRepairFormattingElement(WtNode sample)
 	{
 		WtNode newNode = factory.createRepairFormattingElement(sample);
-		appendToCurrentNode(newNode);
-		getStack().push(newNode);
+		insertElement(newNode);
 		return newNode;
+	}
+
+	/**
+	 * Appends the new element to the current node and pushes it onto the
+	 * stack of open elements.
+	 *
+	 * If the stack of open elements already contains {@link #MAX_TREE_DEPTH}
+	 * elements, the new element is appended to the element at that depth
+	 * instead of the current node. Browsers limit the depth of the DOM tree in
+	 * the same way. The stack of open elements is not limited, therefore end
+	 * tags still find their elements.
+	 */
+	private void insertElement(WtNode newNode)
+	{
+		int size = getStack().size();
+		WtNode parent = null;
+		if (size > MAX_TREE_DEPTH)
+		{
+			parent = getStack().get(size - MAX_TREE_DEPTH);
+			if (parent.getNodeType() == WtNode.NT_SECTION
+					|| isNodeTypeOneOf(parent, TABLE, TBODY, TFOOT, THEAD, TR))
+				parent = null;
+		}
+
+		if (parent != null)
+			getContentOfNodeForModification(parent).add(newNode);
+		else
+			appendToCurrentNode(newNode);
+
+		pushOnStack(newNode);
 	}
 
 	/**
@@ -819,6 +892,13 @@ public class TreeBuilder
 
 	boolean isElementTypeInButtonScope(ElementType elementType)
 	{
+		// Paragraphs are checked for almost every block element. Don't scan
+		// the (possibly deep) stack if there is no p element in scope.
+		if (elementType == P
+				&& !paragraphsInButtonScope.isEmpty()
+				&& paragraphsInButtonScope.peek()[0] == 0)
+			return false;
+
 		return isElementTypeInSpecificScope(BUTTON_SCOPE, elementType);
 	}
 
@@ -884,6 +964,17 @@ public class TreeBuilder
 
 	// =========================================================================
 
+	void pushOnStack(WtNode node)
+	{
+		ElementType nodeType = getNodeType(node);
+		if (BUTTON_SCOPE.isInList(nodeType))
+			paragraphsInButtonScope.push(new int[1]);
+		else if (nodeType == P && !paragraphsInButtonScope.isEmpty())
+			++paragraphsInButtonScope.peek()[0];
+
+		getStack().push(node);
+	}
+
 	void removeFromStack(WtNode node)
 	{
 		Iterator<WtNode> i = getStack().iterator();
@@ -892,10 +983,37 @@ public class TreeBuilder
 			if (i.next() == node)
 			{
 				i.remove();
+				nodeRemovedFromStack(node);
 				return;
 			}
 		}
 		throw new AssertionError("Could not remove node from stack!");
+	}
+
+	/**
+	 * Must be called if a node was inserted into or removed from the stack of
+	 * open elements at a position other than the top of the stack.
+	 */
+	void nodeRemovedFromStack(WtNode node)
+	{
+		ElementType nodeType = getNodeType(node);
+		if (nodeType == P || BUTTON_SCOPE.isInList(nodeType))
+			recountParagraphsInButtonScope();
+	}
+
+	private void recountParagraphsInButtonScope()
+	{
+		paragraphsInButtonScope.clear();
+
+		Iterator<WtNode> i = getStack().descendingIterator();
+		while (i.hasNext())
+		{
+			ElementType nodeType = getNodeType(i.next());
+			if (BUTTON_SCOPE.isInList(nodeType))
+				paragraphsInButtonScope.push(new int[1]);
+			else if (nodeType == P && !paragraphsInButtonScope.isEmpty())
+				++paragraphsInButtonScope.peek()[0];
+		}
 	}
 
 	boolean isInStackOfOpenElements(WtNode node)
@@ -969,7 +1087,15 @@ public class TreeBuilder
 
 	WtNode popFromStack()
 	{
-		return getStack().pop();
+		WtNode node = getStack().pop();
+
+		ElementType nodeType = getNodeType(node);
+		if (BUTTON_SCOPE.isInList(nodeType))
+			paragraphsInButtonScope.poll();
+		else if (nodeType == P && !paragraphsInButtonScope.isEmpty())
+			--paragraphsInButtonScope.peek()[0];
+
+		return node;
 	}
 
 	void clearStackBackToTableContext()
@@ -1010,6 +1136,7 @@ public class TreeBuilder
 			{
 				i.previous();
 				i.add(node);
+				nodeRemovedFromStack(node);
 				return;
 			}
 		}
@@ -1119,7 +1246,7 @@ public class TreeBuilder
 			if (fe == MARKER)
 				break;
 
-			if (isSameFormattingElement(fe, node))
+			if (isSameFormattingElementCached(fe, node))
 				++count;
 
 			if (count == 3)
@@ -1129,6 +1256,42 @@ public class TreeBuilder
 			}
 		}
 		activeFormattingElements.add(node);
+	}
+
+	/**
+	 * Same as isSameFormattingElement() but faster: The tag and the number of
+	 * attributes are compared first and attributes are compared using a
+	 * canonical key which is only computed once per element. Only elements
+	 * whose attributes have no canonical key are compared the slow way.
+	 */
+	private boolean isSameFormattingElementCached(WtNode e0, WtNode e1)
+	{
+		if (e0 == e1)
+			return true;
+
+		FormattingElementKey k0 = getFormattingElementKey(e0);
+		FormattingElementKey k1 = getFormattingElementKey(e1);
+
+		if (!k0.tag.equals(k1.tag))
+			return false;
+
+		if (k0.attributes == null || k1.attributes == null)
+			return isSameFormattingElement(e0, e1);
+
+		return k0.attributeCount == k1.attributeCount
+				&& k0.attributes.hashCode() == k1.attributes.hashCode()
+				&& k0.attributes.equals(k1.attributes);
+	}
+
+	private FormattingElementKey getFormattingElementKey(WtNode e)
+	{
+		FormattingElementKey key = formattingElementKeys.get(e);
+		if (key == null)
+		{
+			key = new FormattingElementKey(e);
+			formattingElementKeys.put(e, key);
+		}
+		return key;
 	}
 
 	boolean isInListOfActiveFormattingElements(WtNode node)
@@ -1423,19 +1586,55 @@ public class TreeBuilder
 		WtNode lastTable = getFromStack(TABLE);
 		if (lastTable != null)
 		{
-			// I believe it is not possible (only in our case, not in HTML in 
-			// general) for the last table NOT to have a parent. Therefore, we
-			// can skip the special treatment of tables without or with the 
-			// wrong kind of parent.
-			WtNode fosterParent = getAboveOnStack(lastTable);
-			WtNodeList content = getContentOfNodeForModification(fosterParent);
-			int i = content.indexOf(lastTable);
-			content.add(i, node);
+			// I believe it is not possible (only in our case, not in HTML in
+			// general) for the last table NOT to have a parent. Usually the
+			// parent is the element above the table on the stack of open
+			// elements. However, if the table itself was foster parented, its
+			// parent is an element further up the stack.
+			Iterator<WtNode> i = getStack().iterator();
+			while (i.next() != lastTable)
+				;
+
+			WtNode aboveLastTable = null;
+			while (i.hasNext())
+			{
+				WtNode candidate = i.next();
+				if (aboveLastTable == null)
+					aboveLastTable = candidate;
+
+				if (candidate.getNodeType() == WtNode.NT_SECTION)
+					continue;
+
+				int index = indexOfNode(getContentOfNode(candidate), lastTable);
+				if (index >= 0)
+				{
+					getContentOfNodeForModification(candidate).add(index, node);
+					return;
+				}
+			}
+
+			// The table has no parent on the stack: Append to the element
+			// above the last table.
+			getContentOfNodeForModification(aboveLastTable).add(node);
 		}
 		else
 		{
 			getContentOfNodeForModification(getStack().getLast()).add(node);
 		}
+	}
+
+	/**
+	 * Nodes implement equals() by comparing their content. We are looking for
+	 * a specific node.
+	 */
+	private static int indexOfNode(WtNodeList content, WtNode node)
+	{
+		for (int i = content.size() - 1; i >= 0; --i)
+		{
+			if (content.get(i) == node)
+				return i;
+		}
+		return -1;
 	}
 
 	void setFosterParentingMode(boolean fosterParentingMode)
@@ -1465,5 +1664,102 @@ public class TreeBuilder
 				WtLeafNode
 	{
 		private static final long serialVersionUID = 1L;
+	}
+
+	// =========================================================================
+
+	/**
+	 * Identifies formatting elements for the Noah's Ark clause.
+	 */
+	private static final class FormattingElementKey
+	{
+		/**
+		 * The element type or, for unknown elements, the element name.
+		 */
+		private final String tag;
+
+		/**
+		 * The number of attributes. Only meaningful if the attributes have a
+		 * canonical representation.
+		 */
+		private final int attributeCount;
+
+		/**
+		 * A canonical representation of the attributes or null if the
+		 * attributes can only be compared using isSameAttributes().
+		 */
+		private final String attributes;
+
+		public FormattingElementKey(WtNode e)
+		{
+			ElementType type = getNodeType(e);
+			if (type == UNKNOWN && (e instanceof WtNamedXmlElement))
+				this.tag = "<" + ((WtNamedXmlElement) e).getName().toLowerCase();
+			else
+				this.tag = String.valueOf(type);
+
+			if (e.getNodeType() == WtNode.NT_XML_ELEMENT)
+			{
+				WtNodeList attrs = ((WtXmlElement) e).getXmlAttributes();
+				this.attributeCount = attrs.size();
+				this.attributes = canonicalAttributes(attrs);
+			}
+			else
+			{
+				this.attributeCount = 0;
+				this.attributes = "";
+			}
+		}
+
+		/**
+		 * Only attributes with resolved names that are unique and whose
+		 * values consist of text only are represented canonically.
+		 */
+		private static String canonicalAttributes(WtNodeList attrs)
+		{
+			TreeMap<String, String> sorted = new TreeMap<String, String>();
+			for (WtNode n : attrs)
+			{
+				if (n.getNodeType() != WtNode.NT_XML_ATTRIBUTE)
+					return null;
+
+				WtXmlAttribute a = (WtXmlAttribute) n;
+				if (!a.getName().isResolved())
+					return null;
+
+				String value = canonicalValue(a.getValue());
+				if (value == null)
+					return null;
+
+				if (sorted.put(a.getName().getAsString(), value) != null)
+					return null;
+			}
+
+			StringBuilder sb = new StringBuilder();
+			for (Map.Entry<String, String> e : sorted.entrySet())
+			{
+				sb.append(e.getKey().length()).append(':').append(e.getKey());
+				sb.append(e.getValue());
+			}
+			return sb.toString();
+		}
+
+		private static String canonicalValue(WtNodeList value)
+		{
+			if (value == null || value instanceof WtEmptyImmutableNode || value.isEmpty())
+				return null;
+
+			StringBuilder sb = new StringBuilder();
+			sb.append(value.size()).append('=');
+			for (WtNode n : value)
+			{
+				if (n.getNodeType() != WtNode.NT_TEXT)
+					return null;
+
+				String text = ((WtText) n).getContent();
+				sb.append(text.length()).append(':').append(text);
+			}
+			return sb.toString();
+		}
 	}
 }
