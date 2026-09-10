@@ -17,6 +17,9 @@
 
 package org.sweble.wikitext.parser.preprocessor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.sweble.wikitext.parser.ParserConfig;
 import org.sweble.wikitext.parser.WtEntityMap;
 import org.sweble.wikitext.parser.nodes.WtNode;
@@ -43,6 +46,34 @@ public class WikitextPreprocessorState
 
 	private boolean parseForInclusion;
 
+	private int maxNestingDepth = ParserConfig.DEFAULT_MAX_NESTING_DEPTH;
+
+	// =========================================================================
+
+	private static final int UNKNOWN = -2;
+
+	/**
+	 * The input of the preprocessor or {@code null} if unknown. In the latter
+	 * case the look-ahead caches below are disabled.
+	 */
+	private String input;
+
+	/**
+	 * Position of the last "]]" in the input, -1 if there is none.
+	 */
+	private int lastDoubleClosingBracket = UNKNOWN;
+
+	/**
+	 * Position of the last "}}" in the input, -1 if there is none.
+	 */
+	private int lastDoubleClosingBrace = UNKNOWN;
+
+	/**
+	 * Position of the last closing tag for a given tag name (as written in
+	 * the opening tag), -1 if there is none.
+	 */
+	private final Map<String, Integer> lastClosingTag = new HashMap<String, Integer>();
+
 	// =========================================================================
 
 	public WikitextPreprocessorState()
@@ -66,6 +97,31 @@ public class WikitextPreprocessorState
 			WtEntityMap entityMap,
 			boolean forInclusion)
 	{
+		init(config, entityMap, forInclusion, null);
+	}
+
+	/**
+	 * @param input
+	 *            The input the preprocessor parses. Enables caches that keep
+	 *            the preprocessor from scanning ahead for closing brackets,
+	 *            braces and tags over and over again. May be {@code null}.
+	 */
+	public void init(
+			ParserConfig config,
+			WtEntityMap entityMap,
+			boolean forInclusion,
+			String input)
+	{
+		this.input = input;
+
+		this.lastDoubleClosingBracket = UNKNOWN;
+
+		this.lastDoubleClosingBrace = UNKNOWN;
+
+		this.lastClosingTag.clear();
+
+		this.maxNestingDepth = config.getMaxNestingDepth();
+
 		this.config = config;
 
 		this.entityMap = entityMap;
@@ -135,6 +191,134 @@ public class WikitextPreprocessorState
 	{
 		getTop().setTemplateBraces(
 				getTop().getTemplateBraces() - i);
+	}
+
+	// =========================================================================
+
+	/**
+	 * Enters a nested template, template parameter or internal link by
+	 * incrementing the nesting depth of the current context. Must only be
+	 * called from a stateful production, which restores the depth when it is
+	 * left.
+	 *
+	 * @return {@code false} and leaves the depth unchanged if
+	 *         {@link ParserConfig#getMaxNestingDepth()} has already been
+	 *         reached.
+	 */
+	public boolean enterNesting()
+	{
+		WikitextPreprocessorContext c = getTop();
+		if (c.getNestingDepth() >= maxNestingDepth)
+			return false;
+		c.setNestingDepth(c.getNestingDepth() + 1);
+		return true;
+	}
+
+	// =========================================================================
+
+	/**
+	 * @return {@code false} if there is no "]]" at or after the given
+	 *         position. An internal link opened in front of that position can
+	 *         then never be closed.
+	 */
+	public boolean hasDoubleClosingBracketAfter(int pos)
+	{
+		if (input == null)
+			return true;
+		if (lastDoubleClosingBracket == UNKNOWN)
+			lastDoubleClosingBracket = input.lastIndexOf("]]");
+		return lastDoubleClosingBracket >= pos;
+	}
+
+	/**
+	 * @return {@code false} if there is no "}}" at or after the given
+	 *         position. A template or parameter opened in front of that
+	 *         position can then never be closed.
+	 */
+	public boolean hasDoubleClosingBraceAfter(int pos)
+	{
+		if (input == null)
+			return true;
+		if (lastDoubleClosingBrace == UNKNOWN)
+			lastDoubleClosingBrace = input.lastIndexOf("}}");
+		return lastDoubleClosingBrace >= pos;
+	}
+
+	/**
+	 * Checks whether the input contains a closing tag for the current tag
+	 * extension (see {@link #setTagExtensionName(String)}) at or after the
+	 * given position.
+	 * <p>
+	 * Like MediaWiki's noMoreClosingTag cache this keeps input like
+	 * "&lt;foo>&lt;foo>&lt;foo>..." from taking quadratic time: The input is
+	 * scanned only once per tag name.
+	 */
+	public boolean hasClosingTagAfter(int pos)
+	{
+		String name = getTop().getTagExtensionName();
+		if (input == null || name == null)
+			return true;
+		Integer last = lastClosingTag.get(name);
+		if (last == null)
+		{
+			last = findLastClosingTag(name);
+			lastClosingTag.put(name, last);
+		}
+		return last >= pos;
+	}
+
+	/**
+	 * Finds the last closing tag "&lt;/name ws* >" like the ValidClosingTag
+	 * production does: The name is matched case-insensitively and must not be
+	 * followed by further name characters.
+	 */
+	private int findLastClosingTag(String name)
+	{
+		int i = input.lastIndexOf("</");
+		while (i >= 0)
+		{
+			if (isClosingTagAt(i, name))
+				return i;
+			i = input.lastIndexOf("</", i - 1);
+		}
+		return -1;
+	}
+
+	private boolean isClosingTagAt(int i, String name)
+	{
+		int j = i + 2;
+		if (!input.regionMatches(true, j, name, 0, name.length()))
+			return false;
+		j += name.length();
+
+		// Neither whitespace nor '>' can be part of a tag name. If either
+		// follows, the tag name ends here.
+		int len = input.length();
+		while (j < len && isWhitespace(input.charAt(j)))
+			++j;
+		return j < len && input.charAt(j) == '>';
+	}
+
+	/**
+	 * The characters matched by pWsStar.
+	 */
+	private static boolean isWhitespace(char ch)
+	{
+		switch (ch)
+		{
+			case ' ':
+			case '\t':
+			case '\f':
+			case '\n':
+			case '\r':
+			case '\u000B':
+			case '\u0085':
+			case '\u2028':
+			case '\u2029':
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	// =========================================================================

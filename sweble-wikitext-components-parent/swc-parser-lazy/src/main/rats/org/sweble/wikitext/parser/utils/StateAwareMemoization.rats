@@ -24,21 +24,23 @@ module org.sweble.wikitext.parser.utils.StateAwareMemoization;
 
 body
 {
-  private static ParserStats stats = null;
+  // Per parser instance: Static mutable state would be shared by all parsers
+  // running concurrently.
+  private ParserStats stats = null;
 
   // ===========================================================================
 
-  public static void enableStats()
+  public void enableStats()
   {
     stats = new ParserStats();
   }
 
-  public static boolean isStatsEnabled()
+  public boolean isStatsEnabled()
   {
     return stats != null;
   }
 
-  public static ParserStats getStats()
+  public ParserStats getStats()
   {
     return stats;
   }

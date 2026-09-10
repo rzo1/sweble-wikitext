@@ -36,8 +36,6 @@ public class WikitextPreprocessor
 		extends
 			ParserCommon<WtNode>
 {
-	private RatsWikitextPreprocessor preprocessor = null;
-
 	private final ParserConfig config;
 
 	// =========================================================================
@@ -86,13 +84,19 @@ public class WikitextPreprocessor
 
 		int inputSize = wikitext.getWikitext().getBytes().length;
 
-		preprocessor = new RatsWikitextPreprocessor(in, title, inputSize);
+		// A Rats! parser must not be shared between threads
+		RatsWikitextPreprocessor preprocessor =
+				new RatsWikitextPreprocessor(in, title, inputSize);
 
-		preprocessor.getState().init(config, wikitext.getEntityMap(), forInclusion);
+		preprocessor.getState().init(
+				config,
+				wikitext.getEntityMap(),
+				forInclusion,
+				wikitext.getWikitext());
 
 		preprocessor.setNodeFactory(config.getNodeFactory());
 
-		Result r = this.preprocessor.pArticle(0);
+		Result r = preprocessor.pArticle(0);
 
 		if (r.hasValue())
 		{

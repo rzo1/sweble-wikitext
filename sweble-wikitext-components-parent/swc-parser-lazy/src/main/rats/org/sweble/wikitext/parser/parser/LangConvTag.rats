@@ -193,7 +193,7 @@ body
 // -- LanguageConversionTag ----------------------------------------------------
 
 transient WtNode LanguageConversionTag =
-    &{ isLangConvTagsEnabled() } "-{" yyValue:LanguageConversionTagChoice
+    &{ isLangConvTagsEnabled() } &{ canNest() } "-{" yyValue:LanguageConversionTagChoice
   / "-"
     {
       yyValue = nf.text("-");
@@ -316,6 +316,7 @@ private String LctVariant =
 ;
 
 private transient stateful WtLctRuleText LctRuleTextStar =
+  &{ enterNesting() }
   {
     enter(ParserScopes.LCT_RULE_TEXT);
   }
@@ -347,6 +348,7 @@ private transient WtLctVarConv LctProtect =
 ;
 
 private transient stateful WtBody LctProtectedContentStar =
+  &{ enterNesting() }
   {
     enter(ParserScopes.LCT_PROTECTED_CONTENT);
   }

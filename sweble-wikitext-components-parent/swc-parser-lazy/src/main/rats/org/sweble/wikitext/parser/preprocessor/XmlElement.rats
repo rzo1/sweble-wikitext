@@ -101,6 +101,7 @@ stateful WtNode XmlElement =
   /       IgnoredOpeningTag
   /       IgnoredElements
   /       TagExtension
+  /       UnclosedTagExtension
   /       LeftAngleBracket
   )
 ;
@@ -219,7 +220,7 @@ private transient WtNode IgnoredElements =
     {
       getState().setTagExtensionName(header.name);
     }
-    '>' body:TagBody
+    '>' body:IgnoredElementBody
     {
       yyValue = nf.ignored("<" + header.name + header.garbage + ">" + body.content.getContent() + body.endTag);
     }
@@ -283,7 +284,21 @@ private transient TagExtHeader TagHeader =
     }
 ;
 
+/* Only includeonly, noinclude and onlyinclude may run to the end of the input
+ * (see IgnoredElementBody). The body of all other tags must be closed.
+ * Checking for a closing tag first keeps unclosed opening tags from scanning
+ * to the end of the input again and again.
+ */
 private transient TagExtBody TagBody =
+  &{ hasClosingTagAfter(yyStart) } content:TagContentStar endTag:ValidClosingTag
+  {
+    yyValue = new TagExtBody();
+    yyValue.content = nf.tagExtBody(content);
+    yyValue.endTag = endTag;
+  }
+;
+
+private transient TagExtBody IgnoredElementBody =
   content:TagContentStar
   endTag:(
     ValidClosingTag
@@ -296,6 +311,16 @@ private transient TagExtBody TagBody =
     yyValue = new TagExtBody();
     yyValue.content = nf.tagExtBody(content);
     yyValue.endTag = (String) endTag;
+  }
+;
+
+/* An opening tag without closing tag. Like MediaWiki's Preprocessor_Hash we
+ * treat the whole opening tag as literal text and resume parsing after it.
+ */
+private transient WtText UnclosedTagExtension =
+  TagHeader '>'
+  {
+    yyValue = nf.text("<" + difference(yyStart, yyResult) + ">");
   }
 ;
 

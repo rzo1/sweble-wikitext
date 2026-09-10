@@ -38,8 +38,6 @@ public class WikitextParser
 {
 	private final ParserConfig config;
 
-	private RatsWikitextParser parser;
-
 	// =========================================================================
 
 	public WikitextParser(ParserConfig config)
@@ -72,20 +70,21 @@ public class WikitextParser
 
 		int inputSize = wikitext.getWikitext().getBytes().length;
 
-		parser = new RatsWikitextParser(in, title, inputSize);
+		// A Rats! parser must not be shared between threads
+		RatsWikitextParser parser = new RatsWikitextParser(in, title, inputSize);
 
-		parser.getState().init(config, wikitext.getEntityMap());
+		parser.getState().init(config, wikitext.getEntityMap(), wikitext.getWikitext());
 
 		parser.setNodeFactory(config.getNodeFactory());
 
 		Result r = null;
 
-		//RatsWikitextParser.enableStats();
+		//parser.enableStats();
 		{
-			r = this.parser.pArticle(0);
+			r = parser.pArticle(0);
 		}
-		if (RatsWikitextParser.isStatsEnabled())
-			RatsWikitextParser.getStats().dump(System.err);
+		if (parser.isStatsEnabled())
+			parser.getStats().dump(System.err);
 
 		if (r.hasValue())
 		{

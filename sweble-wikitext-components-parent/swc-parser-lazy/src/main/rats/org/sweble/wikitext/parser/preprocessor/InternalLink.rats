@@ -24,8 +24,13 @@ modify org.sweble.wikitext.parser.preprocessor.Content;
 
 // -- InternalLink -------------------------------------------------------------
 
-WtNode InternalLink =
-    "[[" content:InternalLinkContentStar "]]"
+/* Without a "]]" further down the input the link cannot be closed and beyond
+ * the maximum nesting depth it must not be opened. The brackets are text in
+ * both cases.
+ */
+stateful WtNode InternalLink =
+    "[[" &{ getState().hasDoubleClosingBracketAfter(yyStart + 2) } &{ enterNesting() }
+    content:InternalLinkContentStar "]]"
     {
       yyValue = nf.list(nf.text("[["), content, nf.text("]]"));
     }

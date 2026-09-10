@@ -97,15 +97,21 @@ inline void InlineContentStopperExternalLink =
   &{ inScope(ParserScopes.EXTERNAL_LINK_TITLE) } ']'
 ;
 
+/* Without a ']' on the same line the link cannot be closed. Checking this
+ * first keeps unclosed openers from parsing the title to the end of the line
+ * again and again.
+ */
 private inline stateful WtNode
 ExternalLinkChoice =
+    &{ getState().mayHaveClosingBracketOnLine(yyStart) }
     rt0:pTpStar target:Url rt1:pExtSpacePlus title:ExternalLinkTitleContentPlus ']'
     {
       yyValue = setRtd(
         nf.extLink(target, nf.linkTitle(title)),
         '[', rt0, SEP, rt1, SEP, ']');
     }
-  / rt0:pTpStar target:Url rt1:pSpaceStar ']'
+  / &{ getState().mayHaveClosingBracketOnLine(yyStart) }
+    rt0:pTpStar target:Url rt1:pSpaceStar ']'
     {
       yyValue = setRtd(
         nf.extLink(target),
