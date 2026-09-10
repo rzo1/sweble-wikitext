@@ -17,6 +17,7 @@
 
 package org.sweble.wikitext.articlecruncher.utils;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -41,19 +42,23 @@ public class WorkerLauncher
 
 	private static final Logger logger = LoggerFactory.getLogger(WorkerLauncher.class.getName());
 
-	private final Object kickOffLock = new Object();
+	/**
+	 * Guards the state of the launcher. Also makes sure that this.future is
+	 * set before the worker can kick-off.
+	 */
+	private final Object lock = new Object();
 
 	private final WorkerInstantiator workerInstantiator;
 
 	private final AbortHandler abortHandler;
 
-	private String workerName;
+	private volatile String workerName;
 
-	private Future<?> future;
+	private volatile Future<?> future;
 
-	private WorkerState state;
+	private volatile WorkerState state;
 
-	private WorkerSynchronizer synchronizer;
+	private volatile WorkerSynchronizer synchronizer;
 
 	// =========================================================================
 
@@ -70,38 +75,30 @@ public class WorkerLauncher
 
 	// =========================================================================
 
-	public final synchronized void start(ExecutorService executor)
+	public final void start(ExecutorService executor)
 	{
 		start(executor, null);
 	}
 
-	public final synchronized void start(
+	public final void start(
 			ExecutorService executor,
 			WorkerSynchronizer synchronizer)
 	{
-		synchronized (state)
+		synchronized (lock)
 		{
 			if (state != WorkerState.INITIALIZED)
-			{
 				throw new IllegalStateException("start() can be called only once");
-			}
-			else
-			{
-				// Make sure that this.future is set before the worker can kick-off
-				synchronized (kickOffLock)
-				{
-					this.state = WorkerState.RUNNING;
-					this.synchronizer = synchronizer;
 
-					this.future = executor.submit(new WorkerRunnable());
-				}
-			}
+			this.state = WorkerState.RUNNING;
+			this.synchronizer = synchronizer;
+
+			this.future = executor.submit(new WorkerRunnable());
 		}
 	}
 
-	public final synchronized void stop()
+	public final void stop()
 	{
-		synchronized (state)
+		synchronized (lock)
 		{
 			switch (state)
 			{
@@ -129,15 +126,15 @@ public class WorkerLauncher
 		}
 	}
 
-	public final synchronized void await() throws InterruptedException, ExecutionException
+	public final void await() throws InterruptedException, ExecutionException
 	{
 		await(Long.MAX_VALUE, null);
 	}
 
-	public final synchronized boolean await(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException
+	public final boolean await(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException
 	{
 		Future<?> f;
-		synchronized (state)
+		synchronized (lock)
 		{
 			if (state == WorkerState.INITIALIZED)
 				throw new IllegalStateException("await() can only be called after start()");
@@ -145,18 +142,23 @@ public class WorkerLauncher
 			f = future;
 		}
 
+		// Don't wait inside lock, the worker could not be stopped otherwise!
 		if (f != null)
 		{
 			try
 			{
 				if (timeout == Long.MAX_VALUE && unit == null)
 				{
-					future.get();
+					f.get();
 				}
 				else
 				{
-					future.get(timeout, unit);
+					f.get(timeout, unit);
 				}
+			}
+			catch (CancellationException e)
+			{
+				// stopped
 			}
 			catch (TimeoutException e)
 			{
@@ -182,18 +184,26 @@ public class WorkerLauncher
 		@Override
 		public void run()
 		{
-			synchronized (kickOffLock)
+			synchronized (lock)
 			{
 			}
 
-			WorkerBase worker = workerInstantiator.instantiate();
-			workerName = worker.getWorkerName();
-			worker.setLauncher(WorkerLauncher.this);
+			WorkerBase worker = null;
+
+			boolean registered = false;
 
 			try
 			{
+				worker = workerInstantiator.instantiate();
+				workerName = worker.getWorkerName();
+				worker.setLauncher(WorkerLauncher.this);
+
 				if (synchronizer != null)
+				{
+					// oneStarted() counts the worker before it can throw
+					registered = true;
 					synchronizer.oneStarted();
+				}
 
 				logger.info(workerName + " starting");
 
@@ -208,15 +218,8 @@ public class WorkerLauncher
 			}
 			catch (InterruptedException e)
 			{
-				boolean unexpected = false;
-				synchronized (state)
-				{
-					// Don't call abort inside lock!
-					if (state != WorkerState.POISONED)
-						unexpected = true;
-				}
-
-				if (unexpected)
+				// Don't call abort inside lock!
+				if (state != WorkerState.POISONED)
 				{
 					logger.error(workerName + " interrupted unexpectedly", e);
 					abortHandler.notify(e);
@@ -224,29 +227,49 @@ public class WorkerLauncher
 			}
 			catch (Throwable t)
 			{
-				logger.error(workerName + " terminated by exception", t);
+				if (worker == null)
+				{
+					logger.error("Creating worker failed", t);
+				}
+				else
+				{
+					logger.error(workerName + " terminated by exception", t);
+				}
 				abortHandler.notify(t);
 			}
 			finally
 			{
-				try
+				if (worker != null)
 				{
-					worker.after();
-				}
-				catch (Throwable t)
-				{
-					logger.error(workerName + ".after() threw exception", t);
+					try
+					{
+						worker.after();
+					}
+					catch (Throwable t)
+					{
+						logger.error(workerName + ".after() threw exception", t);
+					}
 				}
 
-				synchronized (state)
+				synchronized (lock)
 				{
 					state = WorkerState.STOPPED;
 				}
 
-				logger.info(workerName + " stopped");
+				if (worker != null)
+					logger.info(workerName + " stopped");
 
 				if (synchronizer != null)
-					synchronizer.oneStopped();
+				{
+					if (registered)
+					{
+						synchronizer.oneStopped();
+					}
+					else
+					{
+						synchronizer.oneFailedToStart();
+					}
+				}
 			}
 		}
 	}

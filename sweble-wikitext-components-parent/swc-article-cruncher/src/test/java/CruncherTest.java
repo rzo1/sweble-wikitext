@@ -67,7 +67,7 @@ public class CruncherTest
 
 	// =========================================================================
 
-	@Test
+	@Test(timeout = 120000)
 	public void testWithoutFailing() throws Throwable
 	{
 		nexus.start();
@@ -82,7 +82,7 @@ public class CruncherTest
 		assertTrue(jobTraces.isEmpty());
 	}
 
-	@Test
+	@Test(timeout = 120000)
 	public void testWithFailing() throws Throwable
 	{
 		failAfter = (NUM_JOBS_TO_GENERATE * 3) / 4;

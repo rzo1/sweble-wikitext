@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +61,7 @@ public class Nexus
 
 	private MyExecutorService executor;
 
-	private Throwable emergencyCause;
+	private volatile Throwable emergencyCause;
 
 	private WorkerLauncher gatherer;
 
@@ -152,7 +154,7 @@ public class Nexus
 					gatherer.start(executor);
 
 					logger.info("Nexus waiting for end of input stream");
-					synchronizer.waitForAll(1);
+					synchronizer.waitForAll(jobGenerators.size());
 				}
 				catch (InterruptedException e)
 				{
@@ -169,7 +171,20 @@ public class Nexus
 			if (emergencyCause == null)
 			{
 				logger.info("Nexus waiting for processing to finish");
-				jobTraces.waitForCompletion(COMPLETION_TIMEOUT_IN_SECONDS);
+				if (!jobTraces.awaitCompletion(COMPLETION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS))
+				{
+					synchronized (synchronizer.getMonitor())
+					{
+						// Waiting is only aborted by an emergency shutdown
+						if (emergencyCause == null)
+						{
+							logger.error("Nexus timed out waiting for processing to finish");
+							setEmergencyCause(new TimeoutException(
+									"Processing did not finish within " +
+											COMPLETION_TIMEOUT_IN_SECONDS + " seconds"));
+						}
+					}
+				}
 			}
 		}
 		finally
@@ -319,16 +334,29 @@ public class Nexus
 		{
 			switch (/*get().*/state)
 			{
+				case INITIALIZED:
+					// Workers already run and can fail before start()
+					if (t == null)
+						throw new IllegalStateException("Can only shutdown running Nexus");
+					// fall through
+
 				case RUNNING:
 				{
+					if (t != null)
+					{
+						logger.info("Nexus performing emergency shutdown");
+
+						/*get().*/setEmergencyCause(t);
+
+						// Job generation may already have finished
+						/*get().*/jobTraces.abortWaiting();
+					}
+
 					WorkerSynchronizer sync = /*get().*/synchronizer;
 					if (!sync.isSynchronized() && !sync.isAborted())
 					{
-						/*get().*/setEmergencyCause(t);
-
-						logger.info(t == null ?
-								"Nexus performing orderly shutdown" :
-								"Nexus performing emergency shutdown");
+						if (t == null)
+							logger.info("Nexus performing orderly shutdown");
 
 						sync.abort();
 					}
@@ -383,7 +411,10 @@ public class Nexus
 
 	private void nexusStopped() throws Throwable
 	{
-		state = NexusState.SHUTDOWN;
+		synchronized (synchronizer.getMonitor())
+		{
+			state = NexusState.SHUTDOWN;
+		}
 
 		logger.info("Nexus stopped");
 
