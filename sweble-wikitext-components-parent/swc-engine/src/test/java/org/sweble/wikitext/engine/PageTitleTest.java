@@ -23,10 +23,16 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import org.junit.Test;
 import org.sweble.wikitext.engine.config.InterwikiImpl;
 import org.sweble.wikitext.engine.config.NamespaceCase;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
+import org.sweble.wikitext.engine.config.WikiConfigurationException;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
 
 public class PageTitleTest
@@ -209,6 +215,67 @@ public class PageTitleTest
 			assertEquals(lang, "İstanbul", PageTitle.make(config, "istanbul").getTitle());
 			assertEquals(lang, "Ii", PageTitle.make(config, "ıi").getTitle());
 			assertEquals(lang, "Ankara", PageTitle.make(config, "ankara").getTitle());
+		}
+	}
+
+	private static Object serializeAndDeserialize(Object o) throws Exception
+	{
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		try (ObjectOutputStream out = new ObjectOutputStream(bytes))
+		{
+			out.writeObject(o);
+		}
+		try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray())))
+		{
+			return in.readObject();
+		}
+	}
+
+	/** Page titles can be serialized and bound to a configuration again (issue #133). */
+	@Test
+	public void testSerialization() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+
+		for (String target : new String[] { "Template:Foo/bar#frag", "Foo", "wikt:Haus" })
+		{
+			PageTitle title = PageTitle.make(config, target);
+			PageTitle copy = (PageTitle) serializeAndDeserialize(title);
+
+			assertEquals(target, title, copy);
+			assertEquals(target, title.hashCode(), copy.hashCode());
+			assertEquals(target, title.getPrefixedText(), copy.getPrefixedText());
+			assertEquals(target, title.getNamespace(), copy.getNamespace());
+
+			PageTitle bound = copy.rebind(config);
+			assertEquals(target, title, bound);
+			assertEquals(target, title.getUrl(), bound.getUrl());
+		}
+
+		PageTitle copy = (PageTitle) serializeAndDeserialize(PageTitle.make(config, "Foo"));
+		try
+		{
+			copy.getUrl();
+			fail("A title without configuration cannot build a URL");
+		}
+		catch (IllegalStateException e)
+		{
+			assertTrue(e.getMessage(), e.getMessage().contains("rebind"));
+		}
+	}
+
+	/** A missing default namespace is reported clearly (issue #133). */
+	@Test
+	public void testMakeWithoutDefaultNamespaceFailsWithConfigurationException() throws Exception
+	{
+		try
+		{
+			PageTitle.make(new WikiConfigImpl(), "Foo");
+			fail("Expected a WikiConfigurationException");
+		}
+		catch (WikiConfigurationException e)
+		{
+			assertTrue(e.getMessage(), e.getMessage().contains("default namespace"));
 		}
 	}
 }
