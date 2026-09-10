@@ -71,6 +71,13 @@
 		<dependency>
 			<groupId>de.fau.cs.osr.ptk</groupId>
 			<artifactId>ptk-common</artifactId>
+			<exclusions>
+				<!-- Outdated 1.15.0, swc-parser-lazy provides 2.4.0 -->
+				<exclusion>
+					<groupId>xtc</groupId>
+					<artifactId>rats-runtime</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Sweble Wikitext Components - Sweble Wikitext Parser -->

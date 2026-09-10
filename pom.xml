@@ -66,8 +66,17 @@
 		<maven.compiler.target>11</maven.compiler.target>
 
 		<commons-io.version>2.20.0</commons-io.version>
-		<commons-codec.version>1.18.0</commons-codec.version>
+		<commons-codec.version>1.19.0</commons-codec.version>
 		<gson.version>2.13.1</gson.version>
+
+		<!-- override outdated versions managed by the osr parent -->
+		<commons-compress.version>1.28.0</commons-compress.version>
+		<commons-jxpath.version>1.4.0</commons-jxpath.version>
+		<commons-math3.version>3.6.1</commons-math3.version>
+		<xercesImpl.version>2.12.2</xercesImpl.version>
+		<xalan.version>2.7.3</xalan.version>
+		<Saxon-HE.version>12.10</Saxon-HE.version>
+		<rats-runtime.version>2.4.0</rats-runtime.version>
 
 		<forbiddenapis-plugin.version>3.6</forbiddenapis-plugin.version>
 		<maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
@@ -222,6 +231,20 @@
 						<artifactId>jakarta.activation</artifactId>
 					</exclusion>
 				</exclusions>
+			</dependency>
+
+			<!-- xalan 2.7.3 no longer declares its serializer dependency -->
+			<dependency>
+				<groupId>xalan</groupId>
+				<artifactId>serializer</artifactId>
+				<version>${xalan.version}</version>
+			</dependency>
+
+			<!-- ptk-common pulls in rats-runtime 1.15.0 -->
+			<dependency>
+				<groupId>xtc</groupId>
+				<artifactId>rats-runtime</artifactId>
+				<version>${rats-runtime.version}</version>
 			</dependency>
 
 			<dependency>

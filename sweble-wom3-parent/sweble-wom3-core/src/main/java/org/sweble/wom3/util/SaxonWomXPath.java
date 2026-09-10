@@ -31,6 +31,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import de.fau.cs.osr.utils.WrappedException;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.pull.NamespaceContextImpl;
 import net.sf.saxon.sxpath.IndependentContext;
 
@@ -71,10 +72,10 @@ public class SaxonWomXPath
 	public static String womToWmXPath(Wom3Node doc)
 	{
 		IndependentContext context = new IndependentContext();
-		context.declareNamespace(XMLConstants.DEFAULT_NS_PREFIX, Wom3Node.WOM_NS_URI);
-		context.declareNamespace(XMLConstants.XML_NS_PREFIX, XMLConstants.XML_NS_URI);
-		context.declareNamespace(XMLConstants.XMLNS_ATTRIBUTE, XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
-		context.declareNamespace(Wom3Node.DEFAULT_WOM_NS_PREFIX, Wom3Node.WOM_NS_URI);
+		context.declareNamespace(XMLConstants.DEFAULT_NS_PREFIX, NamespaceUri.of(Wom3Node.WOM_NS_URI));
+		context.declareNamespace(XMLConstants.XML_NS_PREFIX, NamespaceUri.of(XMLConstants.XML_NS_URI));
+		context.declareNamespace(XMLConstants.XMLNS_ATTRIBUTE, NamespaceUri.of(XMLConstants.XMLNS_ATTRIBUTE_NS_URI));
+		context.declareNamespace(Wom3Node.DEFAULT_WOM_NS_PREFIX, NamespaceUri.of(Wom3Node.WOM_NS_URI));
 
 		return womToWmXPath(new NamespaceContextImpl(context), doc);
 

@@ -63,7 +63,6 @@
 		<maven-rats-plugin.version>1.3.3</maven-rats-plugin.version>
 
 		<jopt-simple.version>5.0.4</jopt-simple.version>
-		<rats-runtime.version>2.4.0</rats-runtime.version>
 		<xstream.version>1.4.21</xstream.version>
 	</properties>
 
@@ -79,13 +78,6 @@
 				<groupId>net.sf.jopt-simple</groupId>
 				<artifactId>jopt-simple</artifactId>
 				<version>${jopt-simple.version}</version>
-			</dependency>
-
-			<!-- Rats! -->
-			<dependency>
-				<groupId>xtc</groupId>
-				<artifactId>rats-runtime</artifactId>
-				<version>${rats-runtime.version}</version>
 			</dependency>
 
 			<!-- XStream -->
