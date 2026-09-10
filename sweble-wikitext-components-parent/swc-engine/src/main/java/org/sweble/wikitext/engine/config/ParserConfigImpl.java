@@ -348,6 +348,16 @@ public class ParserConfigImpl
 		return iwPrefix.equals(this.wikiConfig.getInterwikiPrefix());
 	}
 
+	/**
+	 * Resolves image link options using the img_* magic word aliases of the
+	 * wiki. The parser falls back to the English aliases on its own.
+	 */
+	public String getImageLinkOptionId(String alias)
+	{
+		I18nAliasImpl a = this.wikiConfig.getImageLinkOptionAlias(alias);
+		return (a != null) ? a.getId() : null;
+	}
+
 	// ==[ Names ]==============================================================
 
 	@Override

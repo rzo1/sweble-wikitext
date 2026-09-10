@@ -47,6 +47,11 @@ public final class NonExpandingParser
 		parserConfig = new NonExpandingParserConfig();
 	}
 
+	public NonExpandingParser(ParserConfig parserConfig)
+	{
+		this.parserConfig = parserConfig;
+	}
+
 	public NonExpandingParser(
 			boolean warningsEnabled,
 			boolean gatherRtd,

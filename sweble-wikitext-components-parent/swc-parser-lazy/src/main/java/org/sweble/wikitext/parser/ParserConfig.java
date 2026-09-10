@@ -68,6 +68,28 @@ public interface ParserConfig
 
 	boolean isIwPrefixOfThisWiki(String iwPrefix);
 
+	/**
+	 * Resolves a (possibly localized) image link option to the id of the
+	 * magic word it is an alias of. For example, {@code "thumb"} and the
+	 * German {@code "mini"} both resolve to {@code "img_thumbnail"}.
+	 * Parameterized options are passed in the form MediaWiki uses for their
+	 * aliases, with the parameter replaced by {@code $1} (e.g.
+	 * {@code "$1px"} or {@code "link=$1"}). The ids the parser understands
+	 * are listed in {@link ImageLinkOptionAliases}.
+	 *
+	 * The English aliases are always recognized by the parser as a fallback
+	 * ({@link ImageLinkOptionAliases#getDefaultId(String)}), implementations
+	 * only have to provide additional (localized) aliases. The default
+	 * implementation does not know any additional aliases.
+	 *
+	 * @return The magic word id or {@code null} if the given string is not a
+	 *         known image link option alias.
+	 */
+	default String getImageLinkOptionId(String alias)
+	{
+		return null;
+	}
+
 	// ==[ Names ]==============================================================
 
 	boolean isValidPageSwitchName(String name);
