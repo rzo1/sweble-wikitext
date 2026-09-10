@@ -22,11 +22,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.sweble.wikitext.engine.config.Interwiki;
 import org.sweble.wikitext.engine.config.Namespace;
+import org.sweble.wikitext.engine.config.NamespaceCase;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.config.WikiConfigurationException;
+import org.sweble.wikitext.engine.utils.TitleCase;
 import org.sweble.wikitext.engine.utils.UrlService;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 import org.sweble.wikitext.parser.parser.LinkTargetParser;
@@ -413,9 +414,10 @@ public class PageTitle
 
 		// TODO: MediaWiki limits the length of title names
 
-		// Don't capitalize the first letter of a interwiki link
-		if (interwiki == null)
-			title = StringUtils.capitalize(title);
+		// Don't capitalize the first letter of a interwiki link or of a title
+		// in a case-sensitive namespace (e.g. on Wiktionary)
+		if (interwiki == null && namespace.getCase() == NamespaceCase.FIRST_LETTER)
+			title = TitleCase.ucfirst(title, config.getContentLanguage());
 
 		// TODO: MediaWiki normalizes IPv6 titles
 

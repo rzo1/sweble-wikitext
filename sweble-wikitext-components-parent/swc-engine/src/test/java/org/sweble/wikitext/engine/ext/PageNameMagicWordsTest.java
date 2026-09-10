@@ -30,6 +30,7 @@ import org.sweble.wikitext.engine.FullPage;
 import org.sweble.wikitext.engine.PageId;
 import org.sweble.wikitext.engine.PageTitle;
 import org.sweble.wikitext.engine.WtEngineImpl;
+import org.sweble.wikitext.engine.config.NamespaceCase;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
 import org.sweble.wikitext.engine.nodes.EngProcessedPage;
 import org.sweble.wikitext.engine.output.HtmlRenderer;
@@ -254,6 +255,34 @@ public class PageNameMagicWordsTest
 		html = render("A&B's", "[[{{FULLPAGENAME}}]]");
 
 		assertTrue(html, html.contains("<strong class=\"selflink\">A&amp;B&#39;s</strong>"));
+	}
+
+	// =========================================================================
+	// == Case-sensitive namespaces (issue #103)
+
+	@Test
+	public void testCaseSensitiveNamespaceKeepsCaseOfPageName() throws Exception
+	{
+		config.getNamespace(0).setCase(NamespaceCase.CASE_SENSITIVE);
+		config.getNamespace(1).setCase(NamespaceCase.CASE_SENSITIVE);
+		config.getNamespace(10).setCase(NamespaceCase.CASE_SENSITIVE);
+
+		assertEquals("wort", expand("wort", "{{PAGENAME}}"));
+		assertEquals("wort", expand("Test", "{{PAGENAME:wort}}"));
+		assertEquals("Talk:wort", expand("Test", "{{TALKPAGENAME:wort}}"));
+		assertEquals("wort", expand("Test", "{{#titleparts:wort/a|1}}"));
+
+		// User is still first-letter
+		assertEquals("User:Foo", expand("Test", "{{FULLPAGENAME:User:foo}}"));
+		assertEquals("User talk:Foo", expand("Test", "{{TALKPAGENAME:User:foo}}"));
+
+		pages.put("Template:foo", "lower");
+		pages.put("Template:Foo", "upper");
+		pages.put("bar", "main");
+
+		assertEquals("lower", expand("Test", "{{foo}}"));
+		assertEquals("upper", expand("Test", "{{Foo}}"));
+		assertEquals("main", expand("Test", "{{:bar}}"));
 	}
 
 	// =========================================================================

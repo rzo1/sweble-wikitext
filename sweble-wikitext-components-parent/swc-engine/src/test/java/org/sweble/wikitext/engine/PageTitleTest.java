@@ -18,12 +18,14 @@ package org.sweble.wikitext.engine;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
 import org.sweble.wikitext.engine.config.InterwikiImpl;
+import org.sweble.wikitext.engine.config.NamespaceCase;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
 
@@ -125,6 +127,88 @@ public class PageTitleTest
 		catch (IllegalArgumentException e)
 		{
 			// expected
+		}
+	}
+
+	/** Titles in first-letter namespaces are capitalized (issue #103). */
+	@Test
+	public void testFirstLetterNamespaceCapitalizesTitle() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getDefaultNamespace().getCase());
+
+		assertEquals("Foo_bar", PageTitle.make(config, "foo bar").getTitle());
+		assertEquals("Foo", PageTitle.make(config, "User:foo").getTitle());
+		assertEquals("User:Foo", PageTitle.make(config, "user:foo").getPrefixedText());
+		assertEquals(PageTitle.make(config, "Foo"), PageTitle.make(config, "foo"));
+
+		// Interwiki links are never capitalized
+		assertEquals("haus", PageTitle.make(config, "wikt:haus").getTitle());
+	}
+
+	/** Titles in case-sensitive namespaces keep their case (issue #103). */
+	@Test
+	public void testCaseSensitiveNamespaceKeepsTitle() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+		config.getNamespace(0).setCase(NamespaceCase.CASE_SENSITIVE);
+		config.getNamespace(10).setCase(NamespaceCase.CASE_SENSITIVE);
+
+		assertEquals("wort", PageTitle.make(config, "wort").getTitle());
+		assertEquals("Wort", PageTitle.make(config, "Wort").getTitle());
+		assertNotEquals(PageTitle.make(config, "Wort"), PageTitle.make(config, "wort"));
+
+		// The namespace of the title decides, not the default namespace
+		assertEquals("Template:foo", PageTitle.make(config, "foo", config.getTemplateNamespace()).getPrefixedText());
+		assertEquals("foo", PageTitle.make(config, ":foo", config.getTemplateNamespace()).getTitle());
+		assertEquals("User:Foo", PageTitle.make(config, "User:foo").getPrefixedText());
+		assertEquals("Foo", PageTitle.make(config, "foo", config.getNamespace(2)).getTitle());
+
+		// Subpages keep their case as well
+		PageTitle title = PageTitle.make(config, "Template:foo/bar");
+		assertEquals("foo", title.getBaseTitle().getTitle());
+		assertEquals("bar", title.getSubpageTitle().getTitle());
+	}
+
+	/** The first letter is converted like MediaWiki's Language::ucfirst(). */
+	@Test
+	public void testFirstLetterIsConvertedLikeMediaWiki() throws Exception
+	{
+		WikiConfigImpl config = DefaultConfigEnWp.generate();
+
+		// No single upper case letter
+		assertEquals("ßa", PageTitle.make(config, "ßa").getTitle());
+		assertEquals("ﬁx", PageTitle.make(config, "ﬁx").getTitle());
+
+		// Letters that are not uppercased in titles
+		assertEquals("ქართული", PageTitle.make(config, "ქართული").getTitle());
+
+		// Other scripts and characters outside the BMP
+		assertEquals("Éa", PageTitle.make(config, "éa").getTitle());
+		assertEquals("Ωmega", PageTitle.make(config, "ωmega").getTitle());
+		assertEquals("𐐀x", PageTitle.make(config, "𐐨x").getTitle());
+		assertEquals("1a", PageTitle.make(config, "1a").getTitle());
+
+		// Only the first letter is changed
+		assertEquals("ÄöÜ", PageTitle.make(config, "äöÜ").getTitle());
+
+		// The dotless i becomes I in all languages
+		assertEquals("Istanbul", PageTitle.make(config, "istanbul").getTitle());
+		assertEquals("Ii", PageTitle.make(config, "ıi").getTitle());
+	}
+
+	/** Turkish upper cases the dotted i to İ (MediaWiki's LanguageTr). */
+	@Test
+	public void testTurkishDottedI() throws Exception
+	{
+		for (String lang : new String[] { "tr", "az", "kaa" })
+		{
+			WikiConfigImpl config = DefaultConfigEnWp.generate();
+			config.setContentLang(lang);
+
+			assertEquals(lang, "İstanbul", PageTitle.make(config, "istanbul").getTitle());
+			assertEquals(lang, "Ii", PageTitle.make(config, "ıi").getTitle());
+			assertEquals(lang, "Ankara", PageTitle.make(config, "ankara").getTitle());
 		}
 	}
 }

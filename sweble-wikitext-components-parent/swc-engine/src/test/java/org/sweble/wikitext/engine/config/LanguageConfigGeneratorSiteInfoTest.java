@@ -339,6 +339,113 @@ public class LanguageConfigGeneratorSiteInfoTest
 		assertEquals("tür", links.get(0).getPostfix());
 	}
 
+	/** de.wiktionary is case-sensitive except for some namespaces (issue #103). */
+	@Test
+	public void testWiktionaryNamespaceCase() throws Exception
+	{
+		WikiConfig config = generateWiktionaryConfig();
+
+		assertEquals(NamespaceCase.CASE_SENSITIVE, config.getNamespace(0).getCase());
+		assertEquals(NamespaceCase.CASE_SENSITIVE, config.getNamespace(10).getCase());
+		assertEquals(NamespaceCase.CASE_SENSITIVE, config.getNamespace(108).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getNamespace(-1).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getNamespace(2).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getNamespace(3).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getNamespace(8).getCase());
+
+		assertEquals("wort", PageTitle.make(config, "wort").getPrefixedText());
+		assertEquals("Wort", PageTitle.make(config, "Wort").getPrefixedText());
+		assertEquals("Benutzer:Foo", PageTitle.make(config, "Benutzer:foo").getPrefixedText());
+		assertEquals("Benutzer:Foo", PageTitle.make(config, "User:foo").getPrefixedText());
+		assertEquals("Spezial:Suche", PageTitle.make(config, "Spezial:suche").getPrefixedText());
+		assertEquals("Vorlage:de-verb", PageTitle.make(config, "Vorlage:de-verb").getPrefixedText());
+		assertEquals("Flexion:haus", PageTitle.make(config, "Flexion:haus").getPrefixedText());
+
+		assertEquals(
+				"https://de.wiktionary.org/wiki/wort",
+				expand(config, "{{VOLLSTÄNDIGE_URL:wort}}"));
+
+		// Transcluded templates keep their case as well
+		List<PageTitle> requested = new ArrayList<PageTitle>();
+		WtEngineImpl engine = new WtEngineImpl(config);
+		engine.expand(pageId(config), "{{de-verb}}{{:wort}}{{Benutzer:foo}}", new RecordingCallback(requested));
+		List<String> names = new ArrayList<String>();
+		for (PageTitle title : requested)
+			names.add(title.getPrefixedText());
+		assertEquals("[Vorlage:de-verb, wort, Benutzer:Foo]", names.toString());
+	}
+
+	@Test
+	public void testWiktionaryNamespaceCaseIsSavedAndLoaded() throws Exception
+	{
+		WikiConfigImpl config = (WikiConfigImpl) generateWiktionaryConfig();
+
+		StringWriter writer = new StringWriter();
+		config.save(writer);
+		WikiConfigImpl loaded = WikiConfigImpl.load(new StringReader(writer.toString()));
+
+		for (Namespace ns : config.getNamespaces())
+			assertEquals(ns.getName(), ns.getCase(), loaded.getNamespace(ns.getId()).getCase());
+		assertEquals("wort", PageTitle.make(loaded, "wort").getPrefixedText());
+		assertEquals("Benutzer:Foo", PageTitle.make(loaded, "Benutzer:foo").getPrefixedText());
+	}
+
+	/**
+	 * Namespaces without a case attribute use the case setting of the wiki,
+	 * except for the ones MediaWiki always capitalizes.
+	 */
+	@Test
+	public void testNamespacesWithoutCaseUseCaseOfWiki() throws Exception
+	{
+		String siteInfo = resource("/siteinfo/dewiktionary-siteinfo.xml");
+		WikiConfig config = LanguageConfigGenerator.generateWikiConfig(
+				"de wiki",
+				"https://de.wiktionary.org",
+				"de",
+				resource("/siteinfo/dewiktionary-namespacealiases.xml"),
+				resource("/siteinfo/dewiktionary-namespaces-nocase.xml"),
+				siteInfo,
+				siteInfo,
+				siteInfo,
+				null);
+
+		assertEquals(NamespaceCase.CASE_SENSITIVE, config.getNamespace(0).getCase());
+		assertEquals(NamespaceCase.CASE_SENSITIVE, config.getNamespace(1).getCase());
+		assertEquals(NamespaceCase.CASE_SENSITIVE, config.getNamespace(10).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getNamespace(-1).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getNamespace(2).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getNamespace(3).getCase());
+		assertEquals(NamespaceCase.FIRST_LETTER, config.getNamespace(8).getCase());
+
+		// A first-letter wiki (de.wikipedia)
+		config = LanguageConfigGenerator.generateWikiConfig(
+				"de wiki",
+				"https://de.wikipedia.org",
+				"de",
+				resource("/siteinfo/dewiktionary-namespacealiases.xml"),
+				resource("/siteinfo/dewiktionary-namespaces-nocase.xml"),
+				siteInfo,
+				siteInfo,
+				resource("/siteinfo/dewiki-general.xml"),
+				null);
+
+		for (Namespace ns : config.getNamespaces())
+			assertEquals(ns.getName(), NamespaceCase.FIRST_LETTER, ns.getCase());
+
+		// Without general site information
+		config = LanguageConfigGenerator.generateWikiConfig(
+				"de wiki",
+				"https://de.wiktionary.org",
+				"de",
+				resource("/siteinfo/dewiktionary-namespacealiases.xml"),
+				resource("/siteinfo/dewiktionary-namespaces-nocase.xml"),
+				siteInfo,
+				siteInfo);
+
+		for (Namespace ns : config.getNamespaces())
+			assertEquals(ns.getName(), NamespaceCase.FIRST_LETTER, ns.getCase());
+	}
+
 	@Test
 	public void testGenerateWithoutGeneralSiteInfoKeepsGivenValues() throws Exception
 	{
@@ -364,6 +471,21 @@ public class LanguageConfigGeneratorSiteInfoTest
 		URL url = LanguageConfigGeneratorSiteInfoTest.class.getResource(name);
 		assertNotNull(name, url);
 		return url.toString();
+	}
+
+	private static WikiConfig generateWiktionaryConfig() throws Exception
+	{
+		String siteInfo = resource("/siteinfo/dewiktionary-siteinfo.xml");
+		return LanguageConfigGenerator.generateWikiConfig(
+				"de wiki",
+				"https://de.wiktionary.org",
+				"de",
+				resource("/siteinfo/dewiktionary-namespacealiases.xml"),
+				siteInfo,
+				siteInfo,
+				siteInfo,
+				siteInfo,
+				null);
 	}
 
 	private static WikiConfigImpl configFromGeneral(String name, String siteUrl) throws Exception
@@ -400,6 +522,31 @@ public class LanguageConfigGeneratorSiteInfoTest
 			texts.add(((WtText) node).getContent());
 		for (WtNode child : node)
 			collect(child, links, texts);
+	}
+
+	private static final class RecordingCallback
+			implements
+				ExpansionCallback
+	{
+		private final List<PageTitle> requested;
+
+		RecordingCallback(List<PageTitle> requested)
+		{
+			this.requested = requested;
+		}
+
+		@Override
+		public FullPage retrieveWikitext(ExpansionFrame expansionFrame, PageTitle pageTitle)
+		{
+			requested.add(pageTitle);
+			return null;
+		}
+
+		@Override
+		public String fileUrl(PageTitle pageTitle, int width, int height)
+		{
+			return null;
+		}
 	}
 
 	private static final class NullCallback
