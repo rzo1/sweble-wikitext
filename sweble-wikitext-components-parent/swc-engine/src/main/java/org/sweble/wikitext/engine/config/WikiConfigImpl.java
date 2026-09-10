@@ -114,6 +114,8 @@ public class WikiConfigImpl
 	/** Keys are lower-case for case-insensitive lookups. */
 	private transient final Map<String, I18nAliasImpl> nameToAliasMap = new HashMap<String, I18nAliasImpl>();
 
+	private transient final Map<String, I18nAliasImpl> nameToImageLinkOptionAliasMap = new HashMap<String, I18nAliasImpl>();
+
 	// -- Parser Functions --
 
 	private final Map<String, ParserFunctionGroup> pfnGroups = new HashMap<String, ParserFunctionGroup>();
@@ -391,6 +393,20 @@ public class WikiConfigImpl
 				nameToAliasMap.put(lcAlias, alias);
 			}
 		}
+
+		// Image link options are only looked up in the context of image links.
+		// Keep them in a separate map so they are not shadowed by (or shadow)
+		// other magic words with the same name.
+		if (alias.getId().startsWith("img_"))
+		{
+			for (String a : alias.getAliases())
+			{
+				String lcAlias = a.toLowerCase();
+				if (!nameToImageLinkOptionAliasMap.containsKey(lcAlias))
+					nameToImageLinkOptionAliasMap.put(lcAlias, alias);
+			}
+		}
+
 		aliasesById.put(alias.getId(), alias);
 	}
 
@@ -408,6 +424,21 @@ public class WikiConfigImpl
 	public I18nAliasImpl getI18nAliasById(String id)
 	{
 		return aliasesById.get(id);
+	}
+
+	/**
+	 * Looks up an image link option alias (an alias of one of the
+	 * {@code img_*} magic words, e.g. {@code "thumb"}, {@code "mini"} or
+	 * {@code "$1px"}).
+	 */
+	public I18nAliasImpl getImageLinkOptionAlias(String name)
+	{
+		if (name == null)
+			throw new NullPointerException();
+		I18nAliasImpl alias = nameToImageLinkOptionAliasMap.get(name.toLowerCase());
+		if (alias != null && alias.isCaseSensitive() && !alias.getAliases().contains(name))
+			alias = null;
+		return alias;
 	}
 
 	@Override

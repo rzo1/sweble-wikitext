@@ -20,6 +20,7 @@ package org.sweble.wikitext.parser.parser;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
+import org.sweble.wikitext.parser.ImageLinkOptionAliases;
 import org.sweble.wikitext.parser.ParserConfig;
 import org.sweble.wikitext.parser.nodes.WtImageLink;
 import org.sweble.wikitext.parser.nodes.WtImageLink.ImageHorizAlign;
@@ -101,42 +102,122 @@ public class LinkBuilder
 
 	public boolean isKeyword(String keyword)
 	{
-		return (ImageViewFormat.which(keyword) != null) ||
-				(ImageHorizAlign.which(keyword) != null) ||
-				(ImageVertAlign.which(keyword) != null) ||
-				(keyword.equals("border")) ||
-				(keyword.equals("upright"));
+		return ImageLinkOptionAliases.isKeywordId(
+				resolveOptionId(keyword));
+	}
+
+	/**
+	 * @param suffix
+	 *            The unit following the digits of a size option (e.g.
+	 *            {@code "px"}).
+	 */
+	public boolean isWidthSuffix(String suffix)
+	{
+		return ImageLinkOptionAliases.IMG_WIDTH.equals(
+				resolveOptionId("$1" + suffix));
+	}
+
+	/**
+	 * @param name
+	 *            The name of a name/value option including the trailing
+	 *            {@code '='} (e.g. {@code "link="}).
+	 */
+	public boolean isLinkTargetOptionName(String name)
+	{
+		return ImageLinkOptionAliases.IMG_LINK.equals(
+				resolveOptionId(name + "$1"));
+	}
+
+	/**
+	 * @param name
+	 *            The name of a name/value option including the trailing
+	 *            {@code '='} (e.g. {@code "alt="}).
+	 */
+	public boolean isAltOptionName(String name)
+	{
+		return ImageLinkOptionAliases.IMG_ALT.equals(
+				resolveOptionId(name + "$1"));
+	}
+
+	/**
+	 * Resolves an image link option alias using the parser configuration and
+	 * falls back to the English aliases.
+	 */
+	private String resolveOptionId(String alias)
+	{
+		String id = parserConfig.getImageLinkOptionId(alias);
+		return (id != null) ? id : ImageLinkOptionAliases.getDefaultId(alias);
 	}
 
 	// =========================================================================
 
 	public void addOption(WtLinkOptionKeyword option)
 	{
-		ImageViewFormat f;
-		ImageHorizAlign h;
-		ImageVertAlign v;
+		String id = resolveOptionId(option.getKeyword());
+		if (id == null)
+			return;
 
-		String keyword = option.getKeyword();
-		if ((f = ImageViewFormat.which(keyword)) != null)
+		switch (id)
 		{
-			format = (format == null) ? f : format.combine(f);
+			case ImageLinkOptionAliases.IMG_THUMBNAIL:
+				addFormat(ImageViewFormat.THUMBNAIL);
+				break;
+			case ImageLinkOptionAliases.IMG_FRAMED:
+				addFormat(ImageViewFormat.FRAME);
+				break;
+			case ImageLinkOptionAliases.IMG_FRAMELESS:
+				addFormat(ImageViewFormat.FRAMELESS);
+				break;
+			case ImageLinkOptionAliases.IMG_LEFT:
+				hAlign = ImageHorizAlign.LEFT;
+				break;
+			case ImageLinkOptionAliases.IMG_RIGHT:
+				hAlign = ImageHorizAlign.RIGHT;
+				break;
+			case ImageLinkOptionAliases.IMG_CENTER:
+				hAlign = ImageHorizAlign.CENTER;
+				break;
+			case ImageLinkOptionAliases.IMG_NONE:
+				hAlign = ImageHorizAlign.NONE;
+				break;
+			case ImageLinkOptionAliases.IMG_BASELINE:
+				vAlign = ImageVertAlign.BASELINE;
+				break;
+			case ImageLinkOptionAliases.IMG_SUB:
+				vAlign = ImageVertAlign.SUB;
+				break;
+			case ImageLinkOptionAliases.IMG_SUPER:
+				vAlign = ImageVertAlign.SUPER;
+				break;
+			case ImageLinkOptionAliases.IMG_TOP:
+				vAlign = ImageVertAlign.TOP;
+				break;
+			case ImageLinkOptionAliases.IMG_TEXT_TOP:
+				vAlign = ImageVertAlign.TEXT_TOP;
+				break;
+			case ImageLinkOptionAliases.IMG_MIDDLE:
+				vAlign = ImageVertAlign.MIDDLE;
+				break;
+			case ImageLinkOptionAliases.IMG_BOTTOM:
+				vAlign = ImageVertAlign.BOTTOM;
+				break;
+			case ImageLinkOptionAliases.IMG_TEXT_BOTTOM:
+				vAlign = ImageVertAlign.TEXT_BOTTOM;
+				break;
+			case ImageLinkOptionAliases.IMG_BORDER:
+				border = true;
+				break;
+			case ImageLinkOptionAliases.IMG_UPRIGHT:
+				upright = true;
+				break;
+			default:
+				break;
 		}
-		else if ((h = ImageHorizAlign.which(keyword)) != null)
-		{
-			hAlign = h;
-		}
-		else if ((v = ImageVertAlign.which(keyword)) != null)
-		{
-			vAlign = v;
-		}
-		else if (keyword.equals("border"))
-		{
-			border = true;
-		}
-		else if (keyword.equals("upright"))
-		{
-			upright = true;
-		}
+	}
+
+	private void addFormat(ImageViewFormat f)
+	{
+		format = (format == null) ? f : format.combine(f);
 	}
 
 	public void addOption(WtLinkOptionResize option)

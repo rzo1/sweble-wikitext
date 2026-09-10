@@ -41,12 +41,16 @@
  *   - Otherwise the second production matched.
  *   - If one of the dimensions is missing the value of the width/height is set
  *     to -1.
+ *   - 'px' can be localized (magic word img_width).
  *
  * Link Option: Keyword
  * --------------------
  *
  *   Grammar:
  *     - LinkOptionKeyword ::= Ws* LinkOptionKeyword Ws*
+ *
+ *   - Keywords are resolved using the (localized) aliases of the img_* magic
+ *     words provided by ParserConfig.getImageLinkOptionId().
  *
  * Link Option: LinkTarget
  * -----------------------
@@ -55,11 +59,15 @@
  *     - LinkOptionLinkTarget ::= Ws* 'link=' LinkTarget Ws*
  *     - LinkOptionLinkTarget ::= Ws* 'link=' Url Ws*
  *
+ *   - 'link=' can be localized (magic word img_link).
+ *
  * Link Option: AltText
  * --------------------
  *
  *   Grammar:
  *     - LinkOptionAltText ::= Ws* 'alt=' LinkTitleContent{ALT}*
+ *
+ *   - 'alt=' can be localized (magic word img_alt).
  *
  * Link Title
  * ----------
@@ -379,7 +387,7 @@ private inline WtNode LinkOptionChoice =
 // -- Link Option Resize -------------------------------------------------------
 
 private WtLinkOptionResize LinkOptionResize =
-    rt0:pExtWsStar width:DigitPlus rt1:pSpaceStar "px" rt2:pExtWsStar
+    rt0:pExtWsStar width:DigitPlus rt1:pSpaceStar px:LinkOptionWidthSuffix rt2:pExtWsStar
     {
       int w = toInt(width);
 
@@ -392,9 +400,9 @@ private WtLinkOptionResize LinkOptionResize =
 
       yyValue = setRtd(
         nf.loResize(w, -1),
-        '|', rt0, width, rt1, "px", rt2);
+        '|', rt0, width, rt1, px, rt2);
     }
-  / rt0:pExtWsStar width:DigitPlus 'x' height:DigitPlus? rt1:pSpaceStar "px" rt2:pExtWsStar
+  / rt0:pExtWsStar width:DigitPlus 'x' height:DigitPlus? rt1:pSpaceStar px:LinkOptionWidthSuffix rt2:pExtWsStar
     {
       int w = toInt(width);
       int h = toInt(height);
@@ -408,9 +416,9 @@ private WtLinkOptionResize LinkOptionResize =
 
       yyValue = setRtd(
         nf.loResize(w, h),
-        '|', rt0, width, 'x', height, rt1, "px", rt2);
+        '|', rt0, width, 'x', height, rt1, px, rt2);
     }
-  / rt0:pExtWsStar 'x' height:DigitPlus rt1:pSpaceStar "px" rt2:pExtWsStar
+  / rt0:pExtWsStar 'x' height:DigitPlus rt1:pSpaceStar px:LinkOptionWidthSuffix rt2:pExtWsStar
     {
       int h = toInt(height);
 
@@ -423,8 +431,14 @@ private WtLinkOptionResize LinkOptionResize =
 
       yyValue = setRtd(
         nf.loResize(-1, h),
-        '|', rt0, 'x', height, rt1, "px", rt2);
+        '|', rt0, 'x', height, rt1, px, rt2);
     }
+;
+
+/* The unit is localizable (magic word img_width, "$1px" in English).
+ */
+private transient String LinkOptionWidthSuffix =
+  yyValue:LinkOptionKeywordString &{ getLinkBuilder().isWidthSuffix(yyValue) }
 ;
 
 
@@ -441,8 +455,13 @@ private WtLinkOptionKeyword LinkOptionKeyword =
   }
 ;
 
+/* Keywords are localizable (magic words img_*). Besides ASCII letters we
+ * accept non-ASCII letters for non-latin wikis. The ranges deliberately
+ * exclude whitespace (U+0085, U+00A0, U+2028, U+2029, ...) and the private
+ * use area which holds the parser entity markers (U+E000, U+E001).
+ */
 private transient String LinkOptionKeywordString =
-  [A-Za-z\-]+
+  [A-Za-z\-\u00C0-\u1FFF\u2C00-\uD7FF\uF900-\uFFEF]+
 ;
 
 
@@ -451,17 +470,18 @@ private transient String LinkOptionKeywordString =
 // -- Link Option Name Value ---------------------------------------------------
 
 private transient stateful WtNode LinkOptionNameValue =
-    rt0:pExtWsStar "link=" target:LinkTargetOverride? rt1:pExtWsStar
+    rt0:pExtWsStar name:LinkOptionName &{ getLinkBuilder().isLinkTargetOptionName(name) }
+    target:LinkTargetOverride? rt1:pExtWsStar
     {
 		WtLinkOptionLinkTarget linkTarget = (target == null) ?
 				nf.loLinkTargetNoLink() :
 				nf.loLinkTarget(target, target.getTargetType());
-		
+
 		yyValue = setRtd(
 				linkTarget,
-				'|', rt0, "link=", SEP, rt1);
+				'|', rt0, name, SEP, rt1);
     }
-  / rt0:pExtWsStar "alt="
+  / rt0:pExtWsStar name:LinkOptionName &{ getLinkBuilder().isAltOptionName(name) }
     /* I don't know why it says INTERNAL_LINK_ALT. This is not a thing...
      * alt= options in MediaWiki do accept links (int/ext) and strip the syntax
      * which suggests that links in alt= options are properly parsed
@@ -476,8 +496,18 @@ private transient stateful WtNode LinkOptionNameValue =
     {
       yyValue = setRtd(
         nf.loAlt(alt),
-        '|', rt0, "alt=", SEP);
+        '|', rt0, name, SEP);
     }
+;
+
+/* The name of a localizable name/value option (magic words img_link and
+ * img_alt, "link=$1" and "alt=$1" in English) including the '='.
+ */
+private transient String LinkOptionName =
+  name:LinkOptionKeywordString '='
+  {
+    yyValue = name + "=";
+  }
 ;
 
 private inline WtLinkTarget LinkTargetOverride =
