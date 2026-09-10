@@ -78,6 +78,8 @@ final class Gui
 
 	private JLabel textRead;
 
+	private JLabel progress;
+
 	/*
 	private JLabel waitingOnDbLabel;
 	*/
@@ -268,6 +270,22 @@ final class Gui
 					gridBagConstraints.anchor = GridBagConstraints.EAST;
 					dbReaderPanel.add(speed, gridBagConstraints);
 
+					JLabel progressLabel = new JLabel();
+					progressLabel.setText("Progress:");
+					gridBagConstraints = new GridBagConstraints();
+					gridBagConstraints.gridx = 4;
+					gridBagConstraints.gridy = 2;
+					gridBagConstraints.anchor = GridBagConstraints.EAST;
+					dbReaderPanel.add(progressLabel, gridBagConstraints);
+
+					progress = new JLabel();
+					progress.setText(space);
+					gridBagConstraints = new GridBagConstraints();
+					gridBagConstraints.gridx = 6;
+					gridBagConstraints.gridy = 2;
+					gridBagConstraints.anchor = GridBagConstraints.EAST;
+					dbReaderPanel.add(progress, gridBagConstraints);
+
 					/*
 					waitingOnDbLabel.setForeground(new Color(255, 102, 51));
 					waitingOnDbLabel.setText("Waiting for DB");
@@ -394,6 +412,8 @@ final class Gui
 
 	private long bytesRead;
 
+	private long fileSize = -1;
+
 	/*
 	private boolean waitingOnDb;
 	*/
@@ -422,9 +442,14 @@ final class Gui
 		this.pageCount = pageCount;
 	}
 
-	public synchronized void setBytesRead(long bytesRead)
+	/**
+	 * @param fileSize
+	 *            The size of the dump file or -1 if unknown.
+	 */
+	public synchronized void setBytesRead(long bytesRead, long fileSize)
 	{
 		this.bytesRead = bytesRead;
+		this.fileSize = fileSize;
 	}
 
 	/*
@@ -477,8 +502,23 @@ final class Gui
 					bytesReadP.getValue(),
 					bytesReadP.makePaddedUnit("B")));
 
-			speedMeter.update(bytesRead, -1);
+			speedMeter.update(bytesRead, fileSize);
 			float speed = speedMeter.getAvgSpeed();
+
+			if (fileSize > 0)
+			{
+				float eta = speedMeter.getEta();
+				this.progress.setText(String.format(
+						"%5.1f %%, ETA %s",
+						speedMeter.getCurrentProgress(),
+						Float.isInfinite(eta) || Float.isNaN(eta) ?
+								"unknown" :
+								String.format("%.0f min", eta)));
+			}
+			else
+			{
+				this.progress.setText("unknown");
+			}
 
 			BinaryPrefix p = new BinaryPrefix((long) speed);
 			this.speed.setText(String.format(

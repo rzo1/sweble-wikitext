@@ -68,7 +68,7 @@ public class DumpCruncher
 
 	private void run(String[] args) throws Throwable
 	{
-		if (!options(args))
+		if (!parseOptions(args))
 			return;
 
 		logger.info("Starting dump cruncher");
@@ -241,7 +241,11 @@ public class DumpCruncher
 
 	// =========================================================================
 
-	private boolean options(String[] args) throws IOException
+	/**
+	 * @return Whether the dump should be crunched: <code>false</code> if the
+	 *         help message was requested or the command line is invalid.
+	 */
+	boolean parseOptions(String[] args) throws IOException
 	{
 		options.createOption('h', "help")
 				.withDescription("Print help message.")
@@ -282,6 +286,7 @@ public class DumpCruncher
 				.withPropertyKey("Nexus.NumProcessingWorkers")
 				.withDefault("4")
 				.withArgName("N")
+				.withRequiredArg()
 				.create();
 
 		options.createOption('P', "properties")

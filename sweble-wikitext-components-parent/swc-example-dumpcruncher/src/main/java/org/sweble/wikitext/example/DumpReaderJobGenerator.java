@@ -18,9 +18,7 @@
 package org.sweble.wikitext.example;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.concurrent.BlockingQueue;
 
@@ -50,8 +48,6 @@ public class DumpReaderJobGenerator
 
 	private final DumpReader dumpReader;
 
-	private InputStream is;
-
 	// =========================================================================
 
 	/**
@@ -75,11 +71,10 @@ public class DumpReaderJobGenerator
 
 		try
 		{
-			is = new FileInputStream(dumpFile);
+			// The file constructor knows the size of the dump
 			this.dumpReader = new DumpReader(
-					is,
+					dumpFile,
 					charset,
-					dumpFile.getPath(),
 					getLogger(),
 					false)
 			{
@@ -103,7 +98,7 @@ public class DumpReaderJobGenerator
 		}
 		catch (Exception e)
 		{
-			after();
+			// The dump reader closes the dump file if it cannot be created
 			throw new WrappedException(e);
 		}
 	}
@@ -111,18 +106,14 @@ public class DumpReaderJobGenerator
 	@Override
 	public void after()
 	{
-		if (is != null)
+		try
 		{
-			try
-			{
-				info("Close the input stream");
-				is.close();
-				is = null;
-			}
-			catch (Exception e)
-			{
-				throw new RuntimeException(e);
-			}
+			info("Close the dump reader");
+			dumpReader.close();
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -177,7 +168,7 @@ public class DumpReaderJobGenerator
 			if (gui != null)
 			{
 				gui.setPageCount((int) getParsedCount());
-				gui.setBytesRead(getCompressedBytesRead());
+				gui.setBytesRead(getCompressedBytesRead(), getFileSize());
 				gui.redrawLater();
 			}
 		}

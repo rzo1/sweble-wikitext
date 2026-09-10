@@ -50,10 +50,11 @@
 
 	<dependencies>
 
-		<!-- JOpt Simple -->
+		<!-- JOpt Simple, the version utils-getopt works with -->
 		<dependency>
 			<groupId>net.sf.jopt-simple</groupId>
 			<artifactId>jopt-simple</artifactId>
+			<version>${jopt-simple-getopt.version}</version>
 		</dependency>
 
 		<!-- Joda-Time - Java date and time API -->

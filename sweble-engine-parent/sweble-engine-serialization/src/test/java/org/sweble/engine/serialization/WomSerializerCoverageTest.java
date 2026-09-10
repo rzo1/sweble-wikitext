@@ -28,7 +28,6 @@ import static org.sweble.engine.serialization.SerializationCoverageFixture.toXml
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.sweble.engine.serialization.CompressorFactory.CompressionFormat;
 import org.sweble.engine.serialization.WomSerializer.SerializationFormat;
@@ -103,7 +102,6 @@ public class WomSerializerCoverageTest
 		serializer.deserialize(json, SerializationFormat.JSON, false);
 	}
 
-	@Ignore("XZ needs org.tukaani:xz at runtime, which is not a dependency (NoClassDefFoundError)")
 	@Test
 	public void testXzCompressionRoundTrip() throws Exception
 	{
