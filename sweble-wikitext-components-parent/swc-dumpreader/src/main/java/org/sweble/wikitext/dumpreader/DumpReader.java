@@ -24,7 +24,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.charset.Charset;
 
@@ -34,8 +33,10 @@ import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.ValidationEvent;
 import jakarta.xml.bind.ValidationEventHandler;
 import jakarta.xml.bind.ValidationEventLocator;
+import javax.xml.namespace.QName;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.validation.Schema;
@@ -65,17 +66,24 @@ public abstract class DumpReader
 
 	private final ExportSchemaVersion schemaVersion;
 
+	private final long fileLength;
+
 	private CountingInputStream decompressedInputStream;
 
 	private CountingInputStream compressedInputStream;
-
-	private long fileLength;
 
 	private long parsedCount;
 
 	private boolean decompress;
 
-	private static final int LOOKAHEAD = 4096;
+	private static final int BUFFER_SIZE = 4096;
+
+	/**
+	 * How many bytes of the (decompressed) dump may precede the root element.
+	 * The export version is determined from the root element before the
+	 * stream is rewound to the beginning.
+	 */
+	private static final int MAX_HEADER_SIZE = 1024 * 1024;
 
 	// =========================================================================
 
@@ -87,9 +95,7 @@ public abstract class DumpReader
 	 */
 	public DumpReader(File dumpFile, Logger logger) throws JAXBException, FactoryConfigurationError, XMLStreamException, IOException, SAXException
 	{
-		this(new FileInputStream(dumpFile), dumpFile.getAbsolutePath(), logger);
-
-		fileLength = dumpFile.length();
+		this(new FileInputStream(dumpFile), null, dumpFile.getAbsolutePath(), dumpFile.length(), logger, true);
 	}
 
 	/**
@@ -118,6 +124,10 @@ public abstract class DumpReader
 		this(is, null, url, logger, useSchema);
 	}
 
+	/**
+	 * Reads a dump from a stream of unknown size; {@link #getFileSize()}
+	 * returns -1.
+	 */
 	public DumpReader(
 			InputStream is,
 			Charset encoding,
@@ -125,27 +135,72 @@ public abstract class DumpReader
 			Logger logger,
 			boolean useSchema) throws JAXBException, FactoryConfigurationError, XMLStreamException, IOException, SAXException
 	{
+		this(is, encoding, url, -1, logger, useSchema);
+	}
+
+	/**
+	 * Reads a dump file. The file's name decides whether it is decompressed
+	 * and its length is returned by {@link #getFileSize()}.
+	 */
+	public DumpReader(
+			File dumpFile,
+			Charset encoding,
+			Logger logger,
+			boolean useSchema) throws JAXBException, FactoryConfigurationError, XMLStreamException, IOException, SAXException
+	{
+		this(new FileInputStream(dumpFile), encoding, dumpFile.getAbsolutePath(), dumpFile.length(), logger, useSchema);
+	}
+
+	/**
+	 * The reader takes ownership of the given stream: it is closed when the
+	 * dump was read, when the reader is closed or when this constructor
+	 * fails.
+	 *
+	 * @param url
+	 *            Names ending in ".bz2" or ".gz" are decompressed.
+	 * @param fileSize
+	 *            The size of the dump in bytes as returned by
+	 *            {@link #getFileSize()} or -1 if unknown.
+	 */
+	public DumpReader(
+			InputStream is,
+			Charset encoding,
+			String url,
+			long fileSize,
+			Logger logger,
+			boolean useSchema) throws JAXBException, FactoryConfigurationError, XMLStreamException, IOException, SAXException
+	{
 		this.dumpInputStream = is;
 		this.dumpUri = url;
 		this.logger = logger;
+		this.fileLength = fileSize;
+		this.parsedCount = 0;
 
-		logger.info("Setting up parser for file " + dumpUri);
+		boolean constructed = false;
+		try
+		{
+			logger.info("Setting up parser for file " + dumpUri);
 
-		getDumpInputStream();
+			getDumpInputStream();
 
-		schemaVersion = determineExportVersion();
+			schemaVersion = determineExportVersion(encoding);
 
-		unmarshaller = createUnmarshaller(schemaVersion.getContextPath());
+			unmarshaller = createUnmarshaller(schemaVersion.getContextPath());
 
-		installCallbacks();
+			installCallbacks();
 
-		if (useSchema)
-			setSchema(DumpReader.class.getResource(schemaVersion.getSchema()));
+			if (useSchema)
+				setSchema(DumpReader.class.getResource(schemaVersion.getSchema()));
 
-		xmlStreamReader = getXmlStreamReader(encoding);
+			xmlStreamReader = createXmlStreamReader(decompressedInputStream, encoding);
 
-		fileLength = -1;
-		parsedCount = 0;
+			constructed = true;
+		}
+		finally
+		{
+			if (!constructed)
+				closeStreams();
+		}
 	}
 
 	// =========================================================================
@@ -175,6 +230,9 @@ public abstract class DumpReader
 		IOUtils.closeQuietly(dumpInputStream);
 	}
 
+	/**
+	 * @return The size of the dump in bytes or -1 if unknown.
+	 */
 	public long getFileSize()
 	{
 		return fileLength;
@@ -212,6 +270,19 @@ public abstract class DumpReader
 		return true;
 	}
 
+	/**
+	 * Called for every {@code <logitem>} element of an export version 0.7 or
+	 * later dump. Log items are not kept in the MediaWiki object. Does
+	 * nothing by default.
+	 *
+	 * In export versions 0.5 and 0.6 log items are part of a page and are
+	 * passed to {@link #processRevision(Object, Object)} instead.
+	 */
+	protected void processLogItem(Object mediaWiki, Object logItem)
+	{
+		// Ignore by default
+	}
+
 	protected boolean processEvent(
 			ValidationEvent ve,
 			ValidationEventLocator vel)
@@ -240,6 +311,11 @@ public abstract class DumpReader
 		return processRevision(page, revision);
 	}
 
+	private void handleLogItem(Object mediaWiki, Object logItem)
+	{
+		processLogItem(mediaWiki, logItem);
+	}
+
 	protected boolean handleEvent(ValidationEvent ve, ValidationEventLocator vel)
 	{
 		return processEvent(ve, vel);
@@ -264,7 +340,7 @@ public abstract class DumpReader
 
 			compressedInputStream = new CountingInputStream(dumpInputStream);
 
-			decomp = new GzipCompressorInputStream(compressedInputStream);
+			decomp = new GzipCompressorInputStream(compressedInputStream, true);
 		}
 		else
 		{
@@ -274,26 +350,93 @@ public abstract class DumpReader
 		}
 
 		decompressedInputStream = new CountingInputStream(
-				new BufferedInputStream(decomp, LOOKAHEAD));
+				new BufferedInputStream(decomp, BUFFER_SIZE));
 	}
 
-	private ExportSchemaVersion determineExportVersion() throws IOException
+	private ExportSchemaVersion determineExportVersion(Charset encoding) throws IOException
 	{
-		byte[] b = new byte[LOOKAHEAD];
-
-		decompressedInputStream.mark(LOOKAHEAD);
-		int read = decompressedInputStream.read(b, 0, LOOKAHEAD);
-		decompressedInputStream.reset();
-
-		String header = new String(b, 0, read);
+		QName root = readRootElementName(encoding);
 
 		for (ExportSchemaVersion version : ExportSchemaVersion.values())
 		{
-			if (header.contains("xmlns=\"" + version.getMediaWikiNamespace() + "\""))
+			if (version.getMediaWikiNamespace().equals(root.getNamespaceURI()))
 				return version;
 		}
 
-		throw new IllegalArgumentException("Unknown xmlns");
+		throw new IllegalArgumentException(String.format(
+				"Unknown xmlns '%s' of root element '%s' in %s",
+				root.getNamespaceURI(),
+				root.getLocalPart(),
+				dumpUri));
+	}
+
+	/**
+	 * Parses the dump up to its root element and rewinds the stream to the
+	 * beginning. The parser may read at most {@link #MAX_HEADER_SIZE} bytes,
+	 * otherwise the mark would be invalidated.
+	 */
+	private QName readRootElementName(Charset encoding) throws IOException
+	{
+		decompressedInputStream.mark(1);
+		int first = decompressedInputStream.read();
+		decompressedInputStream.reset();
+
+		if (first == -1)
+			throw new IllegalArgumentException("Dump is empty: " + dumpUri);
+
+		decompressedInputStream.mark(MAX_HEADER_SIZE);
+
+		HeaderInputStream header = new HeaderInputStream(decompressedInputStream, MAX_HEADER_SIZE);
+
+		QName root = null;
+		try
+		{
+			XMLStreamReader reader = createXmlStreamReader(header, encoding);
+			try
+			{
+				// Unlike nextTag() this also steps over a document type declaration
+				while ((root == null) && reader.hasNext())
+				{
+					if (reader.next() == XMLStreamConstants.START_ELEMENT)
+						root = reader.getName();
+				}
+			}
+			finally
+			{
+				reader.close();
+			}
+		}
+		catch (XMLStreamException e)
+		{
+			throw new IllegalArgumentException(getNoRootElementMessage(header), e);
+		}
+
+		if (root == null)
+			throw new IllegalArgumentException(getNoRootElementMessage(header));
+
+		decompressedInputStream.reset();
+
+		return root;
+	}
+
+	private String getNoRootElementMessage(HeaderInputStream header)
+	{
+		if (header.isExhausted())
+			return "Cannot find the root element within the first " + MAX_HEADER_SIZE + " bytes of " + dumpUri;
+		else
+			return "Cannot find the root element of " + dumpUri;
+	}
+
+	/**
+	 * Creates a StAX factory that neither processes document type
+	 * declarations nor resolves external entities.
+	 */
+	static XMLInputFactory createXmlInputFactory() throws FactoryConfigurationError
+	{
+		XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+		xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+		xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+		return xmlInputFactory;
 	}
 
 	/**
@@ -309,18 +452,20 @@ public abstract class DumpReader
 	 * Therefore, in case you have trouble to parse a XML file, by specifying an
 	 * encoding, you force the use of a Reader and can circumvent the crash.
 	 */
-	private XMLStreamReader getXmlStreamReader(Charset encoding) throws FactoryConfigurationError, XMLStreamException, UnsupportedEncodingException
+	private static XMLStreamReader createXmlStreamReader(
+			InputStream in,
+			Charset encoding) throws FactoryConfigurationError, XMLStreamException
 	{
-		XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+		XMLInputFactory xmlInputFactory = createXmlInputFactory();
 
 		if (encoding != null)
 		{
-			InputStreamReader isr = new InputStreamReader(decompressedInputStream, encoding);
+			InputStreamReader isr = new InputStreamReader(in, encoding);
 			return xmlInputFactory.createXMLStreamReader(isr);
 		}
 		else
 		{
-			return xmlInputFactory.createXMLStreamReader(decompressedInputStream);
+			return xmlInputFactory.createXMLStreamReader(in);
 		}
 	}
 
@@ -358,7 +503,7 @@ public abstract class DumpReader
 
 	private void installCallbacks()
 	{
-		final DumpReaderListener pageListener = new DumpReaderListener()
+		final DumpReaderLogItemListener pageListener = new DumpReaderLogItemListener()
 		{
 			@Override
 			public void handlePage(Object mediaWiki, Object page)
@@ -395,6 +540,23 @@ public abstract class DumpReader
 					throw new WrappedException(e);
 				}
 			}
+
+			@Override
+			public void handleLogItem(Object mediaWiki, Object logItem)
+			{
+				try
+				{
+					DumpReader.this.handleLogItem(mediaWiki, logItem);
+				}
+				catch (RuntimeException e)
+				{
+					throw e;
+				}
+				catch (Exception e)
+				{
+					throw new WrappedException(e);
+				}
+			}
 		};
 
 		unmarshaller.setListener(new Unmarshaller.Listener()
@@ -416,5 +578,60 @@ public abstract class DumpReader
 		JAXBContext context = JAXBContext.newInstance(contextPath);
 
 		return context.createUnmarshaller();
+	}
+
+	// =========================================================================
+
+	/**
+	 * Ends after a given number of bytes and leaves the underlying stream open.
+	 */
+	private static final class HeaderInputStream
+			extends
+				InputStream
+	{
+		private final InputStream in;
+
+		private int remaining;
+
+		public HeaderInputStream(InputStream in, int limit)
+		{
+			this.in = in;
+			this.remaining = limit;
+		}
+
+		public boolean isExhausted()
+		{
+			return remaining == 0;
+		}
+
+		@Override
+		public int read() throws IOException
+		{
+			if (remaining == 0)
+				return -1;
+			int read = in.read();
+			if (read != -1)
+				--remaining;
+			return read;
+		}
+
+		@Override
+		public int read(byte[] b, int off, int len) throws IOException
+		{
+			if (len == 0)
+				return 0;
+			if (remaining == 0)
+				return -1;
+			int read = in.read(b, off, Math.min(len, remaining));
+			if (read > 0)
+				remaining -= read;
+			return read;
+		}
+
+		@Override
+		public void close()
+		{
+			// The dump's stream stays open
+		}
 	}
 }

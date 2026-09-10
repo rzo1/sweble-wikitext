@@ -19,13 +19,33 @@ package org.sweble.wikitext.dumpreader;
 import java.io.InputStream;
 import java.io.Reader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.ls.LSInput;
 import org.w3c.dom.ls.LSResourceResolver;
 
+/**
+ * Resolves the schemas referenced by the export schemas from the class path.
+ * Every other resource is refused, so loading a schema never accesses the
+ * network or the file system.
+ */
 final class LSResourceResolverImplementation
 		implements
 			LSResourceResolver
 {
+	private static final Logger logger =
+			LoggerFactory.getLogger(LSResourceResolverImplementation.class);
+
+	private static final String XML_SCHEMA_TYPE = "http://www.w3.org/2001/XMLSchema";
+
+	private static final String[] MEDIAWIKI_XML_URLS = {
+			"http://www.mediawiki.org/xml",
+			"https://www.mediawiki.org/xml" };
+
+	private static final String[] XML_XSD_URLS = {
+			"http://www.w3.org/2001/xml.xsd",
+			"https://www.w3.org/2001/xml.xsd" };
+
 	@Override
 	public LSInput resolveResource(
 			String type,
@@ -34,58 +54,53 @@ final class LSResourceResolverImplementation
 			final String systemId,
 			final String baseURI)
 	{
-		if ("http://www.w3.org/2001/XMLSchema".equals(type)
-				&& (publicId == null)
-				&& isExportXsd(getClass(), systemId))
+		String xsdPath = null;
+		if (XML_SCHEMA_TYPE.equals(type) && (publicId == null))
+			xsdPath = getXsdFileNameIfExists(getClass(), systemId);
+
+		if (xsdPath == null)
 		{
-			return new LSInputImplementation(
-					getExportXsdFileNameIfExists(getClass(), systemId),
-					systemId,
-					baseURI);
-		}
-		else if ("http://www.w3.org/2001/XMLSchema".equals(type)
-				&& (publicId == null)
-				&& "http://www.w3.org/2001/xml.xsd".equals(systemId))
-		{
-			return new LSInputImplementation(
-					"/xml.xsd",
-					systemId,
-					baseURI);
-		}
-		else
-		{
-			System.err.println(String.format(
-					"Cannot resolve: type = '''%s''', namespaceURI = '''%s''', publicId = '''%s''', systemId = '''%s''', baseURI = '''%s'''",
+			String message = String.format(
+					"Refusing to resolve: type = '''%s''', namespaceURI = '''%s''', publicId = '''%s''', systemId = '''%s''', baseURI = '''%s'''",
 					type,
 					namespaceURI,
 					publicId,
 					systemId,
-					baseURI));
+					baseURI);
 
-			return null;
+			logger.warn(message);
+
+			throw new IllegalArgumentException(message);
 		}
+
+		return new LSInputImplementation(xsdPath, systemId, baseURI);
 	}
 
-	private static boolean isExportXsd(Class<?> clazz, String systemId)
-	{
-		return (getExportXsdFileNameIfExists(clazz, systemId) != null);
-	}
-
-	private static String getExportXsdFileNameIfExists(
+	private static String getXsdFileNameIfExists(
 			Class<?> clazz,
 			String systemId)
 	{
-		if (systemId != null)
+		if (systemId == null)
+			return null;
+
+		for (String url : XML_XSD_URLS)
 		{
-			String string = "http://www.mediawiki.org/xml";
-			if (systemId.startsWith(string + "/export-")
+			if (url.equals(systemId))
+				return "/xml.xsd";
+		}
+
+		for (String url : MEDIAWIKI_XML_URLS)
+		{
+			if (systemId.startsWith(url + "/export-")
 					&& systemId.endsWith(".xsd"))
 			{
-				String fileName = systemId.substring(string.length());
-				if (clazz.getResource(fileName) != null)
+				String fileName = systemId.substring(url.length());
+				if ((fileName.indexOf('/', 1) == -1)
+						&& (clazz.getResource(fileName) != null))
 					return fileName;
 			}
 		}
+
 		return null;
 	}
 

@@ -20,6 +20,7 @@ package org.sweble.wikitext.dumpreader.export_0_9;
 import java.util.ArrayList;
 
 import org.sweble.wikitext.dumpreader.DumpReaderListener;
+import org.sweble.wikitext.dumpreader.DumpReaderLogItemListener;
 
 public aspect MediaWikiTypeAspect
 {
@@ -32,6 +33,18 @@ public aspect MediaWikiTypeAspect
 			public boolean add(PageType page)
 			{
 				listener.handlePage(MediaWikiType.this, page);
+				return false;
+			}
+		};
+
+		logitem = (listener == null) ? null : new ArrayList<LogItemType>()
+		{
+			private static final long serialVersionUID = 1L;
+
+			public boolean add(LogItemType logItem)
+			{
+				if (listener instanceof DumpReaderLogItemListener)
+					((DumpReaderLogItemListener) listener).handleLogItem(MediaWikiType.this, logItem);
 				return false;
 			}
 		};
