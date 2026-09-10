@@ -1,1 +1,1 @@
-before <b style="color:red;">¹</b> after
+before <b style="color:red;">¹''' after'''</b>

@@ -41,13 +41,19 @@ import org.sweble.wikitext.parser.nodes.WtTableHeader;
 import org.sweble.wikitext.parser.nodes.WtText;
 import org.sweble.wikitext.parser.nodes.WtTicks;
 import org.sweble.wikitext.parser.nodes.WtWhitespace;
-import org.sweble.wikitext.parser.nodes.WtXmlEndTag;
-import org.sweble.wikitext.parser.nodes.WtXmlStartTag;
 
 import de.fau.cs.osr.ptk.common.AstVisitor;
 import de.fau.cs.osr.utils.FmtInternalLogicError;
 import de.fau.cs.osr.utils.StringTools;
 
+/**
+ * Converts ticks ('' and ''') into intermediate bold and italics tags. Like
+ * MediaWiki, ticks are analyzed per line and all formatting that was opened by
+ * ticks is closed at the end of the line. HTML &lt;b> and &lt;i> elements do
+ * not affect the ticks.
+ *
+ * The AST is visited recursively, see TreeBuilder for the stack requirements.
+ */
 public class TicksAnalyzer
 {
 	public static WtNode process(ParserConfig config, WtNode a)
@@ -355,10 +361,6 @@ public class TicksAnalyzer
 
 		private State state = State.None;
 
-		private boolean elementStartedItalic = false;
-		
-		private boolean elementStartedBold = false;
-		
 		public TicksConverter(LinkedList<Line> lines)
 		{
 			this.lineIter = lines.iterator();
@@ -387,86 +389,6 @@ public class TicksAnalyzer
 			toTag(entry, result);
 
 			return result;
-		}
-
-		public WtNode visit(WtXmlStartTag n)
-		{
-			if (n.getName().equalsIgnoreCase("i"))
-			{
-				switch (state)
-				{
-					case Italics:
-					case BoldItalics:
-					case ItalicsBold:
-						break;
-					case Bold:
-						state = State.BoldItalics;
-						break;
-					case None:
-						state = State.Italics;
-						break;
-				}
-				elementStartedItalic = true;
-			}
-			else if (n.getName().equalsIgnoreCase("b"))
-			{
-				switch (state)
-				{
-					case Bold:
-					case BoldItalics:
-					case ItalicsBold:
-						break;
-					case Italics:
-						state = State.ItalicsBold;
-						break;
-					case None:
-						state = State.Bold;
-						break;
-				}
-				elementStartedBold = true;
-			}
-			mapInPlace(n);
-			return n;
-		}
-
-		public WtNode visit(WtXmlEndTag n)
-		{
-			if (n.getName().equalsIgnoreCase("i"))
-			{
-				switch (state)
-				{
-					case Italics:
-						state = State.None;
-						break;
-					case BoldItalics:
-					case ItalicsBold:
-						state = State.Bold;
-						break;
-					case Bold:
-					case None:
-						break;
-				}
-				elementStartedItalic = false;
-			}
-			else if (n.getName().equalsIgnoreCase("b"))
-			{
-				switch (state)
-				{
-					case Bold:
-						state = State.None;
-						break;
-					case BoldItalics:
-					case ItalicsBold:
-						state = State.Italics;
-						break;
-					case Italics:
-					case None:
-						break;
-				}
-				elementStartedBold = false;
-			}
-			mapInPlace(n);
-			return n;
 		}
 
 		public WtNode visit(WtNewline newline)
@@ -639,72 +561,39 @@ public class TicksAnalyzer
 			}
 		}
 
+		/**
+		 * MediaWiki handles quotes per line: Every bold or italics formatting
+		 * that was opened by ticks is closed at the end of the line. HTML
+		 * &lt;b> and &lt;i> elements are independent of the ticks and are left
+		 * to the tree builder.
+		 */
 		private WtNodeList closeRemainingTags()
 		{
 			WtNodeList result = null;
 			switch (state)
 			{
 				case Italics:
-					if (!elementStartedItalic)
-					{
 					result = nf.list();
 					result.add(ITALICS.createClose(nf, true));
-						state = State.None;
-					}
 					break;
 				case Bold:
-					if (!elementStartedBold)
-					{
 					result = nf.list();
 					result.add(BOLD.createClose(nf, true));
-						state = State.None;
-					}
 					break;
 				case BoldItalics:
-					if (!elementStartedItalic && !elementStartedBold)
-					{
 					result = nf.list();
 					result.add(ITALICS.createClose(nf, true));
 					result.add(BOLD.createClose(nf, true));
-						state = State.None;
-					}
-					else if (elementStartedItalic)
-					{
-						result = nf.list();
-						result.add(BOLD.createClose(nf, true));
-						state = State.Italics;
-					}
-					else if (!elementStartedBold)
-					{
-						result = nf.list();
-						result.add(ITALICS.createClose(nf, true));
-						state = State.Bold;
-					}
 					break;
 				case ItalicsBold:
-					if (!elementStartedItalic && !elementStartedBold)
-					{
 					result = nf.list();
 					result.add(BOLD.createClose(nf, true));
 					result.add(ITALICS.createClose(nf, true));
-						state = State.None;
-					}
-					else if (elementStartedItalic)
-					{
-						result = nf.list();
-						result.add(BOLD.createClose(nf, true));
-						state = State.Italics;
-					}
-					else if (!elementStartedBold)
-					{
-						result = nf.list();
-						result.add(ITALICS.createClose(nf, true));
-						state = State.Bold;
-					}
 					break;
 				case None:
 					break;
 			}
+			state = State.None;
 			return result;
 		}
 	}
