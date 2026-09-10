@@ -284,6 +284,16 @@
 					</configuration>
 				</plugin>
 
+				<!-- Don't fail when building from a source archive without .git -->
+				<plugin>
+					<groupId>pl.project13.maven</groupId>
+					<artifactId>git-commit-id-plugin</artifactId>
+					<configuration>
+						<failOnNoGitDirectory>false</failOnNoGitDirectory>
+						<failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
+					</configuration>
+				</plugin>
+
 			</plugins>
 		</pluginManagement>
 
