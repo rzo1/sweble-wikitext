@@ -155,6 +155,8 @@
 						<exclude>src/test/resources/**/*.mwtest</exclude>
 						<exclude>src/test/resources/**/Template%3*</exclude>
 						<exclude>src/test/resources/**/index</exclude>
+						<!-- Derived from Wikipedia (CC BY-SA 4.0), see the file header -->
+						<exclude>src/main/resources/org/sweble/wikitext/engine/ext/convert/convert-data.txt</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
