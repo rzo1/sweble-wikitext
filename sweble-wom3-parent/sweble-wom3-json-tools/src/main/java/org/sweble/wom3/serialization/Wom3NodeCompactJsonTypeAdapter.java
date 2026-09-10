@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.sweble.wom3.serialization.ScopeStack.Scope;
 import org.sweble.wom3.util.Wom3Toolbox;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
@@ -182,7 +183,14 @@ public class Wom3NodeCompactJsonTypeAdapter
 	{
 		Document doc = getDoc();
 		DocumentFragment fragment = doc.createDocumentFragment();
-		fragment.appendChild(fromJson(doc, json, new ScopeStack()));
+		try
+		{
+			fragment.appendChild(fromJson(doc, json, new ScopeStack()));
+		}
+		catch (NamespaceException | DOMException | IllegalArgumentException e)
+		{
+			throw invalidInput(e);
+		}
 		return fragment;
 	}
 

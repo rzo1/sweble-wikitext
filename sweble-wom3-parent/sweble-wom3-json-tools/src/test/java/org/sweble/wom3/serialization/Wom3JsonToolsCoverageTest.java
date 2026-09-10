@@ -62,8 +62,8 @@ public class Wom3JsonToolsCoverageTest
 	@Test
 	public void testFullFormatRejectsUndeclaredPrefixes() throws Exception
 	{
-		assertRejected(false, "{\"!type\": \"p:e\", \"!children\": []}", NamespaceException.class);
-		assertRejected(false, "{\"!type\": \"e\", \"@p:a\": \"v\", \"!children\": []}", NamespaceException.class);
+		assertRejected(false, "{\"!type\": \"p:e\", \"!children\": []}", JsonParseException.class);
+		assertRejected(false, "{\"!type\": \"e\", \"@p:a\": \"v\", \"!children\": []}", JsonParseException.class);
 	}
 
 	@Test
@@ -94,8 +94,8 @@ public class Wom3JsonToolsCoverageTest
 	@Test
 	public void testCompactFormatRejectsUndeclaredPrefixes() throws Exception
 	{
-		assertRejected(true, "{\"!p:e\": []}", NamespaceException.class);
-		assertRejected(true, "{\"!e\": [], \"@p:a\": \"v\"}", NamespaceException.class);
+		assertRejected(true, "{\"!p:e\": []}", JsonParseException.class);
+		assertRejected(true, "{\"!e\": [], \"@p:a\": \"v\"}", JsonParseException.class);
 	}
 
 	@Test
