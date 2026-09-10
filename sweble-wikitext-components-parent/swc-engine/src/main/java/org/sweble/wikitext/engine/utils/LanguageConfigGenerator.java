@@ -47,6 +47,7 @@ import org.sweble.wikitext.engine.config.I18nAliasImpl;
 import org.sweble.wikitext.engine.config.InterwikiImpl;
 import org.sweble.wikitext.engine.config.NamespaceCase;
 import org.sweble.wikitext.engine.config.NamespaceImpl;
+import org.sweble.wikitext.engine.config.ParserConfigImpl;
 import org.sweble.wikitext.engine.config.TagExtensionGroup;
 import org.sweble.wikitext.engine.config.WikiConfig;
 import org.sweble.wikitext.engine.config.WikiConfigImpl;
@@ -266,12 +267,12 @@ public class LanguageConfigGenerator
 		NamespaceCase wikiCase = NamespaceCase.FIRST_LETTER;
 		if (apiUrlGeneral != null)
 		{
-			NamedNodeMap general = getGeneralSiteInfo(apiUrlGeneral);
+			Element general = getGeneralSiteInfo(apiUrlGeneral);
 			if (general != null)
 			{
 				// Overrides the link trail and prefix set up by configureEngine()
 				addGeneralSiteInfo(wikiConfig, general, siteUrl);
-				wikiCase = getCase(general, NamespaceCase.FIRST_LETTER);
+				wikiCase = getCase(general.getAttributes(), NamespaceCase.FIRST_LETTER);
 			}
 		}
 
@@ -344,9 +345,12 @@ public class LanguageConfigGenerator
 	/**
 	 * Configures the site name, wiki URL (MediaWiki's $wgServer followed by
 	 * $wgScript), article path ($wgServer followed by $wgArticlePath), link
-	 * trail, link prefix and time zone from the general site information
-	 * (siprop=general). Has to be called after the parser was configured
-	 * since it overrides the link trail and the link prefix. The case
+	 * trail, link prefix, time zone and language variants from the general
+	 * site information (siprop=general). Has to be called after the parser was
+	 * configured since it overrides the link trail and the link prefix. The
+	 * language variants reported by wikis like zh.wikipedia enable language
+	 * conversion markup ("-{...}-"), see
+	 * {@link ParserConfigImpl#isLangConvTagsEnabled()}. The case
 	 * setting of the wiki is not part of the configuration, the case setting
 	 * of each namespace is configured by
 	 * {@link #addNamespaces(WikiConfigImpl, String, MultiValueMap, NamespaceCase)}.
@@ -364,16 +368,16 @@ public class LanguageConfigGenerator
 			ParserConfigurationException,
 			SAXException
 	{
-		NamedNodeMap attributes = getGeneralSiteInfo(apiUrlGeneral);
-		if (attributes != null)
-			addGeneralSiteInfo(wikiConfig, attributes, siteUrl);
+		Element general = getGeneralSiteInfo(apiUrlGeneral);
+		if (general != null)
+			addGeneralSiteInfo(wikiConfig, general, siteUrl);
 	}
 
 	/**
-	 * Returns the attributes of the general site information or null if the
-	 * response contains none.
+	 * Returns the {@code <general>} element of the general site information
+	 * or null if the response contains none.
 	 */
-	private static NamedNodeMap getGeneralSiteInfo(String apiUrlGeneral)
+	private static Element getGeneralSiteInfo(String apiUrlGeneral)
 		throws IOException,
 			ParserConfigurationException,
 			SAXException
@@ -385,14 +389,16 @@ public class LanguageConfigGenerator
 			logger.warn("No general site information found at `{}'", apiUrlGeneral);
 			return null;
 		}
-		return generalNodes.item(0).getAttributes();
+		return (Element) generalNodes.item(0);
 	}
 
 	private static void addGeneralSiteInfo(
 			WikiConfigImpl wikiConfig,
-			NamedNodeMap attributes,
+			Element general,
 			String siteUrl)
 	{
+		NamedNodeMap attributes = general.getAttributes();
+
 		String siteName = getAttributeValue(attributes, "sitename");
 		if (siteName != null)
 			wikiConfig.setSiteName(siteName);
@@ -450,6 +456,54 @@ public class LanguageConfigGenerator
 				wikiConfig.setTimezone(tz);
 			else
 				logger.warn("Unknown time zone `{}'", timezone);
+		}
+
+		addLanguageVariants(wikiConfig, general);
+	}
+
+	/**
+	 * Registers the language variants of the content language of the wiki.
+	 * Wikis whose content language has variants (e.g. zh, sr or kk) report
+	 * them in the general site information as
+	 * {@code <variants><lang code="zh-hans" name="简体"/>...</variants>}.
+	 * Language conversion markup like "-{...}-" is only recognized if at least
+	 * one variant is registered, see
+	 * {@link ParserConfigImpl#isLangConvTagsEnabled()}. Like MediaWiki, wikis
+	 * without variants (e.g. en.wikipedia) show the markup as text.
+	 *
+	 * The variants are also reported by siprop=languagevariants, but for all
+	 * languages with variants and not just the content language, which would
+	 * require another request. Variants that are already registered are kept.
+	 */
+	private static void addLanguageVariants(WikiConfigImpl wikiConfig, Element general)
+	{
+		ParserConfigImpl parserConfig = wikiConfig.getParserConfig();
+		// Only direct children, <fallback> contains <lang> elements as well
+		for (Node variants = general.getFirstChild(); variants != null; variants = variants.getNextSibling())
+		{
+			if (variants.getNodeType() != Node.ELEMENT_NODE || !"variants".equals(variants.getNodeName()))
+				continue;
+
+			for (Node lang = variants.getFirstChild(); lang != null; lang = lang.getNextSibling())
+			{
+				if (lang.getNodeType() != Node.ELEMENT_NODE || !"lang".equals(lang.getNodeName()))
+					continue;
+
+				String code = getAttributeValue(lang.getAttributes(), "code");
+				if (code == null || code.trim().isEmpty())
+				{
+					logger.warn("Skipping language variant without code");
+					continue;
+				}
+
+				code = code.trim();
+				if (parserConfig.isLctVariant(code))
+				{
+					logger.debug("Language variant `{}' is already registered", code);
+					continue;
+				}
+				parserConfig.addLctVariantMapping(code, code);
+			}
 		}
 	}
 

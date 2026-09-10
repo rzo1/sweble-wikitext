@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<!--
+  Trimmed response of
+  https://zh.wikipedia.org/w/api.php?action=query&meta=siteinfo&siprop=general&format=xml
+  including the language variants of the wiki (MediaWiki 1.47.0-wmf.18)
+-->
+<api batchcomplete="">
+	<query>
+		<general mainpage="Wikipedia:首页" sitename="Wikipedia" langconversion="" linkconversion="" titleconversion="" linkprefixcharset="" linkprefix="" linktrail="/^()(.*)$/sD" case="first-letter" lang="zh" timezone="UTC" timeoffset="0" articlepath="/wiki/$1" scriptpath="/w" script="/w/index.php" variantarticlepath="/$2/$1" server="//zh.wikipedia.org" servername="zh.wikipedia.org" wikiid="zhwiki">
+			<fallback>
+				<lang code="zh-hans" />
+				<lang code="zh-hant" />
+				<lang code="zh-cn" />
+				<lang code="zh-tw" />
+				<lang code="zh-hk" />
+				<lang code="en" />
+			</fallback>
+			<variants>
+				<lang code="zh" name="不转换" />
+				<lang code="zh-hans" name="简体" />
+				<lang code="zh-hant" name="繁體" />
+				<lang code="zh-cn" name="大陆简体" />
+				<lang code="zh-hk" name="香港繁體" />
+				<lang code="zh-mo" name="澳門繁體" />
+				<lang code="zh-my" name="大马简体" />
+				<lang code="zh-sg" name="新加坡简体" />
+				<lang code="zh-tw" name="臺灣正體" />
+			</variants>
+		</general>
+	</query>
+</api>
