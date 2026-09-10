@@ -63,7 +63,8 @@ public abstract class XmlTextBase
 	public boolean isContentWhitespace()
 	{
 		// TODO: use isElementContentWhitespace() instead!
-		return StringTools.isWhitespace(getTextContent());
+		String text = getTextContent();
+		return (text != null) && StringTools.isWhitespace(text);
 	}
 
 	// =========================================================================

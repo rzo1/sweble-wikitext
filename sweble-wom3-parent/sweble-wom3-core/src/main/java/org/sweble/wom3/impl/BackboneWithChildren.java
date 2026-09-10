@@ -25,6 +25,7 @@ import org.sweble.wom3.Wom3Node;
 import org.sweble.wom3.impl.AttributeDescriptor.Normalization;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
+import org.w3c.dom.Text;
 
 public abstract class BackboneWithChildren
 		extends
@@ -181,29 +182,34 @@ public abstract class BackboneWithChildren
 	public Wom3Node insertBefore(Node child_, Node before_)
 			throws DOMException
 	{
-		Wom3Node child = Toolbox.expectType(Wom3Node.class, child_);
-		if (((Backbone) child).isContentWhitespace() && ignoresContentWhitespace())
+		Backbone child = expectNewChild(child_);
+		if (child.isContentWhitespace() && ignoresContentWhitespace())
 			return null;
 
-		Wom3Node before = Toolbox.expectType(Wom3Node.class, before_);
-		if (before instanceof Wom3DocumentFragment)
+		if (before_ == null)
+			return appendChild(child);
+
+		Backbone before = expectChild(before_);
+		checkNewChild(child);
+
+		if (child instanceof Wom3DocumentFragment)
 		{
-			Wom3Node move = child.getFirstChild();
+			Backbone move = child.getFirstChild();
 			while (move != null)
 			{
-				Wom3Node next = move.getNextSibling();
-				child.removeChild(move);
-
-				Backbone prev = insertBeforeIntern(before, move, true);
-				this.childInserted(prev, (Backbone) move);
-
+				Backbone next = move.getNextSibling();
+				insertOrMove(move, before, false /* cloning */);
 				move = next;
 			}
 		}
+		else if (child == before)
+		{
+			// Inserting a node in front of itself does not change anything
+			assertWritableOnDocument();
+		}
 		else
 		{
-			Backbone prev = insertBeforeIntern(before, child, true);
-			this.childInserted(prev, (Backbone) child);
+			insertOrMove(child, before, false /* cloning */);
 		}
 
 		return child;
@@ -212,64 +218,64 @@ public abstract class BackboneWithChildren
 	@Override
 	public Wom3Node replaceChild(Node newChild_, Node oldChild_) throws DOMException
 	{
-		Backbone newChild = Toolbox.expectType(Backbone.class, newChild_);
-		if (((Backbone) newChild).isContentWhitespace() && ignoresContentWhitespace())
-			return removeChild(oldChild_);
+		Backbone newChild = expectNewChild(newChild_);
+		Backbone oldChild = expectChild(oldChild_);
+		if (newChild.isContentWhitespace() && ignoresContentWhitespace())
+			return removeChild(oldChild);
 
-		Backbone oldChild = Toolbox.expectType(Backbone.class, oldChild_);
+		checkNewChild(newChild);
 
-		//Backbone prev = replaceChildIntern(newChild, oldChild, true);
-
-		Backbone prevSibling = oldChild.getPreviousSibling();
-		Backbone nextSibling = oldChild.getNextSibling();
-
-		if (newChild instanceof Wom3DocumentFragment)
+		if (newChild == oldChild)
 		{
-			removeChildIntern(oldChild, true /* check */);
-			childRemoved(prevSibling, oldChild);
+			// Replacing a node with itself does not change anything
+			assertWritableOnDocument();
+		}
+		else if (newChild instanceof Wom3DocumentFragment)
+		{
+			Backbone nextSibling = oldChild.getNextSibling();
+			removeChild(oldChild);
 
 			Backbone move = newChild.getFirstChild();
 			while (move != null)
 			{
 				Backbone next = move.getNextSibling();
-				newChild.removeChild(move);
-
-				insertOrAppendIntern(move, nextSibling);
-				childInserted(prevSibling, move);
-
-				prevSibling = move;
+				insertOrMove(move, nextSibling, false /* cloning */);
 				move = next;
 			}
 		}
 		else
 		{
-			replaceChildIntern(newChild, oldChild, true /* check */);
-			childRemoved(prevSibling, oldChild);
-			childInserted(prevSibling, newChild);
+			assertWritableOnDocument();
+
+			// A node that is still linked is moved
+			Backbone oldParent = newChild.getParentNode();
+			Backbone oldNext = newChild.getNextSibling();
+			if (oldParent != null)
+				oldParent.removeChild(newChild);
+
+			try
+			{
+				Backbone prev = replaceChildIntern(newChild, oldChild, true /* check */);
+				childRemoved(prev, oldChild);
+				childInserted(prev, newChild);
+			}
+			catch (RuntimeException e)
+			{
+				restore(newChild, oldParent, oldNext);
+				throw e;
+			}
 		}
 
 		return oldChild;
 	}
 
-	private void insertOrAppendIntern(Wom3Node newChild, Wom3Node nextSibling)
-	{
-		if (nextSibling != null)
-		{
-			insertBeforeIntern(nextSibling, newChild, true /* check */);
-		}
-		else
-		{
-			appendChildIntern(newChild, true /* check */, false /* cloning */);
-		}
-	}
-
 	@Override
 	public Wom3Node removeChild(Node child_) throws DOMException
 	{
-		Wom3Node child = Toolbox.expectType(Wom3Node.class, child_);
+		Backbone child = expectChild(child_);
 		Backbone prev = removeChildIntern(child, true);
 
-		this.childRemoved(prev, (Backbone) child);
+		this.childRemoved(prev, child);
 
 		return child;
 	}
@@ -282,28 +288,25 @@ public abstract class BackboneWithChildren
 
 	public Wom3Node appendChild(Node child_, boolean cloning) throws DOMException
 	{
-		Wom3Node child = Toolbox.expectType(Wom3Node.class, child_);
-		if (((Backbone) child).isContentWhitespace() && ignoresContentWhitespace())
+		Backbone child = expectNewChild(child_);
+		if (child.isContentWhitespace() && ignoresContentWhitespace())
 			return null;
+
+		checkNewChild(child);
 
 		if (child instanceof Wom3DocumentFragment)
 		{
-			Wom3Node move = child.getFirstChild();
+			Backbone move = child.getFirstChild();
 			while (move != null)
 			{
-				Wom3Node next = move.getNextSibling();
-				child.removeChild(move);
-
-				Backbone prev = appendChildIntern(move, true /* check */, cloning);
-				childInserted(prev, (Backbone) move);
-
+				Backbone next = move.getNextSibling();
+				insertOrMove(move, null, cloning);
 				move = next;
 			}
 		}
 		else
 		{
-			Backbone prev = appendChildIntern(child, true /* check */, cloning);
-			childInserted(prev, (Backbone) child);
+			insertOrMove(child, null, cloning);
 		}
 
 		return child;
@@ -314,7 +317,147 @@ public abstract class BackboneWithChildren
 	{
 		// Is expected to assertWritable();
 		clearChildren();
-		appendChild(getOwnerDocument().createTextNode(textContent));
+		if ((textContent != null) && !textContent.isEmpty())
+			appendChild(getOwnerDocument().createTextNode(textContent));
+	}
+
+	@Override
+	public void normalize()
+	{
+		assertWritableOnDocument();
+
+		Backbone child = getFirstChild();
+		while (child != null)
+		{
+			Backbone next = child.getNextSibling();
+			if (isTextNode(child))
+			{
+				// Merge adjacent text nodes into the first one
+				Text text = (Text) child;
+				while (isTextNode(next))
+				{
+					Backbone following = next.getNextSibling();
+					text.setData(nullToEmpty(text.getData()) + nullToEmpty(((Text) next).getData()));
+					removeChild(next);
+					next = following;
+				}
+
+				// Remove empty text nodes
+				String data = text.getData();
+				if ((data == null) || data.isEmpty())
+					removeChild(child);
+			}
+			else
+			{
+				child.normalize();
+			}
+			child = next;
+		}
+	}
+
+	private static boolean isTextNode(Backbone node)
+	{
+		return (node instanceof Text) && (node.getNodeType() == Node.TEXT_NODE);
+	}
+
+	private static String nullToEmpty(String s)
+	{
+		return (s != null) ? s : "";
+	}
+
+	// =========================================================================
+
+	/**
+	 * Inserts the given node in front of {@code before} or appends it if
+	 * {@code before} is {@code null}. A node that is still the child of another
+	 * node is removed from its parent first. If the insertion fails, the node
+	 * is put back where it came from.
+	 */
+	private void insertOrMove(Backbone newChild, Backbone before, boolean cloning)
+	{
+		if (!cloning)
+			assertWritableOnDocument();
+
+		Backbone oldParent = newChild.getParentNode();
+		Backbone oldNext = newChild.getNextSibling();
+		if (oldParent != null)
+			oldParent.removeChild(newChild);
+
+		try
+		{
+			Backbone prev = (before == null) ?
+					appendChildIntern(newChild, true /* check */, cloning) :
+					insertBeforeIntern(before, newChild, true /* check */);
+			childInserted(prev, newChild);
+		}
+		catch (RuntimeException e)
+		{
+			restore(newChild, oldParent, oldNext);
+			throw e;
+		}
+	}
+
+	/**
+	 * Puts a node that was removed from its parent in order to move it back to
+	 * its old position.
+	 */
+	private static void restore(Backbone node, Backbone oldParent, Backbone oldNext)
+	{
+		if ((oldParent != null) && (node.getParentNode() == null))
+			oldParent.insertBefore(node, oldNext);
+	}
+
+	private static Backbone expectNewChild(Node child)
+	{
+		if (child == null)
+			throw new IllegalArgumentException("Argument `child' is null.");
+
+		if (!(child instanceof Backbone))
+			throw new DOMException(
+					DOMException.WRONG_DOCUMENT_ERR,
+					"Given node was created by a different DOM implementation.");
+
+		return (Backbone) child;
+	}
+
+	private Backbone expectChild(Node child)
+	{
+		if (!(child instanceof Backbone) || (child.getParentNode() != this))
+			throw new DOMException(
+					DOMException.NOT_FOUND_ERR,
+					"Given node is not a child of this node.");
+
+		return (Backbone) child;
+	}
+
+	/**
+	 * Checks if the given node can become a child of this node.
+	 */
+	private void checkNewChild(Backbone newChild)
+	{
+		switch (newChild.getNodeType())
+		{
+			case Node.ATTRIBUTE_NODE:
+			case Node.DOCUMENT_NODE:
+			case Node.ENTITY_NODE:
+			case Node.NOTATION_NODE:
+				throw new DOMException(
+						DOMException.HIERARCHY_REQUEST_ERR,
+						"Node `" + newChild.getNodeName() + "' cannot be a child node.");
+		}
+
+		for (Backbone n = this; n != null; n = n.getParentNode())
+		{
+			if (n == newChild)
+				throw new DOMException(
+						DOMException.HIERARCHY_REQUEST_ERR,
+						"Cannot insert a node into itself or into one of its descendants.");
+		}
+
+		if (!hasSameOwnerDocument(newChild))
+			throw new DOMException(
+					DOMException.WRONG_DOCUMENT_ERR,
+					"Given node belongs to a different document.");
 	}
 
 	// =========================================================================
@@ -361,7 +504,9 @@ public abstract class BackboneWithChildren
 					"Given argument `child' is still child of another WOM node.");
 
 		if (before.getParentNode() != this)
-			throw new IllegalArgumentException("Given node `before' is not a child of this node.");
+			throw new DOMException(
+					DOMException.NOT_FOUND_ERR,
+					"Given node `before' is not a child of this node.");
 		Backbone p = (Backbone) before;
 
 		Backbone prev = p.getPreviousSibling();
@@ -397,7 +542,9 @@ public abstract class BackboneWithChildren
 					"Given node `replace' is still child of another WOM node.");
 
 		if (search.getParentNode() != this)
-			throw new IllegalArgumentException("Given node `search' is not a child of this node.");
+			throw new DOMException(
+					DOMException.NOT_FOUND_ERR,
+					"Given node `search' is not a child of this node.");
 		Backbone oldChild = (Backbone) search;
 
 		if (check)
@@ -433,7 +580,9 @@ public abstract class BackboneWithChildren
 		Backbone remove = Toolbox.expectType(Backbone.class, child, "child");
 
 		if (child.getParentNode() != this)
-			throw new IllegalArgumentException("Given node `child' is not a child of this node.");
+			throw new DOMException(
+					DOMException.NOT_FOUND_ERR,
+					"Given node `child' is not a child of this node.");
 
 		if (check)
 			this.allowsRemoval(remove);

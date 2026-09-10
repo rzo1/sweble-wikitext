@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
@@ -31,6 +32,7 @@ import org.sweble.wom3.Wom3Category;
 import org.sweble.wom3.Wom3Node;
 import org.sweble.wom3.Wom3Redirect;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class ArticleTest
 {
@@ -312,6 +314,138 @@ public class ArticleTest
 	public void testSettingNullBodyThrows() throws Exception
 	{
 		n.setBody(null);
+	}
+
+	@Test
+	public void testCategoriesAreReachableThroughDom() throws Exception
+	{
+		BodyImpl body = (BodyImpl) TestHelperDoc.genElem("body");
+		n.setBody(body);
+
+		Wom3Category cat1 = n.addCategory("cat1");
+		Wom3Category cat2 = n.addCategory("cat2");
+
+		assertSame(cat1, n.getFirstChild());
+		assertSame(cat2, cat1.getNextSibling());
+		assertSame(body, cat2.getNextSibling());
+		assertSame(body, n.getLastChild());
+		assertSame(n, cat1.getParentNode());
+
+		NodeList children = n.getChildNodes();
+		assertEquals(3, children.getLength());
+		assertSame(cat1, children.item(0));
+		assertSame(cat2, children.item(1));
+		assertSame(body, children.item(2));
+
+		assertEquals(2, n.getCategories().size());
+	}
+
+	@Test
+	public void testCategoriesWithoutBodyAreReachableThroughDom() throws Exception
+	{
+		Wom3Category cat1 = n.addCategory("cat1");
+		Wom3Category cat2 = n.addCategory("cat2");
+
+		assertSame(cat1, n.getFirstChild());
+		assertSame(cat2, n.getLastChild());
+		assertEquals(2, n.getChildNodes().getLength());
+	}
+
+	@Test
+	public void testCategoriesAreInsertedBetweenRedirectAndBody() throws Exception
+	{
+		BodyImpl body = (BodyImpl) TestHelperDoc.genElem("body");
+		n.setBody(body);
+		RedirectImpl redirect = (RedirectImpl) TestHelperDoc.genElem("redirect");
+		n.setRedirect(redirect);
+
+		Wom3Category cat1 = n.addCategory("cat1");
+		Wom3Category cat2 = n.addCategory("cat2");
+
+		assertSame(redirect, n.getFirstChild());
+		assertSame(cat1, redirect.getNextSibling());
+		assertSame(cat2, cat1.getNextSibling());
+		assertSame(body, cat2.getNextSibling());
+		assertSame(body, n.getLastChild());
+	}
+
+	@Test
+	public void testRemovingCategoriesUpdatesDom() throws Exception
+	{
+		BodyImpl body = (BodyImpl) TestHelperDoc.genElem("body");
+		n.setBody(body);
+		n.addCategory("cat1");
+		Wom3Category cat2 = n.addCategory("cat2");
+
+		n.removeCategory("cat1");
+		assertSame(cat2, n.getFirstChild());
+
+		n.removeCategory("cat2");
+		assertSame(body, n.getFirstChild());
+		assertEquals(1, n.getChildNodes().getLength());
+		assertTrue(n.getCategories().isEmpty());
+	}
+
+	@Test
+	public void testCategoriesInsertedThroughDomAreListed() throws Exception
+	{
+		BodyImpl body = (BodyImpl) TestHelperDoc.genElem("body");
+		n.setBody(body);
+
+		Wom3Category cat = (Wom3Category) TestHelperDoc.genElem("category");
+		cat.setName("x");
+		n.insertBefore(cat, body);
+
+		assertTrue(n.hasCategory("x"));
+		assertEquals(1, n.getCategories().size());
+
+		n.addCategory("y");
+		assertSame(cat, n.getFirstChild());
+		assertEquals(2, n.getCategories().size());
+	}
+
+	@Test
+	public void testDeepCloneHasOwnCategories() throws Exception
+	{
+		BodyImpl body = (BodyImpl) TestHelperDoc.genElem("body");
+		n.setBody(body);
+		addSomeCats();
+
+		ArticleImpl clone = (ArticleImpl) n.cloneNode(true);
+		assertEquals(3, clone.getCategories().size());
+		assertTrue(clone.hasCategory("cat2"));
+		assertSame(clone, clone.getBody().getParentNode());
+		assertSame(clone.getBody(), clone.getLastChild());
+
+		clone.addCategory("cat4");
+		assertTrue(clone.hasCategory("cat4"));
+		assertFalse(n.hasCategory("cat4"));
+		assertEquals(4, clone.getCategories().size());
+		assertEquals(3, n.getCategories().size());
+
+		clone.removeCategory("cat1");
+		assertTrue(n.hasCategory("cat1"));
+	}
+
+	@Test
+	public void testShallowCloneHasNoChildren() throws Exception
+	{
+		BodyImpl body = (BodyImpl) TestHelperDoc.genElem("body");
+		n.setBody(body);
+		n.setRedirect((Wom3Redirect) TestHelperDoc.genElem("redirect"));
+		addSomeCats();
+
+		ArticleImpl clone = (ArticleImpl) n.cloneNode(false);
+		assertNull(clone.getFirstChild());
+		assertNull(clone.getBody());
+		assertNull(clone.getRedirect());
+		assertFalse(clone.isRedirect());
+		assertTrue(clone.getCategories().isEmpty());
+		assertEquals(n.getTitle(), clone.getTitle());
+
+		clone.addCategory("cat");
+		assertSame(clone, ((Node) clone.getCategories().iterator().next()).getParentNode());
+		assertEquals(3, n.getCategories().size());
 	}
 
 	// =========================================================================

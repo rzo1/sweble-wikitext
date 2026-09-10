@@ -164,6 +164,11 @@ public class ElementsByTagNameNodeList
 			// While descending process each node on the way
 			return next;
 		}
+		else if (current == this.root)
+		{
+			// The root has no children
+			return null;
+		}
 		else
 		{
 			// If we cannot descend any more, process each sibling 
@@ -173,7 +178,7 @@ public class ElementsByTagNameNodeList
 				// If we have no siblings, ascend but don't process the parent
 				// nodes on the way to the node that again has siblings
 				current = current.getParentNode();
-				if (current == this.root)
+				if (current == null || current == this.root)
 					// If we reach the root, we're done.
 					return null;
 				next = current.getNextSibling();
