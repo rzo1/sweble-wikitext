@@ -68,34 +68,26 @@ public class ParserFunctionSwitch
 
 		private WtNodeList before;
 
-		private WtNode result;
-
 		public Evaluator(ExpansionFrame frame, List<? extends WtNode> args)
 		{
 			this.frame = frame;
 			this.args = args;
 		}
 
+		/**
+		 * Follows ParserFunctions::switch() of MediaWiki's ParserFunctions
+		 * extension.
+		 */
 		public WtNode evaluate()
 		{
-			WtNode arg0 = frame.expand(args.get(0));
-
-			String cmp = null;
-			Double icmp = null;
-			try
-			{
-				cmp = tu().astToText(arg0).trim();
-
-				icmp = strToDbl(cmp);
-			}
-			catch (StringConversionException e)
-			{
-				// FIXME: Do recursive equality check
-			}
+			String primary = decodeTrimToText(frame.expand(args.get(0)));
 
 			boolean found = false;
+			boolean defaultFound = false;
+			WtNode defaultValue = null;
+			boolean lastItemHadNoEquals = false;
+			WtNode lastItem = null;
 
-			result = null;
 			for (int i = 1; i < args.size(); ++i)
 			{
 				// Process each argument of the switch (after the test string)
@@ -111,86 +103,80 @@ public class ParserFunctionSwitch
 					WtNode c = args.get(i);
 					if (c.isNodeType(WtNode.NT_TEXT))
 						splitTextAtEquals(c);
+					else
+						before.add(c);
 				}
 
 				// Now before holds the stuff in front of the "=" and after
-				// contains everything after the "=". If no "=" was found, 
+				// contains everything after the "=". If no "=" was found,
 				// before contains everything and after == null.
 
-				if (!found)
-					found = compare(cmp, icmp);
-
-				if (found && after != null)
+				if (after != null)
 				{
-					result = after;
-					break;
+					lastItemHadNoEquals = false;
+
+					// A previous case without "=" matched (fall through)
+					if (found)
+						return after;
+
+					String test = decodeTrimToText(frame.expand(before));
+					if (equal(primary, test))
+						return after;
+
+					// A bare "#default" turns the next case into the default
+					if (defaultFound || isDefault(test))
+					{
+						defaultValue = after;
+						defaultFound = false;
+					}
+				}
+				else
+				{
+					lastItemHadNoEquals = true;
+
+					lastItem = frame.expand(before);
+
+					String test = decodeTrimToText(lastItem);
+					if (equal(primary, test))
+					{
+						found = true;
+					}
+					else if (isDefault(test))
+					{
+						defaultFound = true;
+					}
 				}
 			}
 
-			if (before != null && after == null && result == null)
-			{
-				// result == null
-				//     We have not encountered an explicit #default case
+			// If the last case has no "=" it is the default case, even if
+			// there is an explicit "#default" case.
+			if (lastItemHadNoEquals)
+				return lastItem;
 
-				// before != null && after == null
-				//     The last case didn't have an "=" and therefore is an implicit default
-
-				// $found could be true which means that the implicit default 
-				// just happens to match the test string. But that's immaterial.
-
-				result = before;
-			}
-
-			return result;
+			return defaultValue;
 		}
 
-		private boolean compare(String cmp, Double icmp)
+		private String decodeTrimToText(WtNode n)
 		{
-			// See if the case statement matches the test string.
-			// This is the case if they equal numerically or if the 
-			// expanded string representations match. Finally there the
-			// $before part could hold "#default", in which case we only
-			// set the result to the $after part.
-
-			before = (WtNodeList) frame.expand(before);
-
-			String cmp2;
 			try
 			{
-				cmp2 = tu().astToText(before).trim();
+				return decodeCharReferences(tu().astToText(n)).trim();
 			}
 			catch (StringConversionException e)
 			{
 				// FIXME: Do recursive equality check
-				return false;
-			}
-
-			if (cmp2.equals("#default"))
-			{
-				result = after;
-				return false;
-			}
-
-			if (icmp != null && cmp2 != null)
-			{
-				Double icmp2 = strToDbl(cmp2);
-				if (icmp.equals(icmp2))
-					return true;
-			}
-
-			return (cmp != null) && cmp.equals(cmp2);
-		}
-
-		private Double strToDbl(String str)
-		{
-			try
-			{
-				return Double.parseDouble(str);
-			}
-			catch (NumberFormatException e)
-			{
 				return null;
 			}
+		}
+
+		private boolean equal(String primary, String test)
+		{
+			return (primary != null) && (test != null) && phpLooseEquals(primary, test);
+		}
+
+		private boolean isDefault(String test)
+		{
+			return (test != null) && test.equalsIgnoreCase("#default");
 		}
 
 		private void splitNodeListAtEquals(int i)

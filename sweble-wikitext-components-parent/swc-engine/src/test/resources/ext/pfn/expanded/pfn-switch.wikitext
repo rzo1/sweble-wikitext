@@ -21,6 +21,6 @@ Nothing
 <!-- 11 -->
 Bar
 <!-- 12 -->
-A
+B
 <!-- 13 -->
 nowiki <!-- not yet supported: should really be "template"! -->
