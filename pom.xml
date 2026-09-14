@@ -72,7 +72,7 @@
 		<!-- override outdated versions managed by the osr parent -->
 		<commons-compress.version>1.28.0</commons-compress.version>
 		<!-- XZ for commons-compress, which declares it as optional -->
-		<xz.version>1.10</xz.version>
+		<xz.version>1.12</xz.version>
 		<commons-jxpath.version>1.4.0</commons-jxpath.version>
 		<commons-math3.version>3.6.1</commons-math3.version>
 		<xercesImpl.version>2.12.2</xercesImpl.version>
