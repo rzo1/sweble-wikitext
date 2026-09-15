@@ -23,6 +23,22 @@ Numbers refer to issues and pull requests in [rzo1/sweble-wikitext](https://gith
   framed images (#74), indented tables in definition lists (#75, #173), `;a:b`
   (#124), unclosed extension tags stay text (#154, #173), HtmlRenderer output
   (#121, #123) and the pretty printer (#116).
+- **AST of postprocessed pages:** visitors written against 4.0.x must handle
+  the following changes. A visitor without a generic `visit(WtNode)` fallback
+  throws `VisitNotFoundException` for a node type it has no `visit` method for.
+  - Behaviour switches like `__NOTOC__` were `WtText` and are now `WtPageSwitch`
+    nodes, also for localized names (#113).
+  - Extension tags known to the wiki config, like `<gallery>` and
+    `<references>`, are `WtTagExtension` nodes with an unparsed body instead of
+    `WtXmlElement` nodes with a parsed body (#109).
+  - Cells after a caption in a table that already has rows are children of a
+    `WtXmlElement` named `tr` (`repair = true`) instead of an implicit
+    `WtTableRow` (#156).
+  - Text after a framed image is in its own `WtParagraph` (#74). Localized
+    image options are `WtLinkOptionKeyword` instead of `WtLinkOptionGarbage`
+    nodes (#73).
+  - `;a:b` gives a `WtDefinitionListTerm` and a `WtDefinitionListDef` (#124).
+  - Indented tables are `WtTable` nodes in a `WtDefinitionListDef` (#75, #173).
 - `PageTitle` decodes percent-encoded UTF-8 like `rawurldecode`, so `+` stays
   a plus (#72).
 - Namespaces with the same id but different settings, and parser functions of
