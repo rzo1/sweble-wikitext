@@ -67,7 +67,7 @@
 		<!-- utils-getopt is built for JOpt Simple 4.3: it fails with a VerifyError
 		     on 5.x (OptionException.getMessage() became final) and its help uses
 		     joptsimple.internal classes that later 4.x versions removed -->
-		<jopt-simple-getopt.version>4.3</jopt-simple-getopt.version>
+		<jopt-simple-getopt.version>5.0.4</jopt-simple-getopt.version>
 		<xstream.version>1.4.21</xstream.version>
 	</properties>
 
